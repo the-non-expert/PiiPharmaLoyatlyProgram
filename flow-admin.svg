@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 570" width="100%">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#6B7280"/>
+    </marker>
+  </defs>
+
+  <!-- Step 1: Admin opens dashboard -->
+  <rect x="100" y="14" width="200" height="46" rx="23" fill="#FFEDD5" stroke="#F97316" stroke-width="1.5"/>
+  <text x="200" y="42" text-anchor="middle" font-family="Arial" font-size="12" font-weight="700" fill="#7C2D12">Admin opens dashboard</text>
+
+  <!-- Arrow -->
+  <line x1="200" y1="60" x2="200" y2="80" stroke="#6B7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Step 2: Reviews claim -->
+  <rect x="85" y="82" width="230" height="52" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="200" y="104" text-anchor="middle" font-family="Arial" font-size="12" font-weight="700" fill="#1E3A5F">Reviews pending claim</text>
+  <text x="200" y="122" text-anchor="middle" font-family="Arial" font-size="10" fill="#1E3A5F">photo · serial · retailer · product</text>
+
+  <!-- Arrow -->
+  <line x1="200" y1="134" x2="200" y2="154" stroke="#6B7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Diamond: Decision — center (200, 207). Points: top(200,160), right(290,207), bottom(200,254), left(110,207) -->
+  <polygon points="200,160 295,207 200,254 105,207" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="200" y="213" text-anchor="middle" font-family="Arial" font-size="13" font-weight="700" fill="#78350F">Decision</text>
+
+  <!-- Approve (down) -->
+  <line x1="200" y1="254" x2="200" y2="274" stroke="#6B7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="175" y="270" font-family="Arial" font-size="10" fill="#6B7280">Approve</text>
+
+  <!-- Reject (right) -->
+  <line x1="295" y1="207" x2="395" y2="207" stroke="#6B7280" stroke-width="1.5"/>
+  <line x1="395" y1="207" x2="395" y2="274" stroke="#6B7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="348" y="198" text-anchor="middle" font-family="Arial" font-size="10" fill="#6B7280">Reject</text>
+
+  <!-- Payout queue box -->
+  <rect x="95" y="276" width="210" height="46" rx="8" fill="#D1FAE5" stroke="#10B981" stroke-width="1.5"/>
+  <text x="200" y="296" text-anchor="middle" font-family="Arial" font-size="11.5" font-weight="700" fill="#065F46">Added to</text>
+  <text x="200" y="312" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#065F46">payout queue</text>
+
+  <!-- Flagged box -->
+  <rect x="325" y="276" width="140" height="46" rx="8" fill="#FEE2E2" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="395" y="296" text-anchor="middle" font-family="Arial" font-size="11.5" font-weight="700" fill="#7F1D1D">Flagged</text>
+  <text x="395" y="312" text-anchor="middle" font-family="Arial" font-size="10" fill="#7F1D1D">with reason</text>
+
+  <!-- Arrow -->
+  <line x1="200" y1="322" x2="200" y2="342" stroke="#6B7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Export payout file -->
+  <rect x="95" y="344" width="210" height="46" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="200" y="364" text-anchor="middle" font-family="Arial" font-size="11.5" font-weight="700" fill="#1E3A5F">Admin exports</text>
+  <text x="200" y="380" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#1E3A5F">payout file</text>
+
+  <!-- Arrow -->
+  <line x1="200" y1="390" x2="200" y2="410" stroke="#6B7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Upload to Cashfree -->
+  <rect x="95" y="412" width="210" height="46" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="200" y="432" text-anchor="middle" font-family="Arial" font-size="11.5" font-weight="700" fill="#1E3A5F">Uploads to</text>
+  <text x="200" y="448" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#1E3A5F">Cashfree dashboard</text>
+
+  <!-- Arrow -->
+  <line x1="200" y1="458" x2="200" y2="478" stroke="#6B7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Retailer receives -->
+  <rect x="100" y="480" width="200" height="46" rx="23" fill="#D1FAE5" stroke="#10B981" stroke-width="1.5"/>
+  <text x="200" y="500" text-anchor="middle" font-family="Arial" font-size="11.5" font-weight="700" fill="#065F46">Retailer receives</text>
+  <text x="200" y="516" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#065F46">cashback via UPI</text>
+</svg>

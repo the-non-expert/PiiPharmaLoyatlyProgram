@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 345" width="100%">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#6B7280"/>
+    </marker>
+  </defs>
+
+  <!-- Step 1: Visit portal -->
+  <rect x="50" y="12" width="200" height="46" rx="23" fill="#D1FAE5" stroke="#10B981" stroke-width="1.5"/>
+  <text x="150" y="31" text-anchor="middle" font-family="Arial" font-size="12" font-weight="700" fill="#065F46">Visit portal</text>
+  <text x="150" y="49" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#065F46">loyalty.piipharma.com</text>
+
+  <line x1="150" y1="58" x2="150" y2="78" stroke="#6B7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Step 2: Enter mobile -->
+  <rect x="50" y="80" width="200" height="46" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="150" y="99" text-anchor="middle" font-family="Arial" font-size="12" font-weight="700" fill="#1E3A5F">Enter mobile number</text>
+
+  <line x1="150" y1="126" x2="150" y2="146" stroke="#6B7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Step 3: Receive OTP -->
+  <rect x="50" y="148" width="200" height="46" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="150" y="165" text-anchor="middle" font-family="Arial" font-size="12" font-weight="700" fill="#1E3A5F">Receive OTP via WhatsApp</text>
+  <text x="150" y="183" text-anchor="middle" font-family="Arial" font-size="10" fill="#9CA3AF">SMS fallback if WhatsApp fails</text>
+
+  <line x1="150" y1="194" x2="150" y2="214" stroke="#6B7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Step 4: Enter name + UPI -->
+  <rect x="50" y="216" width="200" height="46" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="150" y="235" text-anchor="middle" font-family="Arial" font-size="12" font-weight="700" fill="#1E3A5F">Enter name and UPI ID</text>
+  <text x="150" y="253" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#1E3A5F">Saved for all future claims</text>
+
+  <line x1="150" y1="262" x2="150" y2="282" stroke="#6B7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Step 5: Registered -->
+  <rect x="50" y="284" width="200" height="46" rx="23" fill="#D1FAE5" stroke="#10B981" stroke-width="1.5"/>
+  <text x="150" y="303" text-anchor="middle" font-family="Arial" font-size="12" font-weight="700" fill="#065F46">Registered</text>
+  <text x="150" y="321" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#065F46">ready to submit claims</text>
+</svg>

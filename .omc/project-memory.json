@@ -1,0 +1,189 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1776592140113,
+  "projectRoot": "/Users/ayushj/My-Github/piiPharma",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "@sveltejs/kit",
+        "version": "2.57.0",
+        "category": "fullstack"
+      },
+      {
+        "name": "svelte",
+        "version": "5.55.2",
+        "category": "frontend"
+      },
+      {
+        "name": "vite",
+        "version": "8.0.7",
+        "category": "build"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": null,
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "vite dev",
+      "build": "vite build",
+      "preview": "vite preview",
+      "prepare": "svelte-kit sync || echo ''",
+      "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+      "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+      "lint": "prettier --check . && eslint .",
+      "format": "prettier --write ."
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": "ES modules",
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "src",
+      "static"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "build": {
+      "path": "build",
+      "purpose": "Build output",
+      "fileCount": 2,
+      "lastAccessed": 1776592140092,
+      "keyFiles": [
+        "_headers",
+        "robots.txt"
+      ]
+    },
+    "research": {
+      "path": "research",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1776592140096,
+      "keyFiles": [
+        "color-philosophy.md",
+        "font-philosophy.md",
+        "stack-docs.md",
+        "ui-research-v2.md",
+        "ui-spec.md"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 4,
+      "lastAccessed": 1776592140096,
+      "keyFiles": [
+        "app.css",
+        "app.d.ts",
+        "app.html",
+        "hooks.server.ts"
+      ]
+    },
+    "static": {
+      "path": "static",
+      "purpose": "Static files",
+      "fileCount": 1,
+      "lastAccessed": 1776592140097,
+      "keyFiles": [
+        "robots.txt"
+      ]
+    },
+    "stories": {
+      "path": "stories",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1776592140097,
+      "keyFiles": [
+        "INDEX.md",
+        "admin-auth.md",
+        "admin-claims.md",
+        "admin-payouts.md",
+        "admin-products.md"
+      ]
+    },
+    "supabase": {
+      "path": "supabase",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1776592140097,
+      "keyFiles": [
+        "config.toml",
+        "seed.sql"
+      ]
+    },
+    "tickets": {
+      "path": "tickets",
+      "purpose": null,
+      "fileCount": 9,
+      "lastAccessed": 1776592140098,
+      "keyFiles": [
+        "INDEX.md",
+        "T001-database-schema.md",
+        "T002-supabase-ssr-setup.md",
+        "T003-retailer-auth.md",
+        "T004-retailer-portal.md"
+      ]
+    },
+    "src/lib": {
+      "path": "src/lib",
+      "purpose": "Library code",
+      "fileCount": 1,
+      "lastAccessed": 1776592140099,
+      "keyFiles": [
+        "index.ts"
+      ]
+    },
+    "src/routes": {
+      "path": "src/routes",
+      "purpose": "Route handlers",
+      "fileCount": 3,
+      "lastAccessed": 1776592140099,
+      "keyFiles": [
+        "+layout.svelte",
+        "+page.server.ts",
+        "+page.svelte"
+      ]
+    },
+    "supabase/migrations": {
+      "path": "supabase/migrations",
+      "purpose": "Database migrations",
+      "fileCount": 1,
+      "lastAccessed": 1776592140100,
+      "keyFiles": [
+        "20260417095918_initial_schema.sql"
+      ]
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}
