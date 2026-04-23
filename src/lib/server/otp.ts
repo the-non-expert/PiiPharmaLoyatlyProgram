@@ -1,6 +1,6 @@
 import { dev } from '$app/environment';
 import { getServiceClient } from '$lib/server/supabase';
-import { WHATSAPP_API_TOKEN, WHATSAPP_PHONE_ID, SMS_API_KEY } from '$env/static/private';
+import { WHATSAPP_API_TOKEN, WHATSAPP_PHONE_ID, SMS_API_KEY, DEMO_OTP } from '$env/static/private';
 
 const OTP_TTL_MINUTES = 10;
 const MAX_ATTEMPTS = 3;
@@ -59,12 +59,12 @@ async function sendSms(mobile: string, code: string): Promise<boolean> {
 	}
 }
 
-export async function sendOtp(mobile: string): Promise<{ sent: boolean; channel: 'whatsapp' | 'sms' | null }> {
+export async function sendOtp(mobile: string): Promise<{ sent: boolean; channel: 'whatsapp' | 'sms' | null; devCode?: string }> {
 	if (dev) {
 		const code = generateCode();
 		devCodes.set(mobile, code);
 		console.log(`\n🔑 DEV OTP  +91 ${mobile}  →  ${code}\n`);
-		return { sent: true, channel: 'whatsapp' };
+		return { sent: true, channel: 'whatsapp', devCode: code };
 	}
 
 	const db = getServiceClient();
@@ -75,6 +75,10 @@ export async function sendOtp(mobile: string): Promise<{ sent: boolean; channel:
 		{ mobile, code, expires_at: expiresAt, attempts: 0 },
 		{ onConflict: 'mobile' }
 	);
+
+	if (DEMO_OTP === 'true') {
+		return { sent: true, channel: 'whatsapp', devCode: code };
+	}
 
 	const whatsappOk = await sendWhatsApp(mobile, code);
 	if (whatsappOk) return { sent: true, channel: 'whatsapp' };

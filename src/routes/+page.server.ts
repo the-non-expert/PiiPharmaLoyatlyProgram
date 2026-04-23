@@ -15,12 +15,12 @@ export const actions: Actions = {
 			return fail(400, { mobile, error: 'Enter a valid 10-digit mobile number.' });
 		}
 
-		const { sent } = await sendOtp(mobile);
+		const { sent, devCode } = await sendOtp(mobile);
 		if (!sent) {
 			return fail(500, { mobile, error: 'Could not send OTP. Please try again.' });
 		}
 
-		return { otpSent: true, mobile };
+		return { otpSent: true, mobile, devCode };
 	},
 
 	verifyOtp: async ({ request, cookies }) => {

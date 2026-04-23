@@ -121,6 +121,8 @@
         class="flex flex-col flex-1"
         use:enhance={() => ({ result }) => {
           if (result.type === 'success' && (result.data as any)?.otpSent) {
+            const devCode = (result.data as any)?.devCode;
+            if (devCode) console.log(`%c[PiiPharma] OTP for +91 ${mobile} → ${devCode}`, 'color:#2372B9;font-size:16px;font-weight:bold');
             step = 'otp';
             hasError = false;
             startResendTimer();
