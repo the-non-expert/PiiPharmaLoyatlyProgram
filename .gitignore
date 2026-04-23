@@ -21,3 +21,11 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Claude agent sessions
+.omc/
+
+# StoryGraph
+.storygraph.db
+.storygraph.db-shm
+.storygraph.db-wal
