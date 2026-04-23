@@ -1,7 +1,10 @@
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 import { dev } from '$app/environment';
+import { DEMO_OTP } from '$env/static/private';
 import { getServiceClient } from '$lib/server/supabase';
+
+const isDemo = dev || DEMO_OTP === 'true';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const now = new Date().toISOString();
@@ -12,7 +15,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.retailerSession = null;
 	const retailerSessionId = event.cookies.get('retailer_session');
 	if (retailerSessionId) {
-		if (dev && retailerSessionId.startsWith('dev-session-')) {
+		if (isDemo && retailerSessionId.startsWith('dev-session-')) {
 			const retailerId = retailerSessionId.slice('dev-session-'.length);
 			event.locals.retailerSession = {
 				id: retailerSessionId,
@@ -44,7 +47,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.adminSession = null;
 	const adminSessionId = event.cookies.get('admin_session');
 	if (adminSessionId) {
-		if (dev && adminSessionId.startsWith('dev-admin-session-')) {
+		if (isDemo && adminSessionId.startsWith('dev-admin-session-')) {
 			event.locals.adminSession = {
 				id: adminSessionId,
 				admin_id: adminSessionId.slice('dev-admin-session-'.length),
