@@ -1,10 +1,13 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { dev } from '$app/environment';
+import { DEMO_OTP } from '$env/static/private';
 import { sendOtp, verifyOtp } from '$lib/server/otp';
 import { getServiceClient } from '$lib/server/supabase';
 import { createRetailerSession } from '$lib/server/session';
 import { devRetailers } from '$lib/server/dev-store';
+
+const isDemo = dev || DEMO_OTP === 'true';
 
 export const actions: Actions = {
 	sendOtp: async ({ request }) => {
@@ -41,7 +44,7 @@ export const actions: Actions = {
 
 		let retailer: { id: string; name: string | null } | null = null;
 
-		if (dev) {
+		if (isDemo) {
 			if (!devRetailers.has(mobile)) {
 				devRetailers.set(mobile, { id: `dev-${mobile}`, name: null });
 			}

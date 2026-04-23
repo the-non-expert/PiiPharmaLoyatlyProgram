@@ -59,11 +59,13 @@ async function sendSms(mobile: string, code: string): Promise<boolean> {
 	}
 }
 
+const isDemo = dev || DEMO_OTP === 'true';
+
 export async function sendOtp(mobile: string): Promise<{ sent: boolean; channel: 'whatsapp' | 'sms' | null; devCode?: string }> {
-	if (dev) {
+	if (isDemo) {
 		const code = generateCode();
 		devCodes.set(mobile, code);
-		console.log(`\n🔑 DEV OTP  +91 ${mobile}  →  ${code}\n`);
+		console.log(`\n🔑 ${dev ? 'DEV' : 'DEMO'} OTP  +91 ${mobile}  →  ${code}\n`);
 		return { sent: true, channel: 'whatsapp', devCode: code };
 	}
 
@@ -75,10 +77,6 @@ export async function sendOtp(mobile: string): Promise<{ sent: boolean; channel:
 		{ mobile, code, expires_at: expiresAt, attempts: 0 },
 		{ onConflict: 'mobile' }
 	);
-
-	if (DEMO_OTP === 'true') {
-		return { sent: true, channel: 'whatsapp', devCode: code };
-	}
 
 	const whatsappOk = await sendWhatsApp(mobile, code);
 	if (whatsappOk) return { sent: true, channel: 'whatsapp' };
@@ -93,7 +91,7 @@ export async function verifyOtp(
 	mobile: string,
 	code: string
 ): Promise<{ valid: boolean; reason?: 'expired' | 'invalid' | 'max_attempts' }> {
-	if (dev) {
+	if (isDemo) {
 		const expected = devCodes.get(mobile);
 		if (!expected || expected !== code) return { valid: false, reason: 'invalid' };
 		devCodes.delete(mobile);
