@@ -4,15 +4,11 @@
 
   let { form }: { form: ActionData } = $props();
 
-  const initialOtpSent = (form as any)?.otpSent ?? false;
-  const initialMobile = (form as any)?.mobile ?? '';
-  const initialHasError = !!(form as any)?.error;
-
-  let step: 'mobile' | 'otp' = $state(initialOtpSent ? 'otp' : 'mobile');
-  let mobile = $state(initialMobile);
+  let step: 'mobile' | 'otp' = $state((form as any)?.otpSent ? 'otp' : 'mobile');
+  let mobile = $state((form as any)?.mobile ?? '');
   let resendCountdown = $state(0);
   let verifying = $state(false);
-  let hasError = $state(initialHasError);
+  let hasError = $state(!!(form as any)?.error);
 
   // 6-box OTP state
   let digits = $state<string[]>(['', '', '', '', '', '']);

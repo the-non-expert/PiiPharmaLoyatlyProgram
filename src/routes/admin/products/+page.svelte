@@ -54,8 +54,9 @@
 			<div style="font-size:14px;font-weight:700;color:#474545;margin-bottom:14px;">New Product</div>
 			<form method="POST" action="?/create" use:enhance style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
 				<div style="flex:1;min-width:180px;">
-					<label style="font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Product Name</label>
+					<label for="new-name" style="font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Product Name</label>
 					<input
+						id="new-name"
 						name="name"
 						placeholder="e.g. Amoxicillin 500mg"
 						required
@@ -63,8 +64,9 @@
 					/>
 				</div>
 				<div style="width:130px;">
-					<label style="font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Coupons Req.</label>
+					<label for="new-coupons" style="font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Coupons Req.</label>
 					<input
+						id="new-coupons"
 						name="coupons_required"
 						type="number"
 						min="1"
@@ -74,8 +76,9 @@
 					/>
 				</div>
 				<div style="width:130px;">
-					<label style="font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Cashback (₹)</label>
+					<label for="new-cashback" style="font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Cashback (₹)</label>
 					<input
+						id="new-cashback"
 						name="cashback_amount"
 						type="number"
 						min="1"

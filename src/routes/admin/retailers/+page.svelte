@@ -3,8 +3,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const initialSearch = data.search;
-	let searchInput = $state(initialSearch);
+	let searchInput = $state(data.search);
 
 	function fmt(s: string) {
 		return new Date(s).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
