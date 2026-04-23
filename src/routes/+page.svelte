@@ -228,7 +228,7 @@
         <input type="hidden" name="code" bind:this={codeInputEl} />
 
         <!-- 6 OTP boxes -->
-        <div class="flex gap-[10px] mb-8">
+        <div class="flex justify-center gap-[8px] mb-8">
           {#each digits as digit, i}
             <input
               bind:this={boxes[i]}
@@ -240,7 +240,7 @@
               onkeydown={(e) => onDigitKeydown(e, i)}
               onpaste={i === 0 ? onDigitPaste : undefined}
               disabled={verifying}
-              class="flex-1 h-[60px] border-2 rounded-[10px] text-center text-[24px] font-bold text-[#474545] focus:outline-none transition-colors disabled:opacity-50"
+              class="w-[44px] h-[52px] shrink-0 border-2 rounded-[10px] text-center text-[22px] font-bold text-[#474545] focus:outline-none transition-colors disabled:opacity-50"
               style="
                 border-color: {hasError ? '#E53E3E' : digit ? '#2372B9' : '#EAEAEA'};
                 background: {hasError ? '#fde8e8' : digit ? '#e8f1fb' : '#fff'};
