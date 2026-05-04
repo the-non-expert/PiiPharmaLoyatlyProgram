@@ -4,8 +4,14 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 
 // Service role client — bypasses RLS, server-side only.
 // Never expose SUPABASE_SERVICE_ROLE_KEY to the client.
+// Singleton: reused across requests within a warm serverless function instance.
+let _client: ReturnType<typeof createClient> | null = null;
+
 export function getServiceClient() {
-	return createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-		auth: { persistSession: false }
-	});
+	if (!_client) {
+		_client = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+			auth: { persistSession: false }
+		});
+	}
+	return _client;
 }
