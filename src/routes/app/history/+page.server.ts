@@ -1,17 +1,10 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { dev } from '$app/environment';
 import { getServiceClient } from '$lib/server/supabase';
-import { devClaims } from '$lib/server/dev-store';
 
 export const load: PageServerLoad = async ({ locals }) => {
   const session = locals.retailerSession;
   if (!session) redirect(303, '/');
-
-  if (dev) {
-    const claims = devClaims.filter(c => c.retailer_id === session.retailer_id);
-    return { claims };
-  }
 
   const supabase = getServiceClient();
 

@@ -1,13 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
-import { dev } from '$app/environment';
-import { DEMO_OTP } from '$env/static/private';
 import { sendOtp, verifyOtp } from '$lib/server/otp';
 import { getServiceClient } from '$lib/server/supabase';
 import { createRetailerSession } from '$lib/server/session';
-import { devRetailers } from '$lib/server/dev-store';
-
-const isDemo = dev || DEMO_OTP === 'true';
 
 export const actions: Actions = {
 	sendOtp: async ({ request }) => {
@@ -18,12 +13,12 @@ export const actions: Actions = {
 			return fail(400, { mobile, error: 'Enter a valid 10-digit mobile number.' });
 		}
 
-		const { sent, devCode } = await sendOtp(mobile);
+		const { sent } = await sendOtp(mobile);
 		if (!sent) {
 			return fail(500, { mobile, error: 'Could not send OTP. Please try again.' });
 		}
 
-		return { otpSent: true, mobile, devCode };
+		return { otpSent: true, mobile };
 	},
 
 	verifyOtp: async ({ request, cookies }) => {
@@ -42,40 +37,27 @@ export const actions: Actions = {
 			return fail(400, { mobile, otpSent: true, error: messages[result.reason ?? 'invalid'] });
 		}
 
-		let retailer: { id: string; name: string | null } | null = null;
+		const db = getServiceClient();
 
-		if (isDemo) {
-			if (!devRetailers.has(mobile)) {
-				devRetailers.set(mobile, { id: `dev-${mobile}`, name: null });
-			}
-			retailer = devRetailers.get(mobile)!;
-		} else {
-			const db = getServiceClient();
+		let { data: retailer } = await db
+			.from('retailers')
+			.select('id, name')
+			.eq('mobile', mobile)
+			.single();
 
-			// Find or create retailer row (mobile is the identity)
-			let { data } = await db
+		if (!retailer) {
+			const { data: created } = await db
 				.from('retailers')
+				.insert({ mobile })
 				.select('id, name')
-				.eq('mobile', mobile)
 				.single();
-
-			if (!data) {
-				const { data: created } = await db
-					.from('retailers')
-					.insert({ mobile })
-					.select('id, name')
-					.single();
-				data = created;
-			}
-
-			retailer = data;
+			retailer = created;
 		}
 
 		if (!retailer) return fail(500, { mobile, otpSent: true, error: 'Account error. Please try again.' });
 
 		await createRetailerSession(retailer.id, cookies);
 
-		// First-time user (no name yet) → registration
 		if (!retailer.name) redirect(303, '/app/register');
 		redirect(303, '/app');
 	}

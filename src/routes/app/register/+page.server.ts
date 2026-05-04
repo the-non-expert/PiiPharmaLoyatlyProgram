@@ -1,17 +1,9 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { dev } from '$app/environment';
 import { getServiceClient } from '$lib/server/supabase';
-import { devRetailers } from '$lib/server/dev-store';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.retailerSession) return {};
-
-	if (dev) {
-		const retailer = devRetailers.get(locals.retailerSession.retailer_id);
-		if (retailer?.name) redirect(303, '/app');
-		return {};
-	}
 
 	const db = getServiceClient();
 	const { data } = await db
@@ -38,12 +30,6 @@ export const actions: Actions = {
 		}
 		if (!UPI_REGEX.test(upi_id)) {
 			return fail(400, { name, city, state, upi_id, error: 'Invalid UPI ID. Format: handle@bank' });
-		}
-
-		if (dev) {
-			const id = locals.retailerSession!.retailer_id;
-			devRetailers.set(id, { id, name, city, state, upi_id });
-			redirect(303, '/app');
 		}
 
 		const db = getServiceClient();

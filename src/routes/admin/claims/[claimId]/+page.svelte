@@ -5,6 +5,7 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let showRejectForm = $state(false);
 	let rejectReason = $state('');
+	let photoState = $state<Record<number, 'loading' | 'loaded' | 'error'>>({});
 
 	function fmt(s: string) {
 		return new Date(s).toLocaleDateString('en-IN', {
@@ -32,7 +33,7 @@
 		['UPI ID',           data.retailer?.upi_id ?? '—'],
 		['Product',          data.product?.name    ?? '—'],
 		['Cashback Amount',  '₹' + (data.product?.cashback_amount ?? 0)],
-		['Coupons Required', String(data.product?.coupons_required ?? data.serials.length)],
+		['Coupons Required', String(data.product?.coupons_required ?? data.coupons.length)],
 		['Date Created',     fmt(data.claim.created_at)],
 	] as [string, string][]);
 </script>
@@ -64,31 +65,47 @@
 		<div style="flex:1.65;">
 			<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
 				<div style="font-size:13px;font-weight:700;color:#474545;margin-bottom:14px;">
-					Coupon Photos&ensp;<span style="font-size:12px;font-weight:500;color:#686868;">{data.serials.length} of {data.product?.coupons_required ?? data.serials.length} required</span>
+					Coupon Photos&ensp;<span style="font-size:12px;font-weight:500;color:#686868;">{data.coupons.length} of {data.product?.coupons_required ?? data.coupons.length} required</span>
 				</div>
-				<div style="display:grid;grid-template-columns:repeat({Math.min(data.serials.length, 5)},1fr);gap:10px;">
-					{#each data.serials as serial, i}
+				<div style="display:grid;grid-template-columns:repeat({Math.min(data.coupons.length || 1, 5)},1fr);gap:10px;">
+					{#each data.coupons as coupon, i}
 						<div>
 							<a
-								href={data.claim.photo_signed_url ?? '#'}
+								href={coupon.photo_signed_url ?? '#'}
 								target="_blank"
 								rel="noopener"
-								style="display:block;aspect-ratio:3/4;background:repeating-linear-gradient(45deg,#f3f3f3,#f3f3f3 5px,#ebebeb 5px,#ebebeb 10px);border-radius:7px;border:1px solid #EAEAEA;overflow:hidden;position:relative;text-decoration:none;margin-bottom:6px;"
+								style="display:block;aspect-ratio:3/4;border-radius:7px;border:1px solid #EAEAEA;overflow:hidden;position:relative;text-decoration:none;margin-bottom:6px;background:#f7f7f7;"
 							>
-								{#if data.claim.photo_signed_url}
+								{#if coupon.photo_signed_url}
+									<!-- Spinner shown while loading -->
+									{#if photoState[i] !== 'loaded' && photoState[i] !== 'error'}
+										<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:1;">
+											<div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:#2372B9;border-radius:50%;"></div>
+											<span style="font-size:9px;color:#aaa;font-weight:600;">Loading…</span>
+										</div>
+									{/if}
 									<img
-										src={data.claim.photo_signed_url}
+										src={coupon.photo_signed_url}
 										alt="Coupon {i + 1}"
-										style="width:100%;height:100%;object-fit:cover;"
+										onload={() => photoState[i] = 'loaded'}
+										onerror={() => photoState[i] = 'error'}
+										style="width:100%;height:100%;object-fit:cover;display:block;opacity:{photoState[i] === 'loaded' ? 1 : 0};transition:opacity 0.25s;"
 									/>
+									{#if photoState[i] === 'loaded'}
+										<div style="position:absolute;bottom:4px;right:4px;background:rgba(35,114,185,0.85);border-radius:4px;padding:2px 6px;font-size:8px;color:#fff;font-weight:600;">View</div>
+									{/if}
+									{#if photoState[i] === 'error'}
+										<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+											<span style="font-size:9px;color:#bbb;text-align:center;line-height:1.5;">Failed<br/>to load</span>
+										</div>
+									{/if}
 								{:else}
 									<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-										<span style="font-size:8px;color:#bbb;font-family:monospace;text-align:center;line-height:1.5;">coupon<br/>photo</span>
+										<span style="font-size:9px;color:#bbb;text-align:center;line-height:1.5;">No<br/>photo</span>
 									</div>
 								{/if}
-								<div style="position:absolute;bottom:4px;right:4px;background:rgba(35,114,185,0.85);border-radius:4px;padding:2px 6px;font-size:8px;color:#fff;font-weight:600;">View</div>
 							</a>
-							<div style="font-size:8px;color:#686868;font-family:monospace;text-align:center;line-height:1.4;word-break:break-all;">{serial}</div>
+							<div style="font-size:8px;color:#686868;font-family:monospace;text-align:center;line-height:1.4;word-break:break-all;">{coupon.serial}</div>
 						</div>
 					{/each}
 				</div>
@@ -170,3 +187,10 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+	.spin { animation: spin 0.8s linear infinite; }
+</style>
