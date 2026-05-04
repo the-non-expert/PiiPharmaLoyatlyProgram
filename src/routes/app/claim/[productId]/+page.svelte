@@ -15,7 +15,8 @@
   let curFile    = $state<File | null>(null);
   let curPreview = $state<string | null>(null);
   let curSerial  = $state('');
-  let submitting = $state(false);
+  let submitting  = $state(false);
+  let compressing = $state(false);
 
   const curComplete    = $derived(!!curFile && curSerial.trim().length > 0);
   const totalToSubmit  = $derived(queue.length + (curComplete ? 1 : 0));
@@ -29,13 +30,38 @@
   const qualified = $derived(savedResult?.qualified === true);
   const pct = $derived(Math.min(100, Math.round((newCount / required) * 100)));
 
-  function handlePhoto(e: Event) {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
+  // Resize to max 1200px wide and re-encode at 82% JPEG quality.
+  // Keeps files well under Netlify's 6MB function body limit.
+  async function compressImage(raw: File): Promise<{ file: File; preview: string }> {
+    return new Promise(resolve => {
+      const img = new Image();
+      const url = URL.createObjectURL(raw);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 1200;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+        const preview = canvas.toDataURL('image/jpeg', 0.82);
+        canvas.toBlob(
+          blob => resolve({ file: new File([blob ?? raw], 'coupon.jpg', { type: 'image/jpeg' }), preview }),
+          'image/jpeg', 0.82
+        );
+      };
+      img.src = url;
+    });
+  }
+
+  async function handlePhoto(e: Event) {
+    const raw = (e.target as HTMLInputElement).files?.[0];
+    if (!raw) return;
+    compressing = true;
+    const { file, preview } = await compressImage(raw);
+    compressing = false;
     curFile = file;
-    const reader = new FileReader();
-    reader.onload = ev => { curPreview = ev.target?.result as string; };
-    reader.readAsDataURL(file);
+    curPreview = preview;
   }
 
   function clearPhoto() { curFile = null; curPreview = null; }
@@ -297,6 +323,16 @@
               style="background: rgba(0,0,0,0.55)">
               <span class="text-[12px] font-semibold text-white">Retake</span>
             </button>
+          </div>
+        {:else if compressing}
+          <div class="flex flex-col items-center justify-center rounded-[14px] border-[2.5px] border-[#c7ddf5] bg-[#f4f8fd] min-h-[160px] gap-3 py-7">
+            <div class="w-14 h-14 rounded-full bg-[#e8f1fb] flex items-center justify-center">
+              <svg class="animate-spin" width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="rgba(35,114,185,0.15)" stroke-width="4"/>
+                <path fill="#2372B9" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            </div>
+            <div class="text-[14px] font-semibold text-[#474545]">Processing photo…</div>
           </div>
         {:else}
           <label class="flex flex-col items-center justify-center rounded-[14px] border-[2.5px] border-dashed border-[#EAEAEA] bg-[#F4F6F8] cursor-pointer min-h-[160px] gap-3 py-7">
