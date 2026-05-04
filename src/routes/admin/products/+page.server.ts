@@ -1,22 +1,8 @@
-import { dev } from '$app/environment';
 import { getServiceClient } from '$lib/server/supabase';
 import { fail } from '@sveltejs/kit';
 import type { Product } from '$lib/types/database';
 
 export async function load() {
-	if (dev) {
-		const { MOCK_PRODUCTS, MOCK_CLAIMS } = await import('$lib/server/dev-mock');
-		const products = MOCK_PRODUCTS.map((p) => {
-			const productClaims = MOCK_CLAIMS.filter((c) => c.product_id === p.id);
-			return {
-				...p,
-				submitted_count: productClaims.reduce((s, c) => s + c.serial_count, 0),
-				claims_count:    productClaims.length,
-			};
-		});
-		return { products };
-	}
-
 	const supabase = getServiceClient();
 
 	const [{ data: rawProducts }, { data: claimStats }, { data: subStats }] = await Promise.all([
@@ -45,7 +31,7 @@ export async function load() {
 }
 
 export const actions = {
-	create: async ({ request }) => {
+	create: async ({ request }: { request: Request }) => {
 		const supabase = getServiceClient();
 		const formData = await request.formData();
 		const name             = formData.get('name')?.toString().trim();
@@ -61,7 +47,7 @@ export const actions = {
 		return {};
 	},
 
-	update: async ({ request }) => {
+	update: async ({ request }: { request: Request }) => {
 		const supabase = getServiceClient();
 		const formData = await request.formData();
 		const id               = formData.get('id')?.toString();
@@ -79,7 +65,7 @@ export const actions = {
 		return {};
 	},
 
-	toggleActive: async ({ request }) => {
+	toggleActive: async ({ request }: { request: Request }) => {
 		const supabase = getServiceClient();
 		const formData = await request.formData();
 		const id = formData.get('id')?.toString();

@@ -124,7 +124,12 @@
 				{:else}
 					{#each data.claims as claim}
 						{@const sc = statusColors[claim.status] ?? { bg:'#F4F6F8', text:'#686868', dot:'#686868' }}
-						<tr style="border-bottom:1px solid #EAEAEA;background:#fff;">
+						<tr
+							onclick={() => window.location.href = `/admin/claims/${claim.id}`}
+							style="border-bottom:1px solid #EAEAEA;background:#fff;cursor:pointer;transition:background 0.12s;"
+							onmouseenter={(e) => (e.currentTarget as HTMLElement).style.background = '#f8fafc'}
+							onmouseleave={(e) => (e.currentTarget as HTMLElement).style.background = '#fff'}
+						>
 							<td style="padding:10px 14px;font-size:12px;font-family:monospace;color:#2372B9;font-weight:700;">{claim.id.toUpperCase().replace('CLAIM-','CLM-')}</td>
 							<td style="padding:10px 14px;font-size:13px;color:#474545;font-weight:600;">{claim.retailer_name}</td>
 							<td style="padding:10px 14px;font-size:12px;font-family:monospace;color:#686868;">{claim.mobile}</td>
@@ -140,17 +145,10 @@
 								</td>
 							{/if}
 							<td style="padding:10px 14px;">
-								{#if claim.status === 'pending'}
-									<a
-										href="/admin/claims/{claim.id}"
-										style="display:inline-flex;align-items:center;background:#2372B9;color:#fff;border:none;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700;font-family:'Montserrat',sans-serif;text-decoration:none;white-space:nowrap;"
-									>Review</a>
-								{:else}
-									<a
-										href="/admin/claims/{claim.id}"
-										style="display:inline-flex;align-items:center;background:#fff;color:#474545;border:1.5px solid #EAEAEA;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700;font-family:'Montserrat',sans-serif;text-decoration:none;white-space:nowrap;"
-									>View</a>
-								{/if}
+								<span style="display:inline-flex;align-items:center;gap:4px;color:#2372B9;font-size:11px;font-weight:700;white-space:nowrap;">
+									{claim.status === 'pending' ? 'Review' : 'View'}
+									<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+								</span>
 							</td>
 						</tr>
 					{/each}

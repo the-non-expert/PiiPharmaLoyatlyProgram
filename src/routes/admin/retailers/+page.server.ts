@@ -1,21 +1,8 @@
-import { dev } from '$app/environment';
 import type { PageServerLoad } from './$types';
 import { getServiceClient } from '$lib/server/supabase';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const search = url.searchParams.get('q') ?? '';
-
-	if (dev) {
-		const { MOCK_RETAILERS } = await import('$lib/server/dev-mock');
-		let retailers = MOCK_RETAILERS;
-		if (search) {
-			const q = search.toLowerCase();
-			retailers = retailers.filter(
-				(r) => r.name.toLowerCase().includes(q) || r.mobile.includes(q),
-			);
-		}
-		return { retailers, search };
-	}
 
 	const db = getServiceClient();
 

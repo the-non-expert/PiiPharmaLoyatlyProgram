@@ -1,26 +1,8 @@
-import { dev } from '$app/environment';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { getServiceClient } from '$lib/server/supabase';
 
 export const load: PageServerLoad = async () => {
-	if (dev) {
-		const { MOCK_CLAIMS, MOCK_PAYOUT_HISTORY } = await import('$lib/server/dev-mock');
-		const rows = MOCK_CLAIMS.filter((c) => c.status === 'approved').map((c) => ({
-			id:              c.id,
-			created_at:      c.created_at,
-			retailer_name:   c.retailer_name,
-			upi_id:          c.retailer.upi_id,
-			product_name:    c.product_name,
-			cashback_amount: c.product.cashback_amount,
-		}));
-		return {
-			rows,
-			total:   rows.reduce((s, r) => s + r.cashback_amount, 0),
-			history: MOCK_PAYOUT_HISTORY,
-		};
-	}
-
 	const db = getServiceClient();
 
 	const { data: claims } = await db
@@ -45,7 +27,6 @@ export const load: PageServerLoad = async () => {
 
 	const total = rows.reduce((sum, r) => sum + r.cashback_amount, 0);
 
-	// Payout history — from payout_exports table if it exists, else empty
 	let historyData = null;
 	try {
 		const { data } = await db

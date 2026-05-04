@@ -1,9 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
-import { dev } from '$app/environment';
-import { DEMO_OTP } from '$env/static/private';
 import { getServiceClient } from '$lib/server/supabase';
-
-const isDemo = dev || DEMO_OTP === 'true';
 
 const RETAILER_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const ADMIN_TTL_MS    = 8 * 60 * 60 * 1000;        // 8 hours
@@ -17,12 +13,6 @@ const COOKIE_OPTS = {
 
 export async function createRetailerSession(retailerId: string, cookies: Cookies) {
 	const expiresAt = new Date(Date.now() + RETAILER_TTL_MS);
-
-	if (isDemo) {
-		const sessionId = `dev-session-${retailerId}`;
-		cookies.set('retailer_session', sessionId, { ...COOKIE_OPTS, secure: !dev, expires: expiresAt });
-		return sessionId;
-	}
 
 	const db = getServiceClient();
 
@@ -40,12 +30,6 @@ export async function createRetailerSession(retailerId: string, cookies: Cookies
 
 export async function createAdminSession(adminId: string, cookies: Cookies) {
 	const expiresAt = new Date(Date.now() + ADMIN_TTL_MS);
-
-	if (isDemo) {
-		const sessionId = `dev-admin-session-${adminId}`;
-		cookies.set('admin_session', sessionId, { ...COOKIE_OPTS, secure: !dev, expires: expiresAt });
-		return sessionId;
-	}
 
 	const db = getServiceClient();
 
