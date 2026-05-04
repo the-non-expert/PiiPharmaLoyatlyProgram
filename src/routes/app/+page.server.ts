@@ -12,33 +12,27 @@ export const load: PageServerLoad = async ({ locals }) => {
     .from('retailers').select('name').eq('id', session.retailer_id).single();
   if (!retailer?.name) redirect(303, '/app/register');
 
-  const { data: products } = await supabase
-    .from('products').select('*').eq('active', true).order('name');
+  // All three queries are independent — run in parallel, streamed to client.
+  const products = (async () => {
+    const [{ data: products }, { data: counts }, { data: activeClaims }] = await Promise.all([
+      supabase.from('products').select('*').eq('active', true).order('name'),
+      supabase.from('coupon_submissions').select('product_id').eq('retailer_id', session.retailer_id).is('claim_id', null),
+      supabase.from('claims').select('product_id').eq('retailer_id', session.retailer_id).in('status', ['pending', 'approved']),
+    ]);
 
-  const { data: counts } = await supabase
-    .from('coupon_submissions')
-    .select('product_id')
-    .eq('retailer_id', session.retailer_id)
-    .is('claim_id', null);
+    const countByProduct = (counts ?? []).reduce<Record<string, number>>((acc, row) => {
+      acc[row.product_id] = (acc[row.product_id] ?? 0) + 1;
+      return acc;
+    }, {});
 
-  const { data: activeClaims } = await supabase
-    .from('claims')
-    .select('product_id')
-    .eq('retailer_id', session.retailer_id)
-    .in('status', ['pending', 'approved']);
+    const activeClaimProducts = new Set((activeClaims ?? []).map(c => c.product_id));
 
-  const countByProduct = (counts ?? []).reduce<Record<string, number>>((acc, row) => {
-    acc[row.product_id] = (acc[row.product_id] ?? 0) + 1;
-    return acc;
-  }, {});
+    return (products ?? []).map(p => ({
+      ...p,
+      submitted_count: countByProduct[p.id] ?? 0,
+      has_active_claim: activeClaimProducts.has(p.id)
+    }));
+  })();
 
-  const activeClaimProducts = new Set((activeClaims ?? []).map(c => c.product_id));
-
-  const enriched = (products ?? []).map(p => ({
-    ...p,
-    submitted_count: countByProduct[p.id] ?? 0,
-    has_active_claim: activeClaimProducts.has(p.id)
-  }));
-
-  return { products: enriched };
+  return { products };
 };
