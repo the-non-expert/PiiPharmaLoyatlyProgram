@@ -12,7 +12,7 @@
   }
 
   const statusMap: Record<string, { bg: string; color: string; dot: string; label: string }> = {
-    pending:  { bg: '#fef3cd', color: '#92640a', dot: '#F59E0B', label: 'Pending' },
+    pending:  { bg: '#fef3cd', color: '#92640a', dot: '#F59E0B', label: 'Claim Pending' },
     approved: { bg: '#f0f9e6', color: '#3d6e10', dot: '#93CB52', label: 'Approved' },
     rejected: { bg: '#fde8e8', color: '#9b2626', dot: '#E53E3E', label: 'Rejected' },
     paid:     { bg: '#e8f1fb', color: '#14407a', dot: '#2372B9', label: 'Paid' },
@@ -92,12 +92,13 @@
                     </div>
                   </div>
                   {#if done}
+                    {@const s = statusMap[product.claim_status ?? 'pending']}
                     <span
                       class="inline-flex items-center gap-1 px-[10px] py-1 rounded-full text-[12px] font-bold shrink-0"
-                      style="background: #f0f9e6; color: #3d6e10"
+                      style="background: {s.bg}; color: {s.color}"
                     >
-                      <span class="w-1.5 h-1.5 rounded-full bg-[#93CB52]"></span>
-                      Approved
+                      <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: {s.dot}"></span>
+                      {s.label}
                     </span>
                   {/if}
                 </div>

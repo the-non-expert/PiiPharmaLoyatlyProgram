@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     const [{ data: products }, { data: counts }, { data: activeClaims }] = await Promise.all([
       supabase.from('products').select('*').eq('active', true).order('name'),
       supabase.from('coupon_submissions').select('product_id').eq('retailer_id', session.retailer_id).is('claim_id', null),
-      supabase.from('claims').select('product_id').eq('retailer_id', session.retailer_id).in('status', ['pending', 'approved']),
+      supabase.from('claims').select('product_id, status').eq('retailer_id', session.retailer_id).in('status', ['pending', 'approved']),
     ]);
 
     const countByProduct = (counts ?? []).reduce<Record<string, number>>((acc, row) => {
@@ -25,12 +25,13 @@ export const load: PageServerLoad = async ({ locals }) => {
       return acc;
     }, {});
 
-    const activeClaimProducts = new Set((activeClaims ?? []).map(c => c.product_id));
+    const claimStatusByProduct = new Map((activeClaims ?? []).map(c => [c.product_id, c.status]));
 
     return (products ?? []).map(p => ({
       ...p,
       submitted_count: countByProduct[p.id] ?? 0,
-      has_active_claim: activeClaimProducts.has(p.id)
+      has_active_claim: claimStatusByProduct.has(p.id),
+      claim_status: claimStatusByProduct.get(p.id) ?? null
     }));
   })();
 

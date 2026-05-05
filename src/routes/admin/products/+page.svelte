@@ -112,15 +112,30 @@
 			<div style="background:#fff;border-radius:10px;border:{editing ? '2px solid #2372B9' : '1px solid #EAEAEA'};padding:18px 20px;box-shadow:{editing ? '0 0 0 3px #e8f1fb' : '0 1px 4px rgba(0,0,0,0.04)'};">
 				<!-- Card header -->
 				<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
-					<div style="font-size:14px;font-weight:700;color:#474545;line-height:1.3;margin-right:8px;">{p.name}</div>
+					<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;margin-right:8px;">
+						<div style="font-size:14px;font-weight:700;color:{p.active ? '#474545' : '#999'};line-height:1.3;">{p.name}</div>
+						{#if !p.active}
+							<span style="font-size:10px;font-weight:700;color:#686868;background:#F4F6F8;border:1px solid #EAEAEA;padding:2px 7px;border-radius:99px;white-space:nowrap;flex-shrink:0;">Inactive</span>
+						{/if}
+					</div>
 					{#if editing}
 						<span style="font-size:11px;font-weight:700;color:#2372B9;background:#e8f1fb;padding:3px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;">Editing</span>
 					{:else}
-						<button
-							type="button"
-							onclick={() => startEdit(p)}
-							style="background:#fff;color:#474545;border:1.5px solid #EAEAEA;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;"
-						>Edit</button>
+						<div style="display:flex;gap:6px;flex-shrink:0;">
+							<form method="POST" action="?/toggleActive" use:enhance>
+								<input type="hidden" name="id" value={p.id} />
+								<button
+									type="submit"
+									title="{p.active ? 'Deactivate product' : 'Activate product'}"
+									style="background:{p.active ? '#fff' : '#f0f9e6'};color:{p.active ? '#686868' : '#3d6e10'};border:1.5px solid {p.active ? '#EAEAEA' : '#93CB52'};border-radius:7px;padding:5px 9px;font-size:11px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;white-space:nowrap;"
+								>{p.active ? 'Deactivate' : 'Activate'}</button>
+							</form>
+							<button
+								type="button"
+								onclick={() => startEdit(p)}
+								style="background:#fff;color:#474545;border:1.5px solid #EAEAEA;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;white-space:nowrap;"
+							>Edit</button>
+						</div>
 					{/if}
 				</div>
 
