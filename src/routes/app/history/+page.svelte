@@ -87,7 +87,11 @@
                   class="text-[16px] font-bold"
                   style="color: {claim.status === 'approved' || claim.status === 'paid' ? '#93CB52' : '#474545'}"
                 >
-                  {claim.status === 'approved' || claim.status === 'paid' ? '✓ Approved' : ''}
+                  {#if claim.status === 'approved' || claim.status === 'paid'}
+                    ✓ ₹{claim.cashback_amount} cashback
+                  {:else if claim.status === 'pending'}
+                    <span class="text-[13px] font-semibold text-[#92640a]">Under review</span>
+                  {/if}
                 </span>
                 {#if claim.status === 'rejected' && claim.rejection_reason}
                   <button

@@ -25,6 +25,9 @@ vite.config.ts.timestamp-*
 # Claude agent sessions
 .omc/
 
+# Git worktrees
+.worktrees/
+
 # StoryGraph
 .storygraph.db
 .storygraph.db-shm
