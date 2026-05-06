@@ -240,35 +240,31 @@
 			</div>
 		</div>
 
-		<!-- Image + side nav -->
-		<div style="display:flex;align-items:center;gap:16px;width:100%;max-width:780px;" onclick={(e) => e.stopPropagation()}>
-			<!-- Prev -->
-			<button
-				type="button"
-				onclick={prevPhoto}
-				disabled={lightboxCount <= 1}
-				style="flex-shrink:0;background:rgba(255,255,255,0.12);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:{lightboxCount > 1 ? 'pointer' : 'default'};color:#fff;opacity:{lightboxCount > 1 ? 1 : 0.2};"
-				aria-label="Previous photo"
-			>
-				<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-			</button>
-
+		<!-- Image + overlaid nav buttons -->
+		<div style="position:relative;width:100%;max-width:700px;" onclick={(e) => e.stopPropagation()}>
 			<img
 				src={lightboxUrl}
 				alt="Coupon {lightboxIndex + 1}"
-				style="flex:1;max-width:700px;max-height:78vh;border-radius:10px;object-fit:contain;box-shadow:0 8px 48px rgba(0,0,0,0.5);"
+				style="width:100%;max-height:75vh;border-radius:10px;object-fit:contain;box-shadow:0 8px 48px rgba(0,0,0,0.5);display:block;"
 			/>
-
-			<!-- Next -->
-			<button
-				type="button"
-				onclick={nextPhoto}
-				disabled={lightboxCount <= 1}
-				style="flex-shrink:0;background:rgba(255,255,255,0.12);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:{lightboxCount > 1 ? 'pointer' : 'default'};color:#fff;opacity:{lightboxCount > 1 ? 1 : 0.2};"
-				aria-label="Next photo"
-			>
-				<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-			</button>
+			{#if lightboxCount > 1}
+				<button
+					type="button"
+					onclick={prevPhoto}
+					style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.45);border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;backdrop-filter:blur(4px);"
+					aria-label="Previous photo"
+				>
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+				</button>
+				<button
+					type="button"
+					onclick={nextPhoto}
+					style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.45);border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;backdrop-filter:blur(4px);"
+					aria-label="Next photo"
+				>
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+				</button>
+			{/if}
 		</div>
 
 		<p style="margin-top:14px;font-size:11px;color:rgba(255,255,255,0.3);">← → to navigate · Esc to close · click outside to close</p>
