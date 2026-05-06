@@ -127,12 +127,12 @@
 						<path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
 					</svg>
 				</button>
-				<div class="flex items-center gap-2">
+				<a href="/admin" class="flex items-center gap-2 no-underline">
 					<div class="flex items-center justify-center w-6 h-6 rounded-md flex-shrink-0" style="background:#2372B9;">
 						<span style="font-size:9px;font-weight:900;color:#fff;">Pii</span>
 					</div>
 					<span style="font-size:13px;font-weight:700;color:#fff;">PiiPharma Admin</span>
-				</div>
+				</a>
 				{#if data.pendingCount > 0}
 					<a href="/admin/claims" class="ml-auto no-underline" style="background:rgba(245,158,11,0.18);color:#F59E0B;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700;">{data.pendingCount} pending</a>
 				{/if}
