@@ -6,6 +6,8 @@
 	let showRejectForm = $state(false);
 	let rejectReason = $state('');
 	let photoState = $state<Record<number, 'loading' | 'loaded' | 'error'>>({});
+	let lightboxUrl = $state<string | null>(null);
+	let lightboxSerial = $state<string>('');
 
 	function fmt(s: string) {
 		return new Date(s).toLocaleDateString('en-IN', {
@@ -70,14 +72,12 @@
 				<div class="photo-grid" style="display:grid;grid-template-columns:repeat({Math.min(data.coupons.length || 1, 5)},1fr);gap:10px;">
 					{#each data.coupons as coupon, i}
 						<div>
-							<a
-								href={coupon.photo_signed_url ?? '#'}
-								target="_blank"
-								rel="noopener"
-								style="display:block;aspect-ratio:3/4;border-radius:7px;border:1px solid #EAEAEA;overflow:hidden;position:relative;text-decoration:none;margin-bottom:6px;background:#f7f7f7;"
+							<button
+								type="button"
+								onclick={() => { if (coupon.photo_signed_url && photoState[i] === 'loaded') { lightboxUrl = coupon.photo_signed_url; lightboxSerial = coupon.serial; } }}
+								style="display:block;width:100%;aspect-ratio:3/4;border-radius:7px;border:1px solid #EAEAEA;overflow:hidden;position:relative;margin-bottom:6px;background:#f7f7f7;padding:0;cursor:{photoState[i] === 'loaded' ? 'zoom-in' : 'default'};"
 							>
 								{#if coupon.photo_signed_url}
-									<!-- Spinner shown while loading -->
 									{#if photoState[i] !== 'loaded' && photoState[i] !== 'error'}
 										<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:1;">
 											<div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:#2372B9;border-radius:50%;"></div>
@@ -92,7 +92,9 @@
 										style="width:100%;height:100%;object-fit:cover;display:block;opacity:{photoState[i] === 'loaded' ? 1 : 0};transition:opacity 0.25s;"
 									/>
 									{#if photoState[i] === 'loaded'}
-										<div style="position:absolute;bottom:4px;right:4px;background:rgba(35,114,185,0.85);border-radius:4px;padding:2px 6px;font-size:8px;color:#fff;font-weight:600;">View</div>
+										<div style="position:absolute;bottom:4px;right:4px;background:rgba(35,114,185,0.85);border-radius:4px;padding:2px 6px;font-size:8px;color:#fff;font-weight:600;">
+											<svg width="8" height="8" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:2px;"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>Expand
+										</div>
 									{/if}
 									{#if photoState[i] === 'error'}
 										<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
@@ -104,7 +106,7 @@
 										<span style="font-size:9px;color:#bbb;text-align:center;line-height:1.5;">No<br/>photo</span>
 									</div>
 								{/if}
-							</a>
+							</button>
 							<div style="font-size:8px;color:#686868;font-family:monospace;text-align:center;line-height:1.4;word-break:break-all;">{coupon.serial}</div>
 						</div>
 					{/each}
@@ -187,6 +189,53 @@
 		</div>
 	</div>
 </div>
+
+<!-- Lightbox overlay -->
+{#if lightboxUrl}
+	<div
+		role="dialog"
+		aria-modal="true"
+		aria-label="Coupon photo"
+		style="position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;"
+		onclick={() => lightboxUrl = null}
+		onkeydown={(e) => e.key === 'Escape' && (lightboxUrl = null)}
+		tabindex="-1"
+	>
+		<!-- Toolbar -->
+		<div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:700px;margin-bottom:12px;" onclick={(e) => e.stopPropagation()}>
+			<span style="font-size:11px;font-family:monospace;color:rgba(255,255,255,0.6);letter-spacing:0.05em;">{lightboxSerial}</span>
+			<div style="display:flex;gap:10px;align-items:center;">
+				<a
+					href={lightboxUrl}
+					target="_blank"
+					rel="noopener"
+					title="Open in new tab"
+					style="display:inline-flex;align-items:center;gap:5px;color:rgba(255,255,255,0.7);font-size:11px;font-weight:600;font-family:'Montserrat',sans-serif;text-decoration:none;"
+					onclick={(e) => e.stopPropagation()}
+				>
+					<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					Open in new tab
+				</a>
+				<button
+					type="button"
+					onclick={() => lightboxUrl = null}
+					style="background:rgba(255,255,255,0.12);border:none;border-radius:6px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;"
+					aria-label="Close"
+				>
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+				</button>
+			</div>
+		</div>
+		<!-- Image -->
+		<img
+			src={lightboxUrl}
+			alt="Coupon"
+			style="max-width:min(700px,100%);max-height:80vh;border-radius:10px;object-fit:contain;box-shadow:0 8px 48px rgba(0,0,0,0.5);"
+			onclick={(e) => e.stopPropagation()}
+		/>
+		<p style="margin-top:12px;font-size:11px;color:rgba(255,255,255,0.35);">Click outside to close · Esc to close</p>
+	</div>
+{/if}
 
 <style>
 	@keyframes spin {
