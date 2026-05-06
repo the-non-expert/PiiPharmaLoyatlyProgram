@@ -27,12 +27,12 @@
 		{/each}
 	</div>
 
-	<!-- By Product table -->
-	<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+	<!-- By Product — desktop table -->
+	<div class="desktop-only" style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
 		<div style="padding:13px 18px;border-bottom:1px solid #EAEAEA;">
 			<h2 style="font-size:14px;font-weight:700;color:#474545;margin:0;">By Product</h2>
 		</div>
-		<div class="tbl-scroll"><table style="width:100%;border-collapse:collapse;">
+		<table style="width:100%;border-collapse:collapse;">
 			<thead>
 				<tr>
 					{#each ['Product','Coupons Required','Pending Claims','Approved Claims','Total Coupons Submitted'] as col}
@@ -53,15 +53,47 @@
 					</tr>
 				{/each}
 			</tbody>
-		</table></div>
+		</table>
+	</div>
+
+	<!-- By Product — mobile cards -->
+	<div class="mobile-only" style="display:flex;flex-direction:column;gap:0;">
+		<div style="font-size:13px;font-weight:700;color:#474545;margin-bottom:10px;">By Product</div>
+		{#each data.byProduct as p}
+			<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+				<div style="font-size:14px;font-weight:700;color:#474545;margin-bottom:10px;">{p.name}</div>
+				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+					<div>
+						<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Pending</div>
+						<div style="font-size:18px;font-weight:700;color:{p.pending_claims > 10 ? '#F59E0B' : '#474545'};">{p.pending_claims}</div>
+					</div>
+					<div>
+						<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Approved</div>
+						<div style="font-size:18px;font-weight:700;color:#93CB52;">{p.approved_claims}</div>
+					</div>
+					<div>
+						<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Coupons Req.</div>
+						<div style="font-size:14px;font-weight:600;color:#474545;">{p.coupons_required}</div>
+					</div>
+					<div>
+						<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Total Submitted</div>
+						<div style="font-size:14px;font-weight:600;color:#474545;">{p.total_submissions.toLocaleString('en-IN')}</div>
+					</div>
+				</div>
+			</div>
+		{/each}
 	</div>
 </div>
 
 <style>
 	@media (max-width: 768px) {
 		.pg { padding: 16px 14px !important; }
-		.stat-cards { flex-wrap: wrap !important; gap: 10px !important; }
-		.stat-card { flex: 1 1 calc(50% - 5px) !important; min-width: calc(50% - 5px) !important; padding: 14px 12px !important; }
-		.tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+		.stat-cards { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+		.stat-card { flex: none !important; padding: 14px 12px !important; }
+		.desktop-only { display: none !important; }
+		.mobile-only { display: flex !important; }
+	}
+	@media (min-width: 769px) {
+		.mobile-only { display: none; }
 	}
 </style>

@@ -138,7 +138,7 @@
 				{/if}
 			</header>
 
-			<main class="flex-1 overflow-auto">
+			<main class="flex-1 overflow-auto" style="overflow-x:hidden;">
 				{@render children()}
 			</main>
 		</div>
