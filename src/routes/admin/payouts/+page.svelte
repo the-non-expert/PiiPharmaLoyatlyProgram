@@ -36,7 +36,7 @@
 	}
 </script>
 
-<div style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
+<div class="pg" style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
 	<h1 style="font-size:22px;font-weight:700;color:#474545;margin:0 0 18px;">Payouts</h1>
 
 	{#if (form as any)?.error}
@@ -50,7 +50,7 @@
 
 	{#if data.rows.length > 0}
 		<!-- Summary bar -->
-		<div style="background:#e8f1fb;border:1.5px solid #2372B9;border-radius:10px;padding:13px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;">
+		<div class="summary-bar" style="background:#e8f1fb;border:1.5px solid #2372B9;border-radius:10px;padding:13px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
 			<span style="font-size:13px;font-weight:600;color:#1a5a99;">
 				{selectedCount} approved claim{selectedCount === 1 ? '' : 's'} selected for payout — Total:&ensp;<strong style="font-size:16px;">{inr(selectedTotal)}</strong>
 			</span>
@@ -64,6 +64,7 @@
 		<div style="margin-bottom:20px;">
 			<a
 				href="/admin/payouts/export.csv"
+				class="export-btn"
 				style="display:inline-flex;align-items:center;gap:8px;background:#2372B9;color:#fff;border:none;border-radius:8px;padding:12px 22px;font-size:14px;font-weight:700;font-family:'Montserrat',sans-serif;text-decoration:none;box-shadow:0 4px 16px rgba(35,114,185,0.28);cursor:pointer;"
 			>
 				<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M7 10l5 5 5-5M12 15V3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -74,7 +75,7 @@
 
 		<!-- Payout table -->
 		<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);margin-bottom:28px;">
-			<table style="width:100%;border-collapse:collapse;">
+			<div class="tbl-scroll"><table style="width:100%;border-collapse:collapse;">
 				<thead>
 					<tr>
 						<th style="padding:9px 14px;width:40px;border-bottom:2px solid #EAEAEA;background:#fff;">
@@ -110,7 +111,7 @@
 						</tr>
 					{/each}
 				</tbody>
-			</table>
+			</table></div>
 			<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-top:1px solid #EAEAEA;background:#fff;">
 				<span style="font-size:12px;color:#686868;">Showing 1–{data.rows.length} of {data.rows.length} results</span>
 			</div>
@@ -129,7 +130,7 @@
 				<p style="font-size:13px;color:#686868;margin:0;">No payout history yet.</p>
 			</div>
 		{:else}
-			<table style="width:100%;border-collapse:collapse;">
+			<div class="tbl-scroll"><table style="width:100%;border-collapse:collapse;">
 				<thead>
 					<tr>
 						{#each ['Export Date','Claims in Batch','Total Amount','Download'] as col}
@@ -155,7 +156,15 @@
 						</tr>
 					{/each}
 				</tbody>
-			</table>
+			</table></div>
 		{/if}
 	</div>
 </div>
+
+<style>
+	@media (max-width: 768px) {
+		.pg { padding: 16px 14px !important; }
+		.export-btn { width: 100% !important; justify-content: center !important; }
+		.tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+	}
+</style>

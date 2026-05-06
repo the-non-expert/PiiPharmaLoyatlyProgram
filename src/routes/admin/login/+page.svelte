@@ -28,7 +28,7 @@
 				<span style="font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.5px;">Pii</span>
 			</div>
 			<div style="font-size:17px;font-weight:700;color:#474545;">PiiPharma Admin</div>
-			<div style="font-size:12px;color:#686868;margin-top:3px;">loyalty.piipharma.com/admin</div>
+			<div style="font-size:12px;color:#686868;margin-top:3px;">Retailer Loyalty Program</div>
 		</div>
 
 		<form method="POST" use:enhance style="display:flex;flex-direction:column;gap:18px;margin-bottom:24px;">

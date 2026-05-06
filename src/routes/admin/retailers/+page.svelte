@@ -16,13 +16,13 @@
 	}
 </script>
 
-<div style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
+<div class="pg" style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
 	<h1 style="font-size:22px;font-weight:700;color:#474545;margin:0 0 20px;">Retailers</h1>
 
 	<!-- Search -->
 	<div style="margin-bottom:16px;">
 		<form onsubmit={handleSearch}>
-			<div style="display:flex;align-items:center;border:1.5px solid #EAEAEA;border-radius:8px;background:#fff;overflow:hidden;width:340px;">
+			<div class="search-wrap" style="display:flex;align-items:center;border:1.5px solid #EAEAEA;border-radius:8px;background:#fff;overflow:hidden;width:340px;">
 				<div style="padding:0 12px;display:flex;align-items:center;flex-shrink:0;">
 					<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#686868" stroke-width="2"/><path d="M21 21l-4-4" stroke="#686868" stroke-width="2" stroke-linecap="round"/></svg>
 				</div>
@@ -43,8 +43,8 @@
 		</form>
 	</div>
 
-	<!-- Table -->
-	<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+	<!-- Desktop table -->
+	<div class="desktop-only" style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
 		<table style="width:100%;border-collapse:collapse;">
 			<thead>
 				<tr>
@@ -76,11 +76,56 @@
 				{/if}
 			</tbody>
 		</table>
-
 		{#if data.retailers.length > 0}
 			<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-top:1px solid #EAEAEA;background:#fff;">
 				<span style="font-size:12px;color:#686868;">Showing 1–{data.retailers.length} of {data.retailers.length} retailers</span>
 			</div>
 		{/if}
 	</div>
+
+	<!-- Mobile card list -->
+	<div class="mobile-only">
+		{#if data.retailers.length === 0}
+			<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:40px 20px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+				<p style="font-size:13px;color:#686868;margin:0;">{data.search ? 'No retailers match your search.' : 'No retailers registered yet.'}</p>
+			</div>
+		{:else}
+			<div style="display:flex;flex-direction:column;gap:8px;">
+				{#each data.retailers as r}
+					<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+						<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+							<div>
+								<div style="font-size:14px;font-weight:700;color:#474545;">{r.name}</div>
+								<div style="font-size:12px;font-family:monospace;color:#686868;margin-top:2px;">{r.mobile}</div>
+							</div>
+							<div style="text-align:right;">
+								<div style="font-size:15px;font-weight:700;color:#474545;">₹{r.cashback_earned.toLocaleString('en-IN')}</div>
+								<div style="font-size:11px;color:#686868;margin-top:2px;">{r.total_claims} claim{r.total_claims === 1 ? '' : 's'}</div>
+							</div>
+						</div>
+						<div style="display:flex;gap:12px;font-size:12px;color:#686868;border-top:1px solid #EAEAEA;padding-top:8px;flex-wrap:wrap;">
+							<span>{r.city}, {r.state}</span>
+							<span style="font-family:monospace;">{r.upi_id}</span>
+							<span>Since {fmt(r.registered_at)}</span>
+						</div>
+					</div>
+				{/each}
+			</div>
+			<div style="padding:10px 4px;">
+				<span style="font-size:12px;color:#686868;">{data.retailers.length} retailers</span>
+			</div>
+		{/if}
+	</div>
 </div>
+
+<style>
+	@media (max-width: 768px) {
+		.pg { padding: 16px 14px !important; }
+		.search-wrap { width: 100% !important; }
+		.desktop-only { display: none !important; }
+		.mobile-only { display: block !important; }
+	}
+	@media (min-width: 769px) {
+		.mobile-only { display: none !important; }
+	}
+</style>

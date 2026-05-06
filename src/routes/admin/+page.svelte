@@ -7,11 +7,11 @@
 	}
 </script>
 
-<div style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
+<div class="pg" style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
 	<h1 style="font-size:22px;font-weight:700;color:#474545;margin:0 0 24px;">Dashboard</h1>
 
 	<!-- Stat cards -->
-	<div style="display:flex;gap:16px;margin-bottom:28px;">
+	<div class="stat-cards" style="display:flex;gap:16px;margin-bottom:28px;">
 		{#each [
 			{ label:'Pending Claims',      value: String(data.stats.pendingCount),              sub:'Awaiting review',          accent:'#F59E0B' },
 			{ label:'Approved This Cycle', value: String(data.stats.approvedCount),             sub:'Since last export',        accent:'#93CB52' },
@@ -19,7 +19,7 @@
 			{ label:'Coupon Submissions',  value: data.stats.totalSubmissions.toLocaleString('en-IN'), sub:'All time total',   accent:'#24AEB1' },
 			{ label:'Cashback Queued',     value: inr(data.stats.cashbackQueued),               sub:'Ready for payout',        accent:'#E53E3E' },
 		] as card}
-			<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:18px 20px;flex:1;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+			<div class="stat-card" style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:18px 20px;flex:1;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
 				<div style="font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">{card.label}</div>
 				<div style="font-size:26px;font-weight:700;color:{card.accent};line-height:1;margin-bottom:6px;">{card.value}</div>
 				<div style="font-size:11px;color:#686868;">{card.sub}</div>
@@ -27,8 +27,8 @@
 		{/each}
 	</div>
 
-	<!-- By Product table -->
-	<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+	<!-- By Product — desktop table -->
+	<div class="desktop-only" style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
 		<div style="padding:13px 18px;border-bottom:1px solid #EAEAEA;">
 			<h2 style="font-size:14px;font-weight:700;color:#474545;margin:0;">By Product</h2>
 		</div>
@@ -55,4 +55,45 @@
 			</tbody>
 		</table>
 	</div>
+
+	<!-- By Product — mobile cards -->
+	<div class="mobile-only" style="display:flex;flex-direction:column;gap:0;">
+		<div style="font-size:13px;font-weight:700;color:#474545;margin-bottom:10px;">By Product</div>
+		{#each data.byProduct as p}
+			<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+				<div style="font-size:14px;font-weight:700;color:#474545;margin-bottom:10px;">{p.name}</div>
+				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+					<div>
+						<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Pending</div>
+						<div style="font-size:18px;font-weight:700;color:{p.pending_claims > 10 ? '#F59E0B' : '#474545'};">{p.pending_claims}</div>
+					</div>
+					<div>
+						<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Approved</div>
+						<div style="font-size:18px;font-weight:700;color:#93CB52;">{p.approved_claims}</div>
+					</div>
+					<div>
+						<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Coupons Req.</div>
+						<div style="font-size:14px;font-weight:600;color:#474545;">{p.coupons_required}</div>
+					</div>
+					<div>
+						<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Total Submitted</div>
+						<div style="font-size:14px;font-weight:600;color:#474545;">{p.total_submissions.toLocaleString('en-IN')}</div>
+					</div>
+				</div>
+			</div>
+		{/each}
+	</div>
 </div>
+
+<style>
+	@media (max-width: 768px) {
+		.pg { padding: 16px 14px !important; }
+		.stat-cards { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+		.stat-card { flex: none !important; padding: 14px 12px !important; }
+		.desktop-only { display: none !important; }
+		.mobile-only { display: flex !important; }
+	}
+	@media (min-width: 769px) {
+		.mobile-only { display: none !important; }
+	}
+</style>
