@@ -4,7 +4,6 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	// Checkbox state — initialize outside $state to avoid reactive-capture warning
 	const initialIds = data.rows.map((r) => r.id);
 	let selected = $state(new Set<string>(initialIds));
 	const allSelected = $derived(selected.size === data.rows.length && data.rows.length > 0);
@@ -73,9 +72,9 @@
 			<div style="font-size:12px;color:#686868;margin-top:8px;">After uploading to Cashfree, claims will be marked as Paid and removed from this list.</div>
 		</div>
 
-		<!-- Payout table -->
-		<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);margin-bottom:28px;">
-			<div class="tbl-scroll"><table style="width:100%;border-collapse:collapse;">
+		<!-- Desktop: payout table -->
+		<div class="desktop-only" style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);margin-bottom:28px;">
+			<table style="width:100%;border-collapse:collapse;">
 				<thead>
 					<tr>
 						<th style="padding:9px 14px;width:40px;border-bottom:2px solid #EAEAEA;background:#fff;">
@@ -111,9 +110,52 @@
 						</tr>
 					{/each}
 				</tbody>
-			</table></div>
+			</table>
 			<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-top:1px solid #EAEAEA;background:#fff;">
 				<span style="font-size:12px;color:#686868;">Showing 1–{data.rows.length} of {data.rows.length} results</span>
+			</div>
+		</div>
+
+		<!-- Mobile: payout cards -->
+		<div class="mobile-only" style="margin-bottom:28px;">
+			<!-- Select all toggle -->
+			<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+				<input
+					type="checkbox"
+					checked={allSelected}
+					onchange={toggleAll}
+					style="cursor:pointer;width:16px;height:16px;"
+				/>
+				<span style="font-size:13px;color:#474545;font-weight:600;">
+					{allSelected ? 'Deselect all' : 'Select all'}
+				</span>
+			</div>
+			<div style="display:flex;flex-direction:column;gap:8px;">
+				{#each data.rows as row}
+					<div style="background:#fff;border-radius:10px;border:1.5px solid {selected.has(row.id) ? '#2372B9' : '#EAEAEA'};padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);display:flex;align-items:flex-start;gap:12px;">
+						<input
+							type="checkbox"
+							checked={selected.has(row.id)}
+							onchange={() => toggleRow(row.id)}
+							style="cursor:pointer;width:16px;height:16px;flex-shrink:0;margin-top:2px;"
+						/>
+						<div style="flex:1;min-width:0;">
+							<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+								<div style="font-size:14px;font-weight:700;color:#474545;">{row.retailer_name}</div>
+								<div style="font-size:15px;font-weight:700;color:#474545;flex-shrink:0;margin-left:8px;">{inr(row.cashback_amount)}</div>
+							</div>
+							<div style="font-size:12px;color:#686868;margin-bottom:4px;">{row.product_name}</div>
+							<div style="display:flex;gap:10px;font-size:11px;color:#686868;flex-wrap:wrap;border-top:1px solid #EAEAEA;padding-top:8px;margin-top:4px;">
+								<span style="font-family:monospace;">{row.upi_id}</span>
+								<span style="font-family:monospace;color:#2372B9;font-weight:700;">{row.id.toUpperCase().replace('CLAIM-','CLM-')}</span>
+								<span>{fmt(row.created_at)}</span>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+			<div style="padding:10px 4px;">
+				<span style="font-size:12px;color:#686868;">{data.rows.length} claim{data.rows.length === 1 ? '' : 's'}</span>
 			</div>
 		</div>
 	{:else}
@@ -124,13 +166,15 @@
 
 	<!-- Payout History -->
 	<h2 style="font-size:15px;font-weight:700;color:#474545;margin:0 0 14px;">Payout History</h2>
-	<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-		{#if data.history.length === 0}
-			<div style="padding:36px;text-align:center;">
-				<p style="font-size:13px;color:#686868;margin:0;">No payout history yet.</p>
-			</div>
-		{:else}
-			<div class="tbl-scroll"><table style="width:100%;border-collapse:collapse;">
+
+	{#if data.history.length === 0}
+		<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:36px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+			<p style="font-size:13px;color:#686868;margin:0;">No payout history yet.</p>
+		</div>
+	{:else}
+		<!-- Desktop: history table -->
+		<div class="desktop-only" style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+			<table style="width:100%;border-collapse:collapse;">
 				<thead>
 					<tr>
 						{#each ['Export Date','Claims in Batch','Total Amount','Download'] as col}
@@ -156,15 +200,45 @@
 						</tr>
 					{/each}
 				</tbody>
-			</table></div>
-		{/if}
-	</div>
+			</table>
+		</div>
+
+		<!-- Mobile: history cards -->
+		<div class="mobile-only">
+			<div style="display:flex;flex-direction:column;gap:8px;">
+				{#each data.history as h}
+					<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+						<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+							<div>
+								<div style="font-size:14px;font-weight:700;color:#474545;">{fmt(h.exported_at)}</div>
+								<div style="font-size:12px;color:#686868;margin-top:2px;">{h.claims_count} claim{h.claims_count === 1 ? '' : 's'}</div>
+							</div>
+							<div style="font-size:15px;font-weight:700;color:#474545;">{inr(h.total_amount)}</div>
+						</div>
+						<div style="border-top:1px solid #EAEAEA;padding-top:8px;">
+							<a
+								href="/admin/payouts/export.csv?file={encodeURIComponent(h.filename)}"
+								style="display:inline-flex;align-items:center;gap:5px;color:#2372B9;font-weight:600;font-size:12px;font-family:'Montserrat',sans-serif;text-decoration:none;"
+							>
+								<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="#2372B9" stroke-width="2" stroke-linecap="round"/><path d="M7 10l5 5 5-5M12 15V3" stroke="#2372B9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+								Download CSV
+							</a>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
 </div>
 
 <style>
 	@media (max-width: 768px) {
 		.pg { padding: 16px 14px !important; }
 		.export-btn { width: 100% !important; justify-content: center !important; }
-		.tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+		.desktop-only { display: none !important; }
+		.mobile-only { display: block !important; }
+	}
+	@media (min-width: 769px) {
+		.mobile-only { display: none !important; }
 	}
 </style>
