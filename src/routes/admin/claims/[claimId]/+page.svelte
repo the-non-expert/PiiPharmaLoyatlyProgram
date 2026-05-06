@@ -6,8 +6,15 @@
 	let showRejectForm = $state(false);
 	let rejectReason = $state('');
 	let photoState = $state<Record<number, 'loading' | 'loaded' | 'error'>>({});
-	let lightboxUrl = $state<string | null>(null);
-	let lightboxSerial = $state<string>('');
+	let lightboxIndex = $state<number | null>(null);
+	const lightboxUrl    = $derived(lightboxIndex !== null ? (data.coupons[lightboxIndex]?.photo_signed_url ?? null) : null);
+	const lightboxSerial = $derived(lightboxIndex !== null ? (data.coupons[lightboxIndex]?.serial ?? '') : '');
+	const lightboxCount  = $derived(data.coupons.length);
+
+	function openLightbox(i: number) { lightboxIndex = i; }
+	function closeLightbox() { lightboxIndex = null; }
+	function prevPhoto() { if (lightboxIndex !== null) lightboxIndex = (lightboxIndex - 1 + lightboxCount) % lightboxCount; }
+	function nextPhoto() { if (lightboxIndex !== null) lightboxIndex = (lightboxIndex + 1) % lightboxCount; }
 
 	function fmt(s: string) {
 		return new Date(s).toLocaleDateString('en-IN', {
@@ -74,7 +81,7 @@
 						<div>
 							<button
 								type="button"
-								onclick={() => { if (coupon.photo_signed_url && photoState[i] === 'loaded') { lightboxUrl = coupon.photo_signed_url; lightboxSerial = coupon.serial; } }}
+								onclick={() => { if (photoState[i] === 'loaded') openLightbox(i); }}
 								style="display:block;width:100%;aspect-ratio:3/4;border-radius:7px;border:1px solid #EAEAEA;overflow:hidden;position:relative;margin-bottom:6px;background:#f7f7f7;padding:0;cursor:{photoState[i] === 'loaded' ? 'zoom-in' : 'default'};"
 							>
 								{#if coupon.photo_signed_url}
@@ -191,26 +198,32 @@
 </div>
 
 <!-- Lightbox overlay -->
-{#if lightboxUrl}
+{#if lightboxIndex !== null && lightboxUrl}
 	<div
 		role="dialog"
 		aria-modal="true"
 		aria-label="Coupon photo"
 		style="position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;"
-		onclick={() => lightboxUrl = null}
-		onkeydown={(e) => e.key === 'Escape' && (lightboxUrl = null)}
+		onclick={closeLightbox}
+		onkeydown={(e) => {
+			if (e.key === 'Escape') closeLightbox();
+			else if (e.key === 'ArrowLeft') prevPhoto();
+			else if (e.key === 'ArrowRight') nextPhoto();
+		}}
 		tabindex="-1"
 	>
 		<!-- Toolbar -->
 		<div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:700px;margin-bottom:12px;" onclick={(e) => e.stopPropagation()}>
-			<span style="font-size:11px;font-family:monospace;color:rgba(255,255,255,0.6);letter-spacing:0.05em;">{lightboxSerial}</span>
+			<div style="display:flex;align-items:center;gap:12px;">
+				<span style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.9);">{lightboxIndex + 1} / {lightboxCount}</span>
+				<span style="font-size:11px;font-family:monospace;color:rgba(255,255,255,0.5);letter-spacing:0.05em;">{lightboxSerial}</span>
+			</div>
 			<div style="display:flex;gap:10px;align-items:center;">
 				<a
 					href={lightboxUrl}
 					target="_blank"
 					rel="noopener"
-					title="Open in new tab"
-					style="display:inline-flex;align-items:center;gap:5px;color:rgba(255,255,255,0.7);font-size:11px;font-weight:600;font-family:'Montserrat',sans-serif;text-decoration:none;"
+					style="display:inline-flex;align-items:center;gap:5px;color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;font-family:'Montserrat',sans-serif;text-decoration:none;"
 					onclick={(e) => e.stopPropagation()}
 				>
 					<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -218,7 +231,7 @@
 				</a>
 				<button
 					type="button"
-					onclick={() => lightboxUrl = null}
+					onclick={closeLightbox}
 					style="background:rgba(255,255,255,0.12);border:none;border-radius:6px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;"
 					aria-label="Close"
 				>
@@ -226,14 +239,39 @@
 				</button>
 			</div>
 		</div>
-		<!-- Image -->
-		<img
-			src={lightboxUrl}
-			alt="Coupon"
-			style="max-width:min(700px,100%);max-height:80vh;border-radius:10px;object-fit:contain;box-shadow:0 8px 48px rgba(0,0,0,0.5);"
-			onclick={(e) => e.stopPropagation()}
-		/>
-		<p style="margin-top:12px;font-size:11px;color:rgba(255,255,255,0.35);">Click outside to close · Esc to close</p>
+
+		<!-- Image + side nav -->
+		<div style="display:flex;align-items:center;gap:16px;width:100%;max-width:780px;" onclick={(e) => e.stopPropagation()}>
+			<!-- Prev -->
+			<button
+				type="button"
+				onclick={prevPhoto}
+				disabled={lightboxCount <= 1}
+				style="flex-shrink:0;background:rgba(255,255,255,0.12);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:{lightboxCount > 1 ? 'pointer' : 'default'};color:#fff;opacity:{lightboxCount > 1 ? 1 : 0.2};"
+				aria-label="Previous photo"
+			>
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+			</button>
+
+			<img
+				src={lightboxUrl}
+				alt="Coupon {lightboxIndex + 1}"
+				style="flex:1;max-width:700px;max-height:78vh;border-radius:10px;object-fit:contain;box-shadow:0 8px 48px rgba(0,0,0,0.5);"
+			/>
+
+			<!-- Next -->
+			<button
+				type="button"
+				onclick={nextPhoto}
+				disabled={lightboxCount <= 1}
+				style="flex-shrink:0;background:rgba(255,255,255,0.12);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:{lightboxCount > 1 ? 'pointer' : 'default'};color:#fff;opacity:{lightboxCount > 1 ? 1 : 0.2};"
+				aria-label="Next photo"
+			>
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+			</button>
+		</div>
+
+		<p style="margin-top:14px;font-size:11px;color:rgba(255,255,255,0.3);">← → to navigate · Esc to close · click outside to close</p>
 	</div>
 {/if}
 
