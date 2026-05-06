@@ -13,9 +13,15 @@
 	const path = $derived(page.url.pathname as string);
 	const isLoginPage = $derived(path === '/admin/login');
 
+	let sidebarOpen = $state(false);
+
 	function active(id: string) {
 		if (id === 'dashboard') return path === '/admin';
 		return path.startsWith(`/admin/${id}`);
+	}
+
+	function closeSidebar() {
+		sidebarOpen = false;
 	}
 </script>
 
@@ -23,10 +29,23 @@
 	{@render children()}
 {:else}
 	<div class="flex min-h-screen" style="background:#F4F6F8; font-family:'Montserrat',sans-serif;">
+
+		<!-- Mobile backdrop -->
+		{#if sidebarOpen}
+			<div
+				class="fixed inset-0 bg-black/50 lg:hidden"
+				style="z-index:40;"
+				role="button"
+				tabindex="-1"
+				onclick={closeSidebar}
+				onkeydown={(e) => e.key === 'Escape' && closeSidebar()}
+			></div>
+		{/if}
+
 		<!-- Sidebar -->
 		<aside
-			class="fixed top-0 left-0 h-full flex flex-col"
-			style="width:220px; background:#141f2e; z-index:50;"
+			class="fixed top-0 left-0 h-full flex flex-col transition-transform duration-300"
+			style="width:220px; background:#141f2e; z-index:50; transform: {sidebarOpen ? 'translateX(0)' : 'translateX(-100%)'} "
 		>
 			<!-- Logo -->
 			<div class="flex items-center gap-[10px] px-[18px] py-[22px]" style="border-bottom:1px solid rgba(255,255,255,0.07);">
@@ -51,6 +70,7 @@
 					{@const on = active(item.id)}
 					<a
 						href={item.href}
+						onclick={closeSidebar}
 						class="flex items-center gap-[10px] px-3 rounded-[7px] no-underline"
 						style="padding-top:9px;padding-bottom:9px;background:{on ? '#2372B9' : 'transparent'};"
 					>
@@ -90,9 +110,45 @@
 			</div>
 		</aside>
 
-		<!-- Main -->
-		<main class="flex-1 min-h-screen overflow-auto" style="margin-left:220px;">
-			{@render children()}
-		</main>
+		<!-- Main content area -->
+		<div class="flex flex-col flex-1 min-h-screen lg:ml-[220px]">
+			<!-- Mobile top bar -->
+			<header
+				class="lg:hidden flex items-center gap-3 px-4 py-3 sticky top-0"
+				style="background:#141f2e; z-index:30;"
+			>
+				<button
+					type="button"
+					onclick={() => sidebarOpen = !sidebarOpen}
+					style="color:#fff;background:none;border:none;cursor:pointer;display:flex;padding:4px;"
+					aria-label="Toggle menu"
+				>
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+						<path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+					</svg>
+				</button>
+				<div class="flex items-center gap-2">
+					<div class="flex items-center justify-center w-6 h-6 rounded-md flex-shrink-0" style="background:#2372B9;">
+						<span style="font-size:9px;font-weight:900;color:#fff;">Pii</span>
+					</div>
+					<span style="font-size:13px;font-weight:700;color:#fff;">PiiPharma Admin</span>
+				</div>
+				{#if data.pendingCount > 0}
+					<span class="ml-auto" style="background:rgba(245,158,11,0.18);color:#F59E0B;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700;">{data.pendingCount} pending</span>
+				{/if}
+			</header>
+
+			<main class="flex-1 overflow-auto">
+				{@render children()}
+			</main>
+		</div>
 	</div>
 {/if}
+
+<style>
+	@media (min-width: 1024px) {
+		aside {
+			transform: translateX(0) !important;
+		}
+	}
+</style>
