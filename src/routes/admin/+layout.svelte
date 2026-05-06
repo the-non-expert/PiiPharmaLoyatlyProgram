@@ -48,7 +48,7 @@
 			style="width:220px; background:#141f2e; z-index:50; transform: {sidebarOpen ? 'translateX(0)' : 'translateX(-100%)'} "
 		>
 			<!-- Logo -->
-			<div class="flex items-center gap-[10px] px-[18px] py-[22px]" style="border-bottom:1px solid rgba(255,255,255,0.07);">
+			<a href="/admin" onclick={closeSidebar} class="flex items-center gap-[10px] px-[18px] py-[22px] no-underline" style="border-bottom:1px solid rgba(255,255,255,0.07);">
 				<div class="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0" style="background:#2372B9;">
 					<span style="font-size:12px;font-weight:900;color:#fff;letter-spacing:-0.5px;">Pii</span>
 				</div>
@@ -56,7 +56,7 @@
 					<div style="font-size:13px;font-weight:700;color:#fff;line-height:1.2;">PiiPharma</div>
 					<div style="font-size:10px;color:rgba(255,255,255,0.4);">Admin Portal</div>
 				</div>
-			</div>
+			</a>
 
 			<!-- Nav -->
 			<nav class="flex-1 px-2 py-[10px]" style="display:flex;flex-direction:column;gap:1px;">
@@ -134,7 +134,7 @@
 					<span style="font-size:13px;font-weight:700;color:#fff;">PiiPharma Admin</span>
 				</div>
 				{#if data.pendingCount > 0}
-					<span class="ml-auto" style="background:rgba(245,158,11,0.18);color:#F59E0B;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700;">{data.pendingCount} pending</span>
+					<a href="/admin/claims" class="ml-auto no-underline" style="background:rgba(245,158,11,0.18);color:#F59E0B;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700;">{data.pendingCount} pending</a>
 				{/if}
 			</header>
 
