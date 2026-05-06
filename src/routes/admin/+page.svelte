@@ -94,6 +94,6 @@
 		.mobile-only { display: flex !important; }
 	}
 	@media (min-width: 769px) {
-		.mobile-only { display: none; }
+		.mobile-only { display: none !important; }
 	}
 </style>
