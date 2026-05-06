@@ -37,7 +37,7 @@
 	}
 </script>
 
-<div style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
+<div class="pg" style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
 	<h1 style="font-size:22px;font-weight:700;color:#474545;margin:0 0 16px;">Claims</h1>
 
 	<!-- Tab bar -->
@@ -60,10 +60,11 @@
 	</div>
 
 	<!-- Filters -->
-	<div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+	<div class="filters" style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
 		<!-- Product filter -->
 		<select
 			onchange={(e) => { window.location.href = filterHref('product', (e.currentTarget as HTMLSelectElement).value); }}
+			class="filter-sel"
 			style="height:32px;border:1.5px solid #EAEAEA;border-radius:7px;padding:0 10px;font-family:'Montserrat',sans-serif;font-size:13px;color:#474545;background:#fff;cursor:pointer;width:180px;outline:none;"
 		>
 			<option value="">All Products</option>
@@ -76,6 +77,7 @@
 			<!-- Status filter -->
 			<select
 				onchange={(e) => { window.location.href = filterHref('status', (e.currentTarget as HTMLSelectElement).value); }}
+				class="filter-sel"
 				style="height:32px;border:1.5px solid #EAEAEA;border-radius:7px;padding:0 10px;font-family:'Montserrat',sans-serif;font-size:13px;color:#474545;background:#fff;cursor:pointer;width:150px;outline:none;"
 			>
 				<option value="">All Statuses</option>
@@ -89,6 +91,7 @@
 		<!-- Sort -->
 		<select
 			onchange={(e) => { window.location.href = filterHref('sort', (e.currentTarget as HTMLSelectElement).value); }}
+			class="filter-sel"
 			style="height:32px;border:1.5px solid #EAEAEA;border-radius:7px;padding:0 10px;font-family:'Montserrat',sans-serif;font-size:13px;color:#474545;background:#fff;cursor:pointer;width:160px;outline:none;"
 		>
 			<option value="newest" selected={data.sort !== 'oldest'}>Newest First</option>
@@ -101,7 +104,7 @@
 
 	<!-- Table -->
 	<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-		<table style="width:100%;border-collapse:collapse;">
+		<div class="tbl-scroll"><table style="width:100%;border-collapse:collapse;">
 			<thead>
 				<tr>
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Claim ID</th>
@@ -154,7 +157,7 @@
 					{/each}
 				{/if}
 			</tbody>
-		</table>
+		</table></div>
 
 		<!-- Pagination footer -->
 		{#if data.claims.length > 0}
@@ -164,3 +167,12 @@
 		{/if}
 	</div>
 </div>
+
+<style>
+	@media (max-width: 768px) {
+		.pg { padding: 16px 14px !important; }
+		.filter-sel { width: 100% !important; }
+		.filters { gap: 6px !important; }
+		.tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+	}
+</style>

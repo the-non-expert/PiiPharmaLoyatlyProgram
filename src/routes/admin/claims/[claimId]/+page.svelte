@@ -38,7 +38,7 @@
 	] as [string, string][]);
 </script>
 
-<div style="padding:28px 36px;font-family:'Montserrat',sans-serif;">
+<div class="pg" style="padding:28px 36px;font-family:'Montserrat',sans-serif;">
 	<!-- Back link -->
 	<a href="/admin/claims" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#2372B9;text-decoration:none;margin-bottom:18px;">
 		<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -46,9 +46,9 @@
 	</a>
 
 	<!-- Title row -->
-	<div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
-		<h1 style="font-size:21px;font-weight:700;color:#474545;margin:0;">Claim #{claimLabel}</h1>
-		<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;background:{sc.bg};color:{sc.text};font-size:11px;font-weight:700;white-space:nowrap;">
+	<div class="title-row" style="display:flex;align-items:flex-start;gap:10px;margin-bottom:22px;flex-wrap:wrap;">
+		<h1 class="claim-title" style="font-size:21px;font-weight:700;color:#474545;margin:0;word-break:break-all;">Claim #{claimLabel}</h1>
+		<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;background:{sc.bg};color:{sc.text};font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:4px;">
 			<span style="width:5px;height:5px;border-radius:50%;background:{sc.dot};flex-shrink:0;"></span>
 			{data.claim.status.charAt(0).toUpperCase() + data.claim.status.slice(1)}
 		</span>
@@ -59,15 +59,15 @@
 	{/if}
 
 	<!-- Two-column layout -->
-	<div style="display:flex;gap:20px;align-items:flex-start;">
+	<div class="two-cols" style="display:flex;gap:20px;align-items:flex-start;">
 
 		<!-- LEFT: Coupon photos grid -->
-		<div style="flex:1.65;">
+		<div class="col-photos" style="flex:1.65;">
 			<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
 				<div style="font-size:13px;font-weight:700;color:#474545;margin-bottom:14px;">
 					Coupon Photos&ensp;<span style="font-size:12px;font-weight:500;color:#686868;">{data.coupons.length} of {data.product?.coupons_required ?? data.coupons.length} required</span>
 				</div>
-				<div style="display:grid;grid-template-columns:repeat({Math.min(data.coupons.length || 1, 5)},1fr);gap:10px;">
+				<div class="photo-grid" style="display:grid;grid-template-columns:repeat({Math.min(data.coupons.length || 1, 5)},1fr);gap:10px;">
 					{#each data.coupons as coupon, i}
 						<div>
 							<a
@@ -113,7 +113,7 @@
 		</div>
 
 		<!-- RIGHT: Details + Actions -->
-		<div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+		<div class="col-details" style="flex:1;display:flex;flex-direction:column;gap:14px;">
 
 			<!-- Details -->
 			<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
@@ -193,4 +193,13 @@
 		to { transform: rotate(360deg); }
 	}
 	.spin { animation: spin 0.8s linear infinite; }
+
+	@media (max-width: 768px) {
+		.pg { padding: 16px 14px !important; }
+		.claim-title { font-size: 16px !important; }
+		.two-cols { flex-direction: column !important; }
+		.col-photos { flex: none !important; width: 100% !important; }
+		.col-details { flex: none !important; width: 100% !important; }
+		.photo-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)) !important; }
+	}
 </style>

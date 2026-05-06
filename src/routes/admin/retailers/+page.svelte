@@ -16,13 +16,13 @@
 	}
 </script>
 
-<div style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
+<div class="pg" style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
 	<h1 style="font-size:22px;font-weight:700;color:#474545;margin:0 0 20px;">Retailers</h1>
 
 	<!-- Search -->
 	<div style="margin-bottom:16px;">
 		<form onsubmit={handleSearch}>
-			<div style="display:flex;align-items:center;border:1.5px solid #EAEAEA;border-radius:8px;background:#fff;overflow:hidden;width:340px;">
+			<div class="search-wrap" style="display:flex;align-items:center;border:1.5px solid #EAEAEA;border-radius:8px;background:#fff;overflow:hidden;width:340px;">
 				<div style="padding:0 12px;display:flex;align-items:center;flex-shrink:0;">
 					<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#686868" stroke-width="2"/><path d="M21 21l-4-4" stroke="#686868" stroke-width="2" stroke-linecap="round"/></svg>
 				</div>
@@ -45,7 +45,7 @@
 
 	<!-- Table -->
 	<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-		<table style="width:100%;border-collapse:collapse;">
+		<div class="tbl-scroll"><table style="width:100%;border-collapse:collapse;">
 			<thead>
 				<tr>
 					{#each ['Name','Mobile','City','State','UPI ID','Registered On','Total Claims','Cashback Earned'] as col}
@@ -82,5 +82,14 @@
 				<span style="font-size:12px;color:#686868;">Showing 1–{data.retailers.length} of {data.retailers.length} retailers</span>
 			</div>
 		{/if}
+		</div><!-- end tbl-scroll -->
 	</div>
 </div>
+
+<style>
+	@media (max-width: 768px) {
+		.pg { padding: 16px 14px !important; }
+		.search-wrap { width: 100% !important; }
+		.tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+	}
+</style>

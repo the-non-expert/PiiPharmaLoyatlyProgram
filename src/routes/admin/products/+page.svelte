@@ -34,7 +34,7 @@
 	});
 </script>
 
-<div style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
+<div class="pg" style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
 	<!-- Header row -->
 	<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
 		<h1 style="font-size:22px;font-weight:700;color:#474545;margin:0;">Products</h1>
@@ -52,8 +52,8 @@
 	{#if showAddForm}
 		<div style="background:#fff;border-radius:10px;border:2px solid #2372B9;padding:18px 20px;box-shadow:0 0 0 3px #e8f1fb;margin-bottom:20px;">
 			<div style="font-size:14px;font-weight:700;color:#474545;margin-bottom:14px;">New Product</div>
-			<form method="POST" action="?/create" use:enhance style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
-				<div style="flex:1;min-width:180px;">
+			<form method="POST" action="?/create" use:enhance class="add-form" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+				<div class="add-field-name" style="flex:1;min-width:180px;">
 					<label for="new-name" style="font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Product Name</label>
 					<input
 						id="new-name"
@@ -106,7 +106,7 @@
 	{/if}
 
 	<!-- Product card grid -->
-	<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
+	<div class="prod-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
 		{#each data.products as p}
 			{@const editing = editingId === p.id}
 			<div style="background:#fff;border-radius:10px;border:{editing ? '2px solid #2372B9' : '1px solid #EAEAEA'};padding:18px 20px;box-shadow:{editing ? '0 0 0 3px #e8f1fb' : '0 1px 4px rgba(0,0,0,0.04)'};">
@@ -208,3 +208,15 @@
 		{/each}
 	</div>
 </div>
+
+<style>
+	@media (max-width: 768px) {
+		.pg { padding: 16px 14px !important; }
+		.prod-grid { grid-template-columns: 1fr !important; }
+		.add-form { flex-direction: column !important; }
+		.add-field-name { min-width: 100% !important; }
+	}
+	@media (min-width: 769px) and (max-width: 1024px) {
+		.prod-grid { grid-template-columns: repeat(2, 1fr) !important; }
+	}
+</style>

@@ -7,11 +7,11 @@
 	}
 </script>
 
-<div style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
+<div class="pg" style="padding:32px 36px;font-family:'Montserrat',sans-serif;">
 	<h1 style="font-size:22px;font-weight:700;color:#474545;margin:0 0 24px;">Dashboard</h1>
 
 	<!-- Stat cards -->
-	<div style="display:flex;gap:16px;margin-bottom:28px;">
+	<div class="stat-cards" style="display:flex;gap:16px;margin-bottom:28px;">
 		{#each [
 			{ label:'Pending Claims',      value: String(data.stats.pendingCount),              sub:'Awaiting review',          accent:'#F59E0B' },
 			{ label:'Approved This Cycle', value: String(data.stats.approvedCount),             sub:'Since last export',        accent:'#93CB52' },
@@ -19,7 +19,7 @@
 			{ label:'Coupon Submissions',  value: data.stats.totalSubmissions.toLocaleString('en-IN'), sub:'All time total',   accent:'#24AEB1' },
 			{ label:'Cashback Queued',     value: inr(data.stats.cashbackQueued),               sub:'Ready for payout',        accent:'#E53E3E' },
 		] as card}
-			<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:18px 20px;flex:1;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+			<div class="stat-card" style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:18px 20px;flex:1;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
 				<div style="font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">{card.label}</div>
 				<div style="font-size:26px;font-weight:700;color:{card.accent};line-height:1;margin-bottom:6px;">{card.value}</div>
 				<div style="font-size:11px;color:#686868;">{card.sub}</div>
@@ -32,7 +32,7 @@
 		<div style="padding:13px 18px;border-bottom:1px solid #EAEAEA;">
 			<h2 style="font-size:14px;font-weight:700;color:#474545;margin:0;">By Product</h2>
 		</div>
-		<table style="width:100%;border-collapse:collapse;">
+		<div class="tbl-scroll"><table style="width:100%;border-collapse:collapse;">
 			<thead>
 				<tr>
 					{#each ['Product','Coupons Required','Pending Claims','Approved Claims','Total Coupons Submitted'] as col}
@@ -53,6 +53,15 @@
 					</tr>
 				{/each}
 			</tbody>
-		</table>
+		</table></div>
 	</div>
 </div>
+
+<style>
+	@media (max-width: 768px) {
+		.pg { padding: 16px 14px !important; }
+		.stat-cards { flex-wrap: wrap !important; gap: 10px !important; }
+		.stat-card { flex: 1 1 calc(50% - 5px) !important; min-width: calc(50% - 5px) !important; padding: 14px 12px !important; }
+		.tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+	}
+</style>
