@@ -1,7 +1,18 @@
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getServiceClient } from '$lib/server/supabase';
 
-export const GET: RequestHandler = async () => {
+function csvField(value: string | number): string {
+	const str = String(value);
+	if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+		return `"${str.replace(/"/g, '""')}"`;
+	}
+	return str;
+}
+
+export const GET: RequestHandler = async ({ locals }) => {
+	if (!locals.adminSession) throw error(401, 'Unauthorized');
+
 	const db = getServiceClient();
 
 	const { data: claims } = await db
@@ -27,7 +38,7 @@ export const GET: RequestHandler = async () => {
 
 	const header = 'name,beneUpiId,amount,transferMode,remarks';
 	const csvRows = rows.map((r) =>
-		[r.name, r.beneUpiId, r.amount, r.transferMode, `"${r.remarks.replace(/"/g, '""')}"`].join(',')
+		[csvField(r.name), csvField(r.beneUpiId), r.amount, r.transferMode, csvField(r.remarks)].join(',')
 	);
 	const csv = [header, ...csvRows].join('\n');
 

@@ -287,7 +287,7 @@
       <!-- Info box -->
       <div class="p-4 bg-[#F4F6F8] rounded-[10px] border border-[#EAEAEA]">
         <p class="text-[13px] text-[#686868] text-center leading-relaxed">
-          OTP is valid for <strong class="text-[#474545]">5 minutes</strong>. Do not share it with anyone.
+          OTP is valid for <strong class="text-[#474545]">10 minutes</strong>. Do not share it with anyone.
         </p>
       </div>
     </div>

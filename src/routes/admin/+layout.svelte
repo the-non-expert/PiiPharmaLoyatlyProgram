@@ -1,7 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state';
 
-	let { children, data } = $props<{ children: any; data: { pendingCount: number } }>();
+	let { children, data } = $props<{ children: any; data: { pendingCount: number; adminEmail: string | null } }>();
+
+	const adminDisplayName = $derived(data.adminEmail ? data.adminEmail.split('@')[0] : 'Admin');
+	const adminInitials = $derived(
+		adminDisplayName.length >= 2
+			? adminDisplayName.slice(0, 2).toUpperCase()
+			: adminDisplayName.slice(0, 1).toUpperCase()
+	);
 
 	const path = $derived(page.url.pathname as string);
 	const isLoginPage = $derived(path === '/admin/login');
@@ -70,10 +77,10 @@
 			<div class="px-4 py-[14px]" style="border-top:1px solid rgba(255,255,255,0.07);">
 				<div class="flex items-center gap-[9px]">
 					<div class="flex items-center justify-center w-7 h-7 rounded-full flex-shrink-0" style="background:rgba(255,255,255,0.14);">
-						<span style="font-size:11px;font-weight:700;color:#fff;">RK</span>
+						<span style="font-size:11px;font-weight:700;color:#fff;">{adminInitials}</span>
 					</div>
 					<div class="flex-1 min-w-0">
-						<div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Ramesh Kumar</div>
+						<div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{adminDisplayName}</div>
 						<div style="font-size:10px;color:rgba(255,255,255,0.4);">Admin</div>
 					</div>
 					<a href="/admin/logout" title="Sign out" style="color:rgba(255,255,255,0.3);display:flex;flex-shrink:0;">
