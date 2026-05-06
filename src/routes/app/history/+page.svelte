@@ -82,33 +82,36 @@
               </div>
 
               <!-- Bottom row -->
-              {#if claim.status === 'pending' || claim.status === 'rejected'}
-                <div class="flex justify-between items-center mt-2">
-                  {#if claim.status === 'pending'}
+              <div class="flex justify-between items-center mt-2">
+                <span
+                  class="text-[16px] font-bold"
+                  style="color: {claim.status === 'approved' || claim.status === 'paid' ? '#93CB52' : '#474545'}"
+                >
+                  {#if claim.status === 'approved' || claim.status === 'paid'}
+                    ✓ ₹{claim.cashback_amount} cashback
+                  {:else if claim.status === 'pending'}
                     <span class="text-[13px] font-semibold text-[#92640a]">Under review</span>
-                  {:else}
-                    <span></span>
                   {/if}
-                  {#if claim.status === 'rejected' && claim.rejection_reason}
-                    <button
-                      type="button"
-                      onclick={() => expandedId = expandedId === claim.id ? null : claim.id}
-                      class="flex items-center gap-1 text-[13px] font-semibold text-[#E53E3E]"
-                    >
-                      View reason
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d={expandedId === claim.id ? 'M18 15l-6-6-6 6' : 'M6 9l6 6 6-6'}
-                          stroke="#E53E3E"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  {/if}
-                </div>
-              {/if}
+                </span>
+                {#if claim.status === 'rejected' && claim.rejection_reason}
+                  <button
+                    type="button"
+                    onclick={() => expandedId = expandedId === claim.id ? null : claim.id}
+                    class="flex items-center gap-1 text-[13px] font-semibold text-[#E53E3E]"
+                  >
+                    View reason
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d={expandedId === claim.id ? 'M18 15l-6-6-6 6' : 'M6 9l6 6 6-6'}
+                        stroke="#E53E3E"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                {/if}
+              </div>
 
               <!-- Expanded rejection reason -->
               {#if claim.status === 'rejected' && claim.rejection_reason && expandedId === claim.id}
