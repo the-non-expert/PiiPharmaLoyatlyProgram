@@ -1,7 +1,7 @@
 import type { Cookies } from '@sveltejs/kit';
 import { getServiceClient } from '$lib/server/supabase';
 
-const RETAILER_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const RETAILER_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const ADMIN_TTL_MS    = 8 * 60 * 60 * 1000;        // 8 hours
 
 const COOKIE_OPTS = {
