@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import { getServiceClient } from '$lib/server/supabase';
 
 export const load: PageServerLoad = async ({ url }) => {
-	const tab = url.searchParams.get('tab') ?? 'pending'; // 'pending' | 'all'
+	const tab = url.searchParams.get('tab') ?? 'pending'; // 'pending' | 'allClaims'
 	const productFilter = url.searchParams.get('product') ?? '';
 	const statusFilter  = url.searchParams.get('status') ?? '';
 	const sort          = url.searchParams.get('sort') ?? 'newest'; // 'newest' | 'oldest'
@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	if (tab === 'pending') {
 		query = query.eq('status', 'pending');
-	} else if (statusFilter) {
+	} else if (tab === 'allClaims' && statusFilter) {
 		query = query.eq('status', statusFilter);
 	}
 
