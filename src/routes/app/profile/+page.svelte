@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { invalidateAll } from '$app/navigation';
   import type { PageData, ActionData } from './$types';
   import BottomNav from '$lib/components/BottomNav.svelte';
 
@@ -324,8 +325,10 @@
                       } else if (result.type === 'success') {
                         editing = false;
                         cancelUpiChange();
+                        await invalidateAll();
+                      } else {
+                        await update();
                       }
-                      await update();
                     };
                   }}
                   class="flex flex-col gap-3"
