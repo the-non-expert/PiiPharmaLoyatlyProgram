@@ -1,6 +1,5 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import { goto } from '$app/navigation';
   import type { PageData, ActionData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -22,12 +21,15 @@
   const totalToSubmit  = $derived(queue.length + (curComplete ? 1 : 0));
   const canSubmit      = $derived(totalToSubmit > 0 && !submitting && !data.has_active_claim);
 
-  // Post-save derived
-  const savedResult = $derived(form as any);
-  const showPostSave = $derived(savedResult?.saved === true);
-  const newCount  = $derived(savedResult?.newCount  ?? data.submitted_count);
-  const required  = $derived(savedResult?.required  ?? data.product.coupons_required);
-  const qualified = $derived(savedResult?.qualified === true);
+  // View state — driven by local state, NOT form prop.
+  // form.saved persists across goto() to the same URL, which caused the
+  // success screen to reappear immediately after "Submit Another" was clicked.
+  type ViewState = 'form' | 'progress' | 'qualified';
+  let viewState = $state<ViewState>('form');
+  let savedResult = $state<Record<string, any> | null>(null);
+
+  const newCount = $derived(savedResult?.newCount  ?? data.submitted_count);
+  const required = $derived(savedResult?.required  ?? data.product.coupons_required);
   const pct = $derived(Math.min(100, Math.round((newCount / required) * 100)));
 
   // Resize to max 1200px wide and re-encode at 82% JPEG quality.
@@ -81,7 +83,7 @@
   }
 </script>
 
-{#if showPostSave && qualified}
+{#if viewState === 'qualified'}
 <!-- ── CLAIM CREATED ── -->
 <main
   class="min-h-screen flex flex-col font-[Montserrat]"
@@ -137,7 +139,7 @@
   </div>
 </main>
 
-{:else if showPostSave}
+{:else if viewState === 'progress'}
 <!-- ── PROGRESS UPDATED ── -->
 <main class="min-h-screen bg-white flex flex-col font-[Montserrat]">
   <div class="max-w-sm mx-auto w-full flex flex-col items-center px-6 pb-10">
@@ -178,7 +180,7 @@
     <div class="w-full flex flex-col gap-3">
       <button
         type="button"
-        onclick={() => goto(window.location.pathname, { replaceState: true })}
+        onclick={() => { viewState = 'form'; }}
         class="w-full py-[15px] rounded-lg bg-[#2372B9] text-white text-[15px] font-bold text-center"
       >
         Submit Another Coupon
@@ -295,12 +297,18 @@
 
           return async ({ result, update }) => {
             submitting = false;
-            if (result.type !== 'failure') {
+            if (result.type === 'success' && result.data) {
+              savedResult = result.data as Record<string, any>;
+              viewState = savedResult.qualified ? 'qualified' : 'progress';
+              queueFiles = [];
+              queue = [];
+              curFile = null; curPreview = null; curSerial = '';
+            } else if (result.type !== 'failure') {
               queueFiles = [];
               queue = [];
               curFile = null; curPreview = null; curSerial = '';
             }
-            await update();
+            await update({ reset: false });
           };
         }}
       >
