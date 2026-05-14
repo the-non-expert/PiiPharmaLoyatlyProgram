@@ -1,7 +1,22 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	onMount(() => {
+		const stored = sessionStorage.getItem('admin:claims:tab');
+		const urlTab = page.url.searchParams.get('tab');
+		if (!urlTab && stored === 'allClaims') {
+			goto(tabHref('allClaims'), { replaceState: true });
+		}
+	});
+
+	$effect(() => {
+		sessionStorage.setItem('admin:claims:tab', data.tab);
+	});
 
 	function fmt(s: string) {
 		return new Date(s).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -18,7 +33,7 @@
 		const p = new URLSearchParams();
 		p.set('tab', t);
 		if (data.productFilter) p.set('product', data.productFilter);
-		if (t === 'all' && data.statusFilter) p.set('status', data.statusFilter);
+		if (t === 'allClaims' && data.statusFilter) p.set('status', data.statusFilter);
 		if (data.sort !== 'newest') p.set('sort', data.sort);
 		if (extra) extra.split('&').forEach(kv => { const [k,v] = kv.split('='); if (v) p.set(k, v); });
 		return '/admin/claims?' + p.toString();
@@ -43,8 +58,8 @@
 	<!-- Tab bar -->
 	<div style="display:flex;border-bottom:2px solid #EAEAEA;margin-bottom:18px;">
 		{#each [
-			{ id:'pending', label:'Pending', badge: data.pendingCount },
-			{ id:'all',     label:'All Claims' },
+			{ id:'pending',    label:'Pending',    badge: data.pendingCount },
+			{ id:'allClaims', label:'All Claims' },
 		] as t}
 			{@const on = data.tab === t.id}
 			<a
@@ -73,7 +88,7 @@
 			{/each}
 		</select>
 
-		{#if data.tab === 'all'}
+		{#if data.tab === 'allClaims'}
 			<!-- Status filter -->
 			<select
 				onchange={(e) => { window.location.href = filterHref('status', (e.currentTarget as HTMLSelectElement).value); }}
@@ -113,7 +128,7 @@
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Product</th>
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Date Created</th>
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Cashback</th>
-					{#if data.tab === 'all'}
+					{#if data.tab === 'allClaims'}
 						<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Status</th>
 					{/if}
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Action</th>
@@ -139,7 +154,7 @@
 							<td style="padding:10px 14px;font-size:13px;color:#474545;">{claim.product_name}</td>
 							<td style="padding:10px 14px;font-size:12px;color:#686868;">{fmt(claim.created_at)}</td>
 							<td style="padding:10px 14px;font-size:13px;color:#474545;font-weight:700;">₹{claim.cashback_amount}</td>
-							{#if data.tab === 'all'}
+							{#if data.tab === 'allClaims'}
 								<td style="padding:10px 14px;">
 									<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;background:{sc.bg};color:{sc.text};font-size:11px;font-weight:700;white-space:nowrap;">
 										<span style="width:5px;height:5px;border-radius:50%;background:{sc.dot};flex-shrink:0;"></span>
