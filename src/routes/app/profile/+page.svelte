@@ -6,7 +6,7 @@
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  const r = data.retailer;
+  const r = $derived(data.retailer);
 
   const initials = $derived(
     (r.name ?? '?')
