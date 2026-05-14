@@ -4,28 +4,6 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	const initialIds = data.rows.map((r) => r.id);
-	let selected = $state(new Set<string>(initialIds));
-	const allSelected = $derived(selected.size === data.rows.length && data.rows.length > 0);
-	const selectedTotal = $derived(
-		data.rows
-			.filter((r) => selected.has(r.id))
-			.reduce((s, r) => s + r.cashback_amount, 0),
-	);
-	const selectedCount = $derived(selected.size);
-
-	function toggleAll() {
-		if (allSelected) selected = new Set();
-		else             selected = new Set(data.rows.map((r) => r.id));
-	}
-
-	function toggleRow(id: string) {
-		const next = new Set(selected);
-		if (next.has(id)) next.delete(id);
-		else              next.add(id);
-		selected = next;
-	}
-
 	function fmt(s: string) {
 		return new Date(s).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 	}
@@ -51,7 +29,9 @@
 		<!-- Summary bar -->
 		<div class="summary-bar" style="background:#e8f1fb;border:1.5px solid #2372B9;border-radius:10px;padding:13px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
 			<span style="font-size:13px;font-weight:600;color:#1a5a99;">
-				{selectedCount} approved claim{selectedCount === 1 ? '' : 's'} selected for payout — Total:&ensp;<strong style="font-size:16px;">{inr(selectedTotal)}</strong>
+				{data.rows.length} retailer{data.rows.length === 1 ? '' : 's'} —
+				{data.rows.reduce((s, r) => s + r.claimCount, 0)} approved claim{data.rows.reduce((s, r) => s + r.claimCount, 0) === 1 ? '' : 's'} —
+				Total: <strong style="font-size:16px;">{inr(data.total)}</strong>
 			</span>
 			<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;background:#f0f9e6;color:#3d6e10;font-size:11px;font-weight:700;">
 				<span style="width:5px;height:5px;border-radius:50%;background:#93CB52;flex-shrink:0;"></span>
@@ -77,15 +57,7 @@
 			<table style="width:100%;border-collapse:collapse;">
 				<thead>
 					<tr>
-						<th style="padding:9px 14px;width:40px;border-bottom:2px solid #EAEAEA;background:#fff;">
-							<input
-								type="checkbox"
-								checked={allSelected}
-								onchange={toggleAll}
-								style="cursor:pointer;width:14px;height:14px;"
-							/>
-						</th>
-						{#each ['Claim ID','Retailer Name','UPI ID','Product','Cashback Amount','Approved On'] as col}
+						{#each ['Retailer Name','UPI ID','Products','Claims','Total Cashback'] as col}
 							<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">{col}</th>
 						{/each}
 					</tr>
@@ -93,71 +65,55 @@
 				<tbody>
 					{#each data.rows as row}
 						<tr style="border-bottom:1px solid #EAEAEA;background:#fff;">
-							<td style="padding:10px 14px;">
-								<input
-									type="checkbox"
-									checked={selected.has(row.id)}
-									onchange={() => toggleRow(row.id)}
-									style="cursor:pointer;width:14px;height:14px;"
-								/>
-							</td>
-							<td style="padding:10px 14px;font-size:12px;font-family:monospace;color:#2372B9;font-weight:700;">{row.id.toUpperCase().replace('CLAIM-','CLM-')}</td>
 							<td style="padding:10px 14px;font-size:13px;color:#474545;font-weight:600;">{row.retailer_name}</td>
 							<td style="padding:10px 14px;font-size:11px;font-family:monospace;color:#686868;">{row.upi_id}</td>
-							<td style="padding:10px 14px;font-size:13px;color:#474545;">{row.product_name}</td>
-							<td style="padding:10px 14px;font-size:13px;color:#474545;font-weight:700;">{inr(row.cashback_amount)}</td>
-							<td style="padding:10px 14px;font-size:12px;color:#686868;">{fmt(row.created_at)}</td>
+							<td style="padding:10px 14px;font-size:12px;color:#474545;">{row.products.join(', ')}</td>
+							<td style="padding:10px 14px;font-size:13px;color:#686868;text-align:center;">{row.claimCount}</td>
+							<td style="padding:10px 14px;font-size:13px;color:#474545;font-weight:700;">{inr(row.totalAmount)}</td>
 						</tr>
 					{/each}
 				</tbody>
 			</table>
 			<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-top:1px solid #EAEAEA;background:#fff;">
-				<span style="font-size:12px;color:#686868;">Showing 1–{data.rows.length} of {data.rows.length} results</span>
+				<span style="font-size:12px;color:#686868;">{data.rows.length} retailer{data.rows.length === 1 ? '' : 's'}</span>
+				<span style="font-size:13px;font-weight:700;color:#474545;">Total: {inr(data.total)}</span>
 			</div>
 		</div>
 
 		<!-- Mobile: payout cards -->
 		<div class="mobile-only" style="margin-bottom:28px;">
-			<!-- Select all toggle -->
-			<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-				<input
-					type="checkbox"
-					checked={allSelected}
-					onchange={toggleAll}
-					style="cursor:pointer;width:16px;height:16px;"
-				/>
-				<span style="font-size:13px;color:#474545;font-weight:600;">
-					{allSelected ? 'Deselect all' : 'Select all'}
-				</span>
-			</div>
 			<div style="display:flex;flex-direction:column;gap:8px;">
 				{#each data.rows as row}
-					<div style="background:#fff;border-radius:10px;border:1.5px solid {selected.has(row.id) ? '#2372B9' : '#EAEAEA'};padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);display:flex;align-items:flex-start;gap:12px;">
-						<input
-							type="checkbox"
-							checked={selected.has(row.id)}
-							onchange={() => toggleRow(row.id)}
-							style="cursor:pointer;width:16px;height:16px;flex-shrink:0;margin-top:2px;"
-						/>
-						<div style="flex:1;min-width:0;">
-							<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-								<div style="font-size:14px;font-weight:700;color:#474545;">{row.retailer_name}</div>
-								<div style="font-size:15px;font-weight:700;color:#474545;flex-shrink:0;margin-left:8px;">{inr(row.cashback_amount)}</div>
-							</div>
-							<div style="font-size:12px;color:#686868;margin-bottom:4px;">{row.product_name}</div>
-							<div style="display:flex;gap:10px;font-size:11px;color:#686868;flex-wrap:wrap;border-top:1px solid #EAEAEA;padding-top:8px;margin-top:4px;">
-								<span style="font-family:monospace;">{row.upi_id}</span>
-								<span style="font-family:monospace;color:#2372B9;font-weight:700;">{row.id.toUpperCase().replace('CLAIM-','CLM-')}</span>
-								<span>{fmt(row.created_at)}</span>
-							</div>
+					<div style="background:#fff;border-radius:10px;border:1.5px solid #EAEAEA;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+						<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+							<div style="font-size:14px;font-weight:700;color:#474545;">{row.retailer_name}</div>
+							<div style="font-size:15px;font-weight:700;color:#474545;flex-shrink:0;margin-left:8px;">{inr(row.totalAmount)}</div>
+						</div>
+						<div style="font-size:12px;color:#686868;margin-bottom:4px;">{row.products.join(', ')}</div>
+						<div style="display:flex;gap:10px;font-size:11px;color:#686868;flex-wrap:wrap;border-top:1px solid #EAEAEA;padding-top:8px;margin-top:4px;">
+							<span style="font-family:monospace;">{row.upi_id}</span>
+							<span>{row.claimCount} claim{row.claimCount === 1 ? '' : 's'}</span>
 						</div>
 					</div>
 				{/each}
 			</div>
 			<div style="padding:10px 4px;">
-				<span style="font-size:12px;color:#686868;">{data.rows.length} claim{data.rows.length === 1 ? '' : 's'}</span>
+				<span style="font-size:12px;color:#686868;">{data.rows.length} retailer{data.rows.length === 1 ? '' : 's'}</span>
 			</div>
 		</div>
+
+		<!-- Mark as Paid -->
+		<form method="post" action="?/markPaid" use:enhance style="margin-bottom:32px;">
+			<input type="hidden" name="confirmed" value="yes" />
+			<button
+				type="submit"
+				style="background:#3d6e10;color:#fff;border:none;border-radius:8px;padding:12px 22px;font-size:14px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:8px;"
+			>
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				Mark all as Paid
+			</button>
+			<div style="font-size:12px;color:#686868;margin-top:8px;">Only do this after successfully uploading the CSV to Cashfree.</div>
+		</form>
 	{:else}
 		<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:48px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04);margin-bottom:28px;">
 			<p style="font-size:13px;color:#686868;margin:0;">No approved claims pending payout.</p>
