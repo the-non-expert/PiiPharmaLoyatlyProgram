@@ -5,12 +5,24 @@ import { getServiceClient } from '$lib/server/supabase';
 import { createRetailerSession } from '$lib/server/session';
 
 export const actions: Actions = {
-	sendOtp: async ({ request }) => {
+	sendOtp: async ({ request, cookies }) => {
 		const data = await request.formData();
 		const mobile = String(data.get('mobile') ?? '').trim();
 
 		if (!/^\d{10}$/.test(mobile)) {
 			return fail(400, { mobile, error: 'Enter a valid 10-digit mobile number.' });
+		}
+
+		const db = getServiceClient();
+		const { data: retailer } = await db
+			.from('retailers')
+			.select('id, name')
+			.eq('mobile', mobile)
+			.single();
+
+		if (retailer?.name) {
+			await createRetailerSession(retailer.id, cookies);
+			redirect(303, '/app');
 		}
 
 		const { sent } = await sendOtp(mobile);

@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { enhance } from '$app/forms';
+  import { enhance, applyAction } from '$app/forms';
+  import { goto } from '$app/navigation';
   import type { ActionData } from './$types';
 
   let { form }: { form: ActionData } = $props();
 
-  let step: 'mobile' | 'otp' = $state((form as any)?.otpSent ? 'otp' : 'mobile');
+  let step: 'mobile' | 'otp' | 'logging-in' = $state((form as any)?.otpSent ? 'otp' : 'mobile');
   let mobile = $state((form as any)?.mobile ?? '');
   let resendCountdown = $state(0);
   let verifying = $state(false);
@@ -119,8 +120,11 @@
         action="?/sendOtp"
         bind:this={sendOtpFormEl}
         class="flex flex-col flex-1"
-        use:enhance={() => ({ result }) => {
-          if (result.type === 'success' && (result.data as any)?.otpSent) {
+        use:enhance={() => async ({ result }) => {
+          if (result.type === 'redirect') {
+            step = 'logging-in';
+            await goto(result.location);
+          } else if (result.type === 'success' && (result.data as any)?.otpSent) {
             step = 'otp';
             hasError = false;
             startResendTimer();
@@ -177,6 +181,18 @@
         </div>
       </form>
     </div>
+
+    {:else if step === 'logging-in'}
+    <!-- ── LOGGING IN STATE ── -->
+    <div class="flex-1 flex flex-col items-center justify-center px-7">
+      <div class="w-[72px] h-[72px] bg-[#2372B9] rounded-[18px] flex items-center justify-center mb-6" style="box-shadow: 0 8px 24px #e8f1fb">
+        <span class="text-[32px] font-black text-white leading-none" style="letter-spacing:-1px">Pii</span>
+      </div>
+      <div class="w-8 h-8 border-4 border-[#e8f1fb] border-t-[#2372B9] rounded-full mb-5" style="animation: spin 0.8s linear infinite"></div>
+      <p class="text-[16px] font-semibold text-[#474545]">Logging you in…</p>
+      <p class="text-[13px] text-[#686868] mt-1">Welcome back!</p>
+    </div>
+    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
     {:else}
     <!-- ── OTP STEP (Screen 2) ── -->
