@@ -19,27 +19,53 @@ export const GET: RequestHandler = async ({ locals }) => {
 		.from('claims')
 		.select(`
 			id,
-			retailers ( name, upi_id ),
+			retailers ( id, name, upi_id ),
 			products ( name, cashback_amount )
 		`)
 		.eq('status', 'approved');
 
-	const rows = (claims ?? []).map((c) => {
+	// Group by retailer_id — one transfer per retailer
+	const byRetailer = new Map<string, {
+		name: string;
+		upi_id: string;
+		totalAmount: number;
+		products: string[];
+	}>();
+
+	for (const c of claims ?? []) {
 		const retailer = Array.isArray(c.retailers) ? c.retailers[0] : c.retailers;
-		const product = Array.isArray(c.products) ? c.products[0] : c.products;
-		return {
-			name: retailer?.name ?? '',
-			beneUpiId: retailer?.upi_id ?? '',
-			amount: product?.cashback_amount ?? 0,
-			transferMode: 'UPI',
-			remarks: `${product?.name ?? ''} - ${c.id}`
-		};
-	});
+		const product  = Array.isArray(c.products)  ? c.products[0]  : c.products;
+		if (!retailer?.id) continue;
+
+		const existing = byRetailer.get(retailer.id);
+		const productName = product?.name ?? 'Unknown';
+		const amount = product?.cashback_amount ?? 0;
+
+		if (existing) {
+			existing.totalAmount += amount;
+			existing.products.push(productName);
+		} else {
+			byRetailer.set(retailer.id, {
+				name:        retailer.name ?? '',
+				upi_id:      retailer.upi_id ?? '',
+				totalAmount: amount,
+				products:    [productName],
+			});
+		}
+	}
 
 	const header = 'name,beneUpiId,amount,transferMode,remarks';
-	const csvRows = rows.map((r) =>
-		[csvField(r.name), csvField(r.beneUpiId), r.amount, r.transferMode, csvField(r.remarks)].join(',')
-	);
+	const csvRows = Array.from(byRetailer.values()).map((r) => {
+		const claimCount = r.products.length;
+		const remarks = `${claimCount} claim${claimCount !== 1 ? 's' : ''}: ${r.products.join(', ')}`;
+		return [
+			csvField(r.name),
+			csvField(r.upi_id),
+			r.totalAmount,
+			'UPI',
+			csvField(remarks),
+		].join(',');
+	});
 	const csv = [header, ...csvRows].join('\n');
 
 	const date = new Date().toISOString().slice(0, 10);

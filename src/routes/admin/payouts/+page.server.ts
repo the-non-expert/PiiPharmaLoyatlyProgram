@@ -10,22 +10,49 @@ export const load: PageServerLoad = async () => {
 		.select(`
 			id,
 			created_at,
-			retailers ( name, upi_id ),
+			retailers ( id, name, upi_id ),
 			products ( name, cashback_amount )
 		`)
 		.eq('status', 'approved')
 		.order('approved_at', { ascending: true });
 
-	const rows = (claims ?? []).map((c) => ({
-		id:              c.id,
-		created_at:      c.created_at,
-		retailer_name:   (Array.isArray(c.retailers) ? c.retailers[0] : c.retailers)?.name ?? '—',
-		upi_id:          (Array.isArray(c.retailers) ? c.retailers[0] : c.retailers)?.upi_id ?? '—',
-		product_name:    (Array.isArray(c.products)  ? c.products[0]  : c.products)?.name ?? '—',
-		cashback_amount: (Array.isArray(c.products)  ? c.products[0]  : c.products)?.cashback_amount ?? 0,
-	}));
+	// Group by retailer_id — one row per retailer
+	const byRetailer = new Map<string, {
+		retailer_name: string;
+		upi_id: string;
+		products: string[];
+		totalAmount: number;
+		claimCount: number;
+		earliest_created_at: string;
+	}>();
 
-	const total = rows.reduce((sum, r) => sum + r.cashback_amount, 0);
+	for (const c of claims ?? []) {
+		const retailer = Array.isArray(c.retailers) ? c.retailers[0] : c.retailers;
+		const product  = Array.isArray(c.products)  ? c.products[0]  : c.products;
+		if (!retailer?.id) continue;
+
+		const existing = byRetailer.get(retailer.id);
+		const productName = product?.name ?? 'Unknown';
+		const amount = product?.cashback_amount ?? 0;
+
+		if (existing) {
+			existing.totalAmount  += amount;
+			existing.claimCount   += 1;
+			existing.products.push(productName);
+		} else {
+			byRetailer.set(retailer.id, {
+				retailer_name:        retailer.name ?? '—',
+				upi_id:               retailer.upi_id ?? '—',
+				products:             [productName],
+				totalAmount:          amount,
+				claimCount:           1,
+				earliest_created_at:  c.created_at,
+			});
+		}
+	}
+
+	const rows = Array.from(byRetailer.values());
+	const total = rows.reduce((sum, r) => sum + r.totalAmount, 0);
 
 	let historyData = null;
 	try {
