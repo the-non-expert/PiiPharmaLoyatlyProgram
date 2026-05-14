@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/state';
+	import { page, navigating } from '$app/state';
 
 	let { children, data } = $props<{ children: any; data: { pendingCount: number; adminEmail: string | null } }>();
 
@@ -139,7 +139,195 @@
 			</header>
 
 			<main class="flex-1 overflow-auto" style="overflow-x:hidden;">
-				{@render children()}
+				{#if navigating.to && navigating.to.url.pathname.startsWith('/admin') && !navigating.to.url.pathname.startsWith('/admin/login')}
+					{@const dest = navigating.to.url.pathname}
+					<div style="padding:32px 36px;font-family:'Montserrat',sans-serif;" class="sk-pg">
+
+						{#if dest === '/admin'}
+							<!-- Dashboard skeleton -->
+							<div class="sk-bar" style="width:160px;height:22px;margin-bottom:24px;"></div>
+							<div class="sk-stat-grid" style="display:flex;gap:16px;margin-bottom:28px;">
+								{#each [1,2,3,4,5] as _}
+									<div class="sk-card" style="flex:1;padding:18px 20px;">
+										<div class="sk-bar" style="width:80%;height:11px;margin-bottom:10px;"></div>
+										<div class="sk-bar" style="width:50%;height:26px;margin-bottom:8px;"></div>
+										<div class="sk-bar" style="width:60%;height:11px;"></div>
+									</div>
+								{/each}
+							</div>
+							<div class="sk-card" style="padding:0;overflow:hidden;">
+								<div style="padding:13px 18px;border-bottom:1px solid #EAEAEA;">
+									<div class="sk-bar" style="width:80px;height:14px;"></div>
+								</div>
+								{#each [1,2,3,4,5,6] as _}
+									<div style="display:flex;gap:14px;padding:11px 14px;border-bottom:1px solid #EAEAEA;">
+										<div class="sk-bar" style="flex:2;height:13px;"></div>
+										<div class="sk-bar" style="flex:1;height:13px;"></div>
+										<div class="sk-bar" style="flex:1;height:13px;"></div>
+										<div class="sk-bar" style="flex:1;height:13px;"></div>
+										<div class="sk-bar" style="flex:1;height:13px;"></div>
+									</div>
+								{/each}
+							</div>
+
+						{:else if /^\/admin\/claims\/[^/]+/.test(dest)}
+							<!-- Claim detail skeleton -->
+							<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+								<div class="sk-bar" style="width:28px;height:28px;border-radius:50%;"></div>
+								<div class="sk-bar" style="width:180px;height:22px;"></div>
+							</div>
+							<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;" class="sk-detail-grid">
+								<div class="sk-card" style="padding:18px 20px;">
+									<div class="sk-bar" style="width:90px;height:11px;margin-bottom:14px;"></div>
+									{#each [1,2,3,4] as _}
+										<div style="margin-bottom:12px;">
+											<div class="sk-bar" style="width:60px;height:10px;margin-bottom:5px;"></div>
+											<div class="sk-bar" style="width:85%;height:14px;"></div>
+										</div>
+									{/each}
+								</div>
+								<div class="sk-card" style="padding:18px 20px;">
+									<div class="sk-bar" style="width:100px;height:11px;margin-bottom:14px;"></div>
+									<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+										{#each [1,2,3,4] as _}
+											<div class="sk-bar" style="height:90px;border-radius:8px;"></div>
+										{/each}
+									</div>
+									<div class="sk-bar" style="width:70%;height:11px;margin-bottom:8px;"></div>
+									{#each [1,2,3] as _}
+										<div class="sk-bar" style="width:55%;height:12px;margin-bottom:6px;font-family:monospace;"></div>
+									{/each}
+								</div>
+							</div>
+							<div class="sk-card" style="padding:16px 20px;display:flex;gap:10px;">
+								<div class="sk-bar" style="width:110px;height:38px;border-radius:7px;"></div>
+								<div class="sk-bar" style="width:110px;height:38px;border-radius:7px;"></div>
+							</div>
+
+						{:else if dest.startsWith('/admin/claims')}
+							<!-- Claims list skeleton -->
+							<div class="sk-bar" style="width:80px;height:22px;margin-bottom:16px;"></div>
+							<div style="display:flex;gap:0;border-bottom:2px solid #EAEAEA;margin-bottom:18px;">
+								<div class="sk-bar" style="width:90px;height:14px;margin:0 20px 10px;"></div>
+								<div class="sk-bar" style="width:90px;height:14px;margin:0 20px 10px;"></div>
+							</div>
+							<div style="display:flex;gap:8px;margin-bottom:16px;">
+								<div class="sk-bar" style="width:180px;height:32px;border-radius:7px;"></div>
+								<div class="sk-bar" style="width:150px;height:32px;border-radius:7px;"></div>
+								<div class="sk-bar" style="width:160px;height:32px;border-radius:7px;"></div>
+							</div>
+							<div class="sk-card" style="padding:0;overflow:hidden;">
+								<div style="display:flex;gap:14px;padding:10px 14px;border-bottom:2px solid #EAEAEA;">
+									{#each [80,120,90,110,80,70,70,60] as w}
+										<div class="sk-bar" style="width:{w}px;height:11px;flex-shrink:0;"></div>
+									{/each}
+								</div>
+								{#each [1,2,3,4,5,6,7] as _}
+									<div style="display:flex;gap:14px;padding:11px 14px;border-bottom:1px solid #EAEAEA;align-items:center;">
+										<div class="sk-bar" style="width:80px;height:12px;flex-shrink:0;font-family:monospace;"></div>
+										<div class="sk-bar" style="width:120px;height:13px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:90px;height:12px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:110px;height:13px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:80px;height:12px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:50px;height:13px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:60px;height:20px;border-radius:99px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:50px;height:12px;flex-shrink:0;"></div>
+									</div>
+								{/each}
+							</div>
+
+						{:else if dest.startsWith('/admin/retailers')}
+							<!-- Retailers skeleton -->
+							<div class="sk-bar" style="width:100px;height:22px;margin-bottom:20px;"></div>
+							<div class="sk-bar" style="width:340px;height:34px;border-radius:8px;margin-bottom:16px;"></div>
+							<div class="sk-card" style="padding:0;overflow:hidden;">
+								<div style="display:flex;gap:14px;padding:10px 14px;border-bottom:2px solid #EAEAEA;">
+									{#each [100,80,70,80,120,90,70,90] as w}
+										<div class="sk-bar" style="width:{w}px;height:11px;flex-shrink:0;"></div>
+									{/each}
+								</div>
+								{#each [1,2,3,4,5,6,7,8] as _}
+									<div style="display:flex;gap:14px;padding:11px 14px;border-bottom:1px solid #EAEAEA;align-items:center;">
+										<div class="sk-bar" style="width:100px;height:13px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:80px;height:12px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:70px;height:13px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:80px;height:13px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:120px;height:12px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:90px;height:12px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:30px;height:13px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:70px;height:13px;flex-shrink:0;"></div>
+									</div>
+								{/each}
+							</div>
+
+						{:else if dest.startsWith('/admin/payouts')}
+							<!-- Payouts skeleton -->
+							<div class="sk-bar" style="width:90px;height:22px;margin-bottom:18px;"></div>
+							<div class="sk-bar" style="width:100%;height:48px;border-radius:10px;margin-bottom:18px;"></div>
+							<div class="sk-card" style="padding:0;overflow:hidden;">
+								<div style="display:flex;gap:14px;padding:10px 14px;border-bottom:2px solid #EAEAEA;align-items:center;">
+									<div class="sk-bar" style="width:16px;height:16px;border-radius:3px;flex-shrink:0;"></div>
+									{#each [120,80,90,100,60,70,80] as w}
+										<div class="sk-bar" style="width:{w}px;height:11px;flex-shrink:0;"></div>
+									{/each}
+								</div>
+								{#each [1,2,3,4,5,6] as _}
+									<div style="display:flex;gap:14px;padding:11px 14px;border-bottom:1px solid #EAEAEA;align-items:center;">
+										<div class="sk-bar" style="width:16px;height:16px;border-radius:3px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:120px;height:13px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:80px;height:12px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:90px;height:13px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:100px;height:13px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:50px;height:13px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:60px;height:20px;border-radius:99px;flex-shrink:0;"></div>
+										<div class="sk-bar" style="width:60px;height:13px;flex-shrink:0;"></div>
+									</div>
+								{/each}
+							</div>
+
+						{:else if dest.startsWith('/admin/products')}
+							<!-- Products skeleton -->
+							<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+								<div class="sk-bar" style="width:100px;height:22px;"></div>
+								<div class="sk-bar" style="width:110px;height:34px;border-radius:7px;"></div>
+							</div>
+							<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;" class="sk-products-grid">
+								{#each [1,2,3,4,5,6] as _}
+									<div class="sk-card" style="padding:18px 20px;">
+										<div class="sk-bar" style="width:75%;height:15px;margin-bottom:10px;"></div>
+										<div style="display:flex;gap:16px;margin-bottom:14px;">
+											<div>
+												<div class="sk-bar" style="width:50px;height:10px;margin-bottom:5px;"></div>
+												<div class="sk-bar" style="width:30px;height:18px;"></div>
+											</div>
+											<div>
+												<div class="sk-bar" style="width:60px;height:10px;margin-bottom:5px;"></div>
+												<div class="sk-bar" style="width:40px;height:18px;"></div>
+											</div>
+										</div>
+										<div class="sk-bar" style="width:80px;height:28px;border-radius:6px;"></div>
+									</div>
+								{/each}
+							</div>
+
+						{:else}
+							<!-- Generic admin skeleton -->
+							<div class="sk-bar" style="width:160px;height:22px;margin-bottom:24px;"></div>
+							<div class="sk-card" style="padding:0;overflow:hidden;">
+								{#each [1,2,3,4,5] as _}
+									<div style="display:flex;gap:14px;padding:14px;border-bottom:1px solid #EAEAEA;">
+										<div class="sk-bar" style="flex:2;height:13px;"></div>
+										<div class="sk-bar" style="flex:1;height:13px;"></div>
+										<div class="sk-bar" style="flex:1;height:13px;"></div>
+									</div>
+								{/each}
+							</div>
+						{/if}
+
+					</div>
+				{:else}
+					{@render children()}
+				{/if}
 			</main>
 		</div>
 	</div>
@@ -150,5 +338,26 @@
 		aside {
 			transform: translateX(0) !important;
 		}
+	}
+	:global(.sk-bar) {
+		background: #EAEAEA;
+		border-radius: 5px;
+		animation: sk-pulse 1.4s ease-in-out infinite;
+	}
+	:global(.sk-card) {
+		background: #fff;
+		border-radius: 10px;
+		border: 1px solid #EAEAEA;
+		box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+	}
+	@keyframes sk-pulse {
+		0%, 100% { opacity: 1; }
+		50%       { opacity: 0.45; }
+	}
+	@media (max-width: 768px) {
+		.sk-pg { padding: 16px 14px !important; }
+		.sk-stat-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+		.sk-detail-grid { grid-template-columns: 1fr !important; }
+		.sk-products-grid { grid-template-columns: 1fr !important; }
 	}
 </style>
