@@ -299,7 +299,7 @@
                   </button>
                 </form>
               </div>
-              <p class="text-[11px] text-[#686868] mt-1">OTP verification required to change UPI ID</p>
+              <p class="text-[11px] text-[#686868] mt-1">For your security, we'll send an OTP to your number before updating your UPI ID.</p>
 
             {:else}
               <!-- OTP step for UPI change -->
