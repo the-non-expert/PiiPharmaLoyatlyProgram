@@ -1,8 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { slide } from 'svelte/transition';
+  import { slide, fly, fade } from 'svelte/transition';
   import type { PageData } from './$types';
-  import BottomNav from '$lib/components/BottomNav.svelte';
   import QrGlyph from '$lib/components/QrGlyph.svelte';
   import ProgressPill from '$lib/components/ProgressPill.svelte';
   import ScannerView from '$lib/components/ScannerView.svelte';
@@ -12,6 +11,9 @@
   import type { ScanErrorCode } from '$lib/components/ScanErrorBanner.svelte';
 
   let { data }: { data: PageData } = $props();
+
+  // ── Nav menu ──────────────────────────────────────────────
+  let menuOpen = $state(false);
 
   // ── State machine ─────────────────────────────────────────
   type AppState =
@@ -115,7 +117,7 @@
 </script>
 
 <main class="min-h-screen bg-[#F4F6F8] flex flex-col font-[Montserrat]">
-  <div class="max-w-lg mx-auto w-full flex flex-col flex-1 pb-[72px] relative">
+  <div class="max-w-lg mx-auto w-full flex flex-col flex-1 relative">
 
     <!-- ── Blue hero zone ───────────────────────────────────── -->
     <div
@@ -133,13 +135,14 @@
           <p class="text-[13px] leading-none mb-[2px]" style="color:rgba(255,255,255,0.75)">{greeting}</p>
           <h1 class="text-[22px] font-bold text-white leading-snug">{data.retailerName} 👋</h1>
         </div>
-        <div
-          class="w-[42px] h-[42px] rounded-full flex items-center justify-center shrink-0"
+        <button
+          onclick={() => (menuOpen = true)}
+          aria-label="Open navigation menu"
+          class="w-[42px] h-[42px] rounded-full flex items-center justify-center shrink-0 cursor-pointer border-none"
           style="background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4)"
-          aria-hidden="true"
         >
           <span class="text-[15px] font-bold text-white">{data.initials}</span>
-        </div>
+        </button>
       </div>
 
       <!-- hero scan button — whole block (circle + labels) is the tap target -->
@@ -274,8 +277,81 @@
     </div>
   </div>
 
-  <BottomNav active="home" />
 </main>
+
+<!-- ── Nav sheet (replaces bottom nav) ──────────────────────── -->
+{#if menuOpen}
+  <div
+    class="fixed inset-0 z-40"
+    style="background:rgba(0,0,0,0.35)"
+    onclick={() => (menuOpen = false)}
+    aria-hidden="true"
+    in:fade={{ duration: 150 }}
+    out:fade={{ duration: 150 }}
+  ></div>
+  <div
+    class="fixed bottom-0 left-0 right-0 z-50 bg-white max-w-lg mx-auto"
+    style="border-radius:24px 24px 0 0; box-shadow:0 -8px 32px rgba(0,0,0,0.12)"
+    in:fly={{ y: 240, duration: 260 }}
+    out:fly={{ y: 240, duration: 200 }}
+    role="dialog"
+    aria-modal="true"
+    aria-label="Navigation"
+  >
+    <div class="px-6 pt-4 pb-10">
+      <!-- drag handle -->
+      <div class="w-11 h-[5px] rounded-full bg-[#EAEAEA] mx-auto mb-5"></div>
+
+      <!-- user chip -->
+      <div class="flex items-center gap-3 pb-4 mb-2 border-b border-[#EAEAEA]">
+        <div
+          class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+          style="background:#e8f1fb"
+        >
+          <span class="text-[13px] font-bold text-[#2372B9]">{data.initials}</span>
+        </div>
+        <span class="text-[15px] font-bold text-[#474545]">{data.retailerName}</span>
+      </div>
+
+      <!-- nav items -->
+      <nav class="flex flex-col">
+        <a
+          href="/app/history"
+          onclick={() => (menuOpen = false)}
+          class="flex items-center gap-3 py-[14px] border-b border-[#EAEAEA]"
+        >
+          <div class="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0" style="background:#F4F6F8">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke="#2372B9" stroke-width="2"/>
+              <path d="M7 8h10M7 12h10M7 16h6" stroke="#2372B9" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="text-[15px] font-semibold text-[#474545]">My Claims</span>
+          <svg class="ml-auto" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18l6-6-6-6" stroke="#686868" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+
+        <a
+          href="/app/profile"
+          onclick={() => (menuOpen = false)}
+          class="flex items-center gap-3 py-[14px]"
+        >
+          <div class="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0" style="background:#F4F6F8">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="4" stroke="#2372B9" stroke-width="2"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#2372B9" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="text-[15px] font-semibold text-[#474545]">Profile</span>
+          <svg class="ml-auto" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18l6-6-6-6" stroke="#686868" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </nav>
+    </div>
+  </div>
+{/if}
 
 <!-- ── Scanner overlay ──────────────────────────────────────── -->
 {#if appState.kind === 'scanning'}

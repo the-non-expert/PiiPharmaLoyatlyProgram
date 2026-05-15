@@ -7,7 +7,7 @@
 {#if navigating.to && navigating.to.url.pathname.startsWith('/app')}
   {@const dest = navigating.to.url.pathname}
   <main class="min-h-screen bg-[#F4F6F8] flex flex-col font-[Montserrat]">
-    <div class="max-w-lg mx-auto w-full flex flex-col flex-1 pb-[72px]">
+    <div class="max-w-lg mx-auto w-full flex flex-col flex-1">
 
       {#if dest === '/app' || dest === '/app/'}
         <!-- Home skeleton — matches new QR scanner hero layout -->
@@ -49,7 +49,8 @@
 
       {:else if dest.startsWith('/app/history')}
         <!-- History skeleton -->
-        <div class="bg-white border-b border-[#EAEAEA] px-5 pt-3 pb-4 shrink-0">
+        <div class="bg-white border-b border-[#EAEAEA] px-4 pt-3 pb-4 shrink-0" style="display:flex;align-items:center;gap:8px;">
+          <div class="app-sk-bar" style="width:32px;height:32px;border-radius:50%;flex-shrink:0;"></div>
           <div class="app-sk-bar" style="width:100px;height:20px;"></div>
         </div>
         <div class="flex-1 px-4 py-4">
@@ -72,6 +73,7 @@
       {:else if dest.startsWith('/app/profile')}
         <!-- Profile skeleton -->
         <div class="bg-[#2372B9] px-5 pt-3 pb-6 shrink-0">
+          <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.15);margin-bottom:12px;"></div>
           <div style="display:flex;align-items:center;gap:16px;">
             <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.2);flex-shrink:0;"></div>
             <div>
@@ -130,17 +132,6 @@
         </div>
       {/if}
 
-      <!-- Bottom nav skeleton -->
-      <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-[#EAEAEA]" style="height:64px;max-width:512px;margin:0 auto;left:0;right:0;z-index:20;">
-        <div style="display:flex;justify-content:space-around;align-items:center;height:100%;padding:0 16px;">
-          {#each [1,2,3] as _}
-            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
-              <div class="app-sk-bar" style="width:24px;height:24px;border-radius:5px;"></div>
-              <div class="app-sk-bar" style="width:36px;height:9px;"></div>
-            </div>
-          {/each}
-        </div>
-      </nav>
     </div>
   </main>
 {:else}
