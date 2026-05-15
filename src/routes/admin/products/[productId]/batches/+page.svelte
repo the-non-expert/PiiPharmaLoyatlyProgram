@@ -80,9 +80,9 @@
 		<div class="kpi-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
 			{#each [
 				{ label: 'Total stickers printed', value: data.stats.totalPrinted.toLocaleString('en-IN'), sub: `across ${data.batches.length} batches`, accent: '#2372B9' },
-				{ label: 'In market',               value: data.stats.inMarket.toLocaleString('en-IN'),     sub: `${Math.round(data.stats.inMarket / data.stats.totalPrinted * 100)}% of printed`,    accent: '#474545' },
-				{ label: 'Scanned at least once',   value: data.stats.scannedOnce.toLocaleString('en-IN'),  sub: `${Math.round(data.stats.scannedOnce / data.stats.inMarket * 100)}% of in-market`, accent: '#3d8c1a' },
-				{ label: 'Last batch',              value: formatDay(data.stats.lastBatch.generated_at),     sub: `${data.stats.lastBatch.quantity.toLocaleString('en-IN')} codes`,                   accent: '#F59E0B' },
+				{ label: 'In market',               value: data.stats.inMarket.toLocaleString('en-IN'),     sub: data.stats.totalPrinted > 0 ? `${Math.round(data.stats.inMarket / data.stats.totalPrinted * 100)}% of printed` : '—',    accent: '#474545' },
+				{ label: 'Scanned at least once',   value: data.stats.scannedOnce.toLocaleString('en-IN'),  sub: data.stats.inMarket > 0 ? `${Math.round(data.stats.scannedOnce / data.stats.inMarket * 100)}% of in-market` : '—', accent: '#3d8c1a' },
+				{ label: 'Last batch',              value: data.stats.lastBatch ? formatDay(data.stats.lastBatch.generated_at) : '—', sub: data.stats.lastBatch ? `${data.stats.lastBatch.quantity.toLocaleString('en-IN')} codes` : 'No batches yet', accent: '#F59E0B' },
 			] as kpi}
 				<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
 					<div style="font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">{kpi.label}</div>
