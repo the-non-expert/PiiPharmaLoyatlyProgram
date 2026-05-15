@@ -212,8 +212,9 @@
     </div>
 
     <div class="flex-1 flex flex-col px-7 pb-10">
-      <h1 class="text-[28px] font-bold text-[#474545] mb-2">Enter OTP</h1>
+      <h1 class="text-[28px] font-bold text-[#474545] mb-2">Verify Your Number</h1>
       <p class="text-[14px] text-[#686868] leading-relaxed mb-9">
+        Almost there! This is a one-time step — you won't need an OTP after this.<br><br>
         We sent a 6-digit code to<br>
         <span class="font-bold text-[#474545]">{displayMobile}</span> via WhatsApp
       </p>
