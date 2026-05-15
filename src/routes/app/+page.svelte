@@ -24,6 +24,7 @@
 
   let appState = $state<AppState>({ kind: 'idle' });
   let submitting = $state(false);
+  let productFilter = $state<'all' | 'inprogress' | 'completed'>('all');
 
   // Greeting based on time of day
   const hour = new Date().getHours();
@@ -134,6 +135,13 @@
         <div>
           <p class="text-[13px] leading-none mb-[2px]" style="color:rgba(255,255,255,0.75)">{greeting}</p>
           <h1 class="text-[22px] font-bold text-white leading-snug">{data.retailerName} 👋</h1>
+          {#await data.productsWithStats then { cashbackEarned }}
+            {#if cashbackEarned > 0}
+              <p class="text-[12px] font-semibold mt-[4px]" style="color:rgba(255,255,255,0.7)">
+                ₹{cashbackEarned} earned so far
+              </p>
+            {/if}
+          {/await}
         </div>
         <button
           onclick={() => (menuOpen = true)}
@@ -195,7 +203,7 @@
     <!-- ── Body ───────────────────────────────────────────────── -->
     <div class="flex-1 overflow-y-auto px-4 py-5">
 
-      {#await data.products}
+      {#await data.productsWithStats}
         <!-- skeleton while loading -->
         <div class="flex flex-col gap-[10px]">
           {#each [1, 2, 3] as _}
@@ -210,7 +218,7 @@
           {/each}
         </div>
 
-      {:then products}
+      {:then { products }}
 
         {#if products.length === 0 || products.every(p => p.submitted_count === 0 && !p.has_active_claim)}
           <!-- ── Empty / first-run state ── -->
@@ -248,18 +256,46 @@
           </div>
 
         {:else}
+          <!-- ── Filter tabs ── -->
+          {#if products.some(p => p.has_active_claim) && products.some(p => !p.has_active_claim)}
+            {@const tabs = [
+              { id: 'all',        label: 'All' },
+              { id: 'inprogress', label: 'In Progress' },
+              { id: 'completed',  label: 'Completed' },
+            ]}
+            <div class="flex gap-2 mb-3">
+              {#each tabs as tab}
+                <button
+                  type="button"
+                  onclick={() => (productFilter = tab.id)}
+                  class="px-3 py-[5px] rounded-full text-[12px] font-bold border transition-colors cursor-pointer"
+                  style={productFilter === tab.id
+                    ? 'background:#2372B9;color:#fff;border-color:#2372B9'
+                    : 'background:#fff;color:#686868;border-color:#EAEAEA'}
+                >
+                  {tab.label}
+                </button>
+              {/each}
+            </div>
+          {/if}
+
           <!-- ── Active progress list ── -->
+          {@const filtered = productFilter === 'inprogress'
+            ? products.filter(p => !p.has_active_claim)
+            : productFilter === 'completed'
+              ? products.filter(p => p.has_active_claim)
+              : products}
           <div class="flex justify-between items-baseline mb-3">
             <h2
               class="text-[13px] font-bold text-[#474545] uppercase"
               style="letter-spacing:0.06em"
             >Active Progress</h2>
             <span class="text-[12px] font-semibold text-[#686868]">
-              {products.length} product{products.length !== 1 ? 's' : ''}
+              {filtered.length} product{filtered.length !== 1 ? 's' : ''}
             </span>
           </div>
           <div class="flex flex-col gap-[10px]">
-            {#each products as product}
+            {#each filtered as product}
               <ProgressPill
                 name={product.name}
                 current={product.has_active_claim ? product.coupons_required : product.submitted_count}
