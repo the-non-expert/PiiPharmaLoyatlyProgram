@@ -38,6 +38,7 @@
 		"@supabase/supabase-js": "^2.103.3",
 		"@tailwindcss/vite": "^4.2.2",
 		"bcryptjs": "^3.0.3",
+		"jsqr": "^1.4.0",
 		"tailwindcss": "^4.2.2"
 	}
 }

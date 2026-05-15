@@ -12,6 +12,14 @@ export const load: PageServerLoad = async ({ locals }) => {
     .from('retailers').select('name').eq('id', session.retailer_id).single();
   if (!retailer?.name) redirect(303, '/app/register');
 
+  const retailerName = retailer.name;
+  const initials = retailerName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w: string) => w[0].toUpperCase())
+    .join('');
+
   // All three queries are independent — run in parallel, streamed to client.
   const products = (async () => {
     const [{ data: products }, { data: counts }, { data: activeClaims }] = await Promise.all([
@@ -35,5 +43,5 @@ export const load: PageServerLoad = async ({ locals }) => {
     }));
   })();
 
-  return { products };
+  return { products, retailerName, initials };
 };

@@ -1,133 +1,273 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import type { PageData } from './$types';
   import BottomNav from '$lib/components/BottomNav.svelte';
+  import QrGlyph from '$lib/components/QrGlyph.svelte';
+  import ProgressPill from '$lib/components/ProgressPill.svelte';
+  import ScannerView from '$lib/components/ScannerView.svelte';
+  import ScanResultSheet from '$lib/components/ScanResultSheet.svelte';
+  import type { ScanResultOk } from '$lib/components/ScanResultSheet.svelte';
+  import ScanErrorBanner from '$lib/components/ScanErrorBanner.svelte';
+  import type { ScanErrorCode } from '$lib/components/ScanErrorBanner.svelte';
 
   let { data }: { data: PageData } = $props();
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning,' : hour < 17 ? 'Good afternoon,' : 'Good evening,';
+  // ── State machine ─────────────────────────────────────────
+  type AppState =
+    | { kind: 'idle' }
+    | { kind: 'scanning' }
+    | { kind: 'result'; payload: ScanResultOk }
+    | { kind: 'error'; reason: ScanErrorCode; detail?: string };
 
-  function pct(submitted: number, required: number) {
-    return Math.min(100, Math.round((submitted / required) * 100));
+  let appState = $state<AppState>({ kind: 'idle' });
+  let submitting = $state(false);
+
+  // Greeting based on time of day
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? 'Good morning,' : hour < 17 ? 'Good afternoon,' : 'Good evening,';
+
+  // Hero label changes when in error state
+  const heroLabel = $derived(
+    appState.kind === 'error'
+      ? { main: 'Try again', sub: "Last scan couldn't be processed" }
+      : { main: 'Scan Coupon', sub: 'Tap to scan a QR sticker on the box' }
+  );
+
+  // ── QR decode → POST /app/scan ────────────────────────────
+  async function handleScanResult(payload: { s: string; p: string; h: string }) {
+    submitting = true;
+    try {
+      const res = await fetch('/app/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        appState = { kind: 'error', reason: 'network_error' };
+        return;
+      }
+
+      const data = await res.json();
+
+      switch (data.status) {
+        case 'ok':
+          appState = {
+            kind: 'result',
+            payload: {
+              serial: payload.s,
+              product_name: data.product_name,
+              coupons_submitted: data.coupons_submitted,
+              coupons_required: data.coupons_required,
+              cashback_amount: data.cashback_amount,
+              claim_created: data.claim_created,
+              upi_id: data.upi_id
+            }
+          };
+          break;
+        case 'already_scanned':
+          appState = {
+            kind: 'error',
+            reason: 'qr_already_scanned',
+            detail: data.previous_scan_date
+          };
+          break;
+        case 'hmac_failed':
+          appState = { kind: 'error', reason: 'qr_hmac_failed' };
+          break;
+        case 'invalid':
+        default:
+          appState = { kind: 'error', reason: 'qr_invalid' };
+      }
+    } catch {
+      appState = { kind: 'error', reason: 'network_error' };
+    } finally {
+      submitting = false;
+    }
   }
 
-  const statusMap: Record<string, { bg: string; color: string; dot: string; label: string }> = {
-    pending:  { bg: '#fef3cd', color: '#92640a', dot: '#F59E0B', label: 'Claim Pending' },
-    approved: { bg: '#f0f9e6', color: '#3d6e10', dot: '#93CB52', label: 'Approved' },
-    rejected: { bg: '#fde8e8', color: '#9b2626', dot: '#E53E3E', label: 'Rejected' },
-    paid:     { bg: '#e8f1fb', color: '#14407a', dot: '#2372B9', label: 'Paid' },
-  };
+  function openScanner() {
+    appState = { kind: 'scanning' };
+  }
+
+  function closeScanner() {
+    appState = { kind: 'idle' };
+  }
+
+  function handleScanError() {
+    // QR decoder had an issue before even hitting the server
+    appState = { kind: 'error', reason: 'qr_invalid' };
+  }
+
+  // Auto-dismiss error after 8s
+  let errorTimer: ReturnType<typeof setTimeout> | null = null;
+  $effect(() => {
+    if (errorTimer !== null) clearTimeout(errorTimer);
+    if (appState.kind === 'error') {
+      errorTimer = setTimeout(() => {
+        appState = { kind: 'idle' };
+      }, 8000);
+    }
+    return () => { if (errorTimer !== null) clearTimeout(errorTimer); };
+  });
 </script>
 
 <main class="min-h-screen bg-[#F4F6F8] flex flex-col font-[Montserrat]">
-  <div class="max-w-lg mx-auto w-full flex flex-col flex-1 pb-[72px]">
+  <div class="max-w-lg mx-auto w-full flex flex-col flex-1 pb-[72px] relative">
 
-    <!-- Blue header -->
-    <div class="bg-[#2372B9] px-5 pt-3 pb-5 shrink-0">
-      <div class="flex justify-between items-center">
+    <!-- ── Blue hero zone ───────────────────────────────────── -->
+    <div
+      class="bg-[#2372B9] px-5 pb-9 shrink-0 relative overflow-hidden"
+      style="padding-top: 12px"
+    >
+      <!-- decorative faint QR brackets top-right -->
+      <div class="absolute top-[50px] right-[-30px] pointer-events-none" aria-hidden="true" style="opacity:0.08">
+        <QrGlyph size={220} color="#fff" />
+      </div>
+
+      <!-- greeting row -->
+      <div class="flex justify-between items-center relative z-10">
         <div>
-          <p class="text-[13px] font-medium leading-none mb-1" style="color: rgba(255,255,255,0.75)">{greeting}</p>
-          <h1 class="text-[22px] font-bold text-white leading-snug">Welcome back 👋</h1>
+          <p class="text-[13px] leading-none mb-[2px]" style="color:rgba(255,255,255,0.75)">{greeting}</p>
+          <h1 class="text-[22px] font-bold text-white leading-snug">{data.retailerName} 👋</h1>
         </div>
         <div
           class="w-[42px] h-[42px] rounded-full flex items-center justify-center shrink-0"
-          style="background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4)"
+          style="background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4)"
+          aria-hidden="true"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.9)" stroke-width="2"/>
-            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round"/>
-          </svg>
+          <span class="text-[15px] font-bold text-white">{data.initials}</span>
+        </div>
+      </div>
+
+      <!-- hero scan button -->
+      <div class="mt-9 flex flex-col items-center gap-[18px] relative z-10">
+        <button
+          onclick={openScanner}
+          aria-label="Scan a coupon QR code"
+          class="relative w-[168px] h-[168px] flex items-center justify-center cursor-pointer bg-transparent border-none p-0"
+        >
+          <!-- outer halo -->
+          <div
+            class="absolute rounded-full pointer-events-none"
+            style="inset:-12px;background:rgba(255,255,255,0.10)"
+            aria-hidden="true"
+          ></div>
+          <!-- inner halo -->
+          <div
+            class="absolute rounded-full pointer-events-none"
+            style="inset:6px;background:rgba(255,255,255,0.14)"
+            aria-hidden="true"
+          ></div>
+          <!-- button circle -->
+          <div
+            class="w-[144px] h-[144px] rounded-full bg-white flex items-center justify-center"
+            style="box-shadow:0 10px 32px rgba(0,0,0,0.25)"
+          >
+            <QrGlyph size={84} color="#2372B9" />
+          </div>
+        </button>
+
+        <div class="text-center">
+          <div class="text-[19px] font-bold text-white mb-1">{heroLabel.main}</div>
+          <div class="text-[13px]" style="color:rgba(255,255,255,0.8)">{heroLabel.sub}</div>
         </div>
       </div>
     </div>
 
-    <!-- Scrollable body -->
+    <!-- ── Error banner (overlaps hero/body seam) ────────────── -->
+    {#if appState.kind === 'error'}
+      <div class="mx-4 relative z-10" style="margin-top:-18px">
+        <ScanErrorBanner
+          reason={appState.reason}
+          detail={appState.detail}
+          onretry={openScanner}
+          ondismiss={() => (appState = { kind: 'idle' })}
+        />
+      </div>
+    {/if}
+
+    <!-- ── Body ───────────────────────────────────────────────── -->
     <div class="flex-1 overflow-y-auto px-4 py-5">
 
-      <!-- YOUR PRODUCTS -->
-      <h2 class="text-[15px] font-bold text-[#474545] mb-3 uppercase" style="letter-spacing:0.05em">Your Products</h2>
-
       {#await data.products}
-        <!-- Skeleton cards while data loads -->
-        <div class="flex flex-col gap-3 mb-6">
+        <!-- skeleton while loading -->
+        <div class="flex flex-col gap-[10px]">
           {#each [1, 2, 3] as _}
-            <div
-              class="bg-white rounded-xl border border-[#EAEAEA] p-4 animate-pulse"
-              style="box-shadow: 0 2px 8px rgba(0,0,0,0.04)"
-            >
-              <div class="flex justify-between items-start mb-3">
-                <div class="flex-1 min-w-0 mr-3">
-                  <div class="h-[16px] bg-[#EAEAEA] rounded w-2/3 mb-[8px]"></div>
-                  <div class="h-[13px] bg-[#EAEAEA] rounded w-1/3"></div>
-                </div>
+            <div class="bg-white rounded-xl border border-[#EAEAEA] px-[14px] py-3 animate-pulse" style="box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+              <div class="flex justify-between items-center mb-2">
+                <div class="h-[14px] bg-[#EAEAEA] rounded w-1/2"></div>
+                <div class="h-[13px] bg-[#EAEAEA] rounded w-10"></div>
               </div>
-              <div class="h-2 bg-[#EAEAEA] rounded-full mb-3"></div>
-              <div class="flex justify-between items-center">
-                <div class="h-[12px] bg-[#EAEAEA] rounded w-2/5"></div>
-                <div class="h-[32px] bg-[#EAEAEA] rounded-md w-28"></div>
-              </div>
+              <div class="h-[6px] bg-[#EAEAEA] rounded-full mb-[6px]"></div>
+              <div class="h-[11px] bg-[#EAEAEA] rounded w-2/5"></div>
             </div>
           {/each}
         </div>
+
       {:then products}
-        {#if products.length === 0}
-          <div class="bg-white rounded-xl p-8 text-center border border-[#EAEAEA]">
-            <p class="text-[14px] text-[#686868]">No active products found.</p>
-          </div>
-        {:else}
-          <div class="flex flex-col gap-3 mb-6">
-            {#each products as product}
-              {@const done = product.has_active_claim}
-              {@const progress = pct(product.submitted_count, product.coupons_required)}
 
-              <div
-                class="bg-white rounded-xl border border-[#EAEAEA] p-4"
-                style="box-shadow: 0 2px 8px rgba(0,0,0,0.04)"
-              >
-                <div class="flex justify-between items-start mb-2.5">
-                  <div class="flex-1 min-w-0 mr-3">
-                    <div class="text-[15px] font-bold text-[#474545] mb-[3px]">{product.name}</div>
-                    <div class="text-[13px] font-bold" style="color: {done ? '#93CB52' : '#2372B9'}">
-                      ₹{product.cashback_amount} cashback
-                    </div>
-                  </div>
-                  {#if done}
-                    {@const s = statusMap[product.claim_status ?? 'pending']}
-                    <span
-                      class="inline-flex items-center gap-1 px-[10px] py-1 rounded-full text-[12px] font-bold shrink-0"
-                      style="background: {s.bg}; color: {s.color}"
-                    >
-                      <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: {s.dot}"></span>
-                      {s.label}
-                    </span>
-                  {/if}
-                </div>
-
-                <!-- Progress bar -->
-                <div class="h-2 bg-[#EAEAEA] rounded-full overflow-hidden mb-2">
+        {#if products.length === 0 || products.every(p => p.submitted_count === 0 && !p.has_active_claim)}
+          <!-- ── Empty / first-run state ── -->
+          <div class="flex flex-col items-center pt-2">
+            <div
+              class="w-14 h-14 rounded-full flex items-center justify-center mb-[14px]"
+              style="background:#e8f1fb"
+            >
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2v4M12 18v4M22 12h-4M6 12H2M19 5l-3 3M8 16l-3 3M19 19l-3-3M8 8L5 5"
+                  stroke="#2372B9" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h2 class="text-[17px] font-bold text-[#474545] text-center mb-[6px]">
+              Start scanning to earn cashback
+            </h2>
+            <p class="text-[13px] text-[#686868] text-center leading-[1.6] max-w-[280px] mb-[22px]">
+              Every QR sticker counts toward a product target. Hit the target and we'll send cashback straight to your UPI.
+            </p>
+            <div class="w-full flex flex-col gap-[10px]">
+              {#each [
+                { n: '1', t: 'Find the QR sticker on the product box' },
+                { n: '2', t: 'Tap Scan Coupon and point at the code' },
+                { n: '3', t: 'When you hit the target, cashback is auto-claimed' }
+              ] as step}
+                <div class="flex items-center gap-3 px-3 py-[10px] bg-white rounded-[10px] border border-[#EAEAEA]">
                   <div
-                    class="h-full rounded-full transition-all"
-                    style="width: {done ? 100 : progress}%; background: {done ? '#93CB52' : '#2372B9'}"
-                  ></div>
+                    class="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[12px] font-bold shrink-0"
+                    style="background:#e8f1fb;color:#2372B9"
+                  >{step.n}</div>
+                  <span class="text-[13px] text-[#474545] leading-[1.4]">{step.t}</span>
                 </div>
+              {/each}
+            </div>
+          </div>
 
-                <div class="flex justify-between items-center">
-                  <span class="text-[12px] text-[#686868]">
-                    {done ? product.coupons_required : product.submitted_count} of {product.coupons_required} coupons submitted
-                  </span>
-                  {#if !done}
-                    <a
-                      href="/app/claim/{product.id}"
-                      class="bg-[#e8f1fb] text-[#2372B9] border border-[#2372B9] rounded-md px-[14px] py-[7px] text-[13px] font-bold shrink-0"
-                    >
-                      Submit Coupon
-                    </a>
-                  {/if}
-                </div>
-              </div>
+        {:else}
+          <!-- ── Active progress list ── -->
+          <div class="flex justify-between items-baseline mb-3">
+            <h2
+              class="text-[13px] font-bold text-[#474545] uppercase"
+              style="letter-spacing:0.06em"
+            >Active Progress</h2>
+            <span class="text-[12px] font-semibold text-[#686868]">
+              {products.length} product{products.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div class="flex flex-col gap-[10px]">
+            {#each products as product}
+              <ProgressPill
+                name={product.name}
+                current={product.has_active_claim ? product.coupons_required : product.submitted_count}
+                total={product.coupons_required}
+                cashback={product.cashback_amount}
+              />
             {/each}
           </div>
         {/if}
+
+      {:catch}
+        <p class="text-[13px] text-[#686868] text-center py-8">Couldn't load products. Please refresh.</p>
       {/await}
 
     </div>
@@ -135,3 +275,36 @@
 
   <BottomNav active="home" />
 </main>
+
+<!-- ── Scanner overlay ──────────────────────────────────────── -->
+{#if appState.kind === 'scanning'}
+  <ScannerView
+    onclose={closeScanner}
+    onresult={handleScanResult}
+    onerror={handleScanError}
+  />
+{/if}
+
+<!-- ── Loading spinner while POST is in-flight ──────────────── -->
+{#if submitting}
+  <div
+    class="fixed inset-0 z-40 flex items-center justify-center"
+    style="background:rgba(15,30,50,0.55)"
+    aria-busy="true"
+    aria-label="Processing scan"
+  >
+    <div
+      class="w-14 h-14 rounded-full border-4 border-white animate-spin"
+      style="border-top-color:transparent"
+    ></div>
+  </div>
+{/if}
+
+<!-- ── Result sheet ──────────────────────────────────────────── -->
+{#if appState.kind === 'result'}
+  <ScanResultSheet
+    result={appState.payload}
+    onscanagain={openScanner}
+    onviewclaims={() => goto('/app/history')}
+  />
+{/if}

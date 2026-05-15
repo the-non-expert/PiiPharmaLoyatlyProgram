@@ -10,42 +10,38 @@
     <div class="max-w-lg mx-auto w-full flex flex-col flex-1 pb-[72px]">
 
       {#if dest === '/app' || dest === '/app/'}
-        <!-- Home/Dashboard skeleton -->
-        <div class="bg-[#2372B9] px-5 pt-3 pb-5 shrink-0">
-          <div class="flex justify-between items-center">
+        <!-- Home skeleton — matches new QR scanner hero layout -->
+        <div class="bg-[#2372B9] px-5 shrink-0" style="padding-top:12px;padding-bottom:36px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;">
             <div>
               <div class="app-sk-bar" style="width:80px;height:11px;margin-bottom:6px;opacity:0.35;"></div>
               <div class="app-sk-bar" style="width:160px;height:20px;opacity:0.35;"></div>
             </div>
-            <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.2);"></div>
+            <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.2);flex-shrink:0;"></div>
+          </div>
+          <!-- scan button placeholder -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
+            <div style="width:168px;height:168px;border-radius:50%;background:rgba(255,255,255,0.15);"></div>
+            <div>
+              <div class="app-sk-bar" style="width:120px;height:16px;margin:0 auto 6px;opacity:0.35;"></div>
+              <div class="app-sk-bar" style="width:200px;height:11px;margin:0 auto;opacity:0.25;"></div>
+            </div>
           </div>
         </div>
         <div class="flex-1 px-4 py-5">
-          <div class="app-sk-bar" style="width:120px;height:13px;margin-bottom:12px;"></div>
-          <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
-            {#each [1,2,3] as _}
-              <div class="app-sk-card">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-                  <div class="app-sk-bar" style="width:55%;height:15px;"></div>
-                  <div class="app-sk-bar" style="width:60px;height:20px;border-radius:99px;"></div>
-                </div>
-                <div class="app-sk-bar" style="width:100%;height:6px;border-radius:99px;margin-bottom:8px;"></div>
-                <div style="display:flex;justify-content:space-between;">
-                  <div class="app-sk-bar" style="width:40%;height:11px;"></div>
-                  <div class="app-sk-bar" style="width:30%;height:11px;"></div>
-                </div>
-              </div>
-            {/each}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div class="app-sk-bar" style="width:110px;height:12px;"></div>
+            <div class="app-sk-bar" style="width:60px;height:11px;"></div>
           </div>
-          <div class="app-sk-bar" style="width:80px;height:13px;margin-bottom:12px;"></div>
           <div style="display:flex;flex-direction:column;gap:10px;">
-            {#each [1,2] as _}
-              <div class="app-sk-card" style="display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                  <div class="app-sk-bar" style="width:120px;height:14px;margin-bottom:5px;"></div>
-                  <div class="app-sk-bar" style="width:80px;height:11px;"></div>
+            {#each [1,2,3] as _}
+              <div class="app-sk-card" style="padding:12px 14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <div class="app-sk-bar" style="width:55%;height:14px;"></div>
+                  <div class="app-sk-bar" style="width:36px;height:13px;"></div>
                 </div>
-                <div class="app-sk-bar" style="width:60px;height:20px;border-radius:99px;"></div>
+                <div class="app-sk-bar" style="width:100%;height:6px;border-radius:99px;margin-bottom:6px;"></div>
+                <div class="app-sk-bar" style="width:45%;height:11px;"></div>
               </div>
             {/each}
           </div>
