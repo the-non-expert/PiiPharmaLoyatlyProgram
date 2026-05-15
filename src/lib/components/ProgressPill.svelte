@@ -16,8 +16,9 @@
 >
   <div class="flex justify-between items-center mb-2">
     <div class="text-[14px] font-bold text-[#474545] truncate mr-2">{name}</div>
-    <div class="text-[13px] font-bold shrink-0" style="color: {done ? '#93CB52' : '#2372B9'}">
-      {current}<span class="font-semibold text-[#686868]"> / {total}</span>
+    <div class="inline-flex items-baseline shrink-0">
+      <span class="text-[13px] font-bold" style="color:{done ? '#93CB52' : '#2372B9'}">{current}</span>
+      <span class="text-[13px] font-semibold text-[#686868]">&nbsp;/&nbsp;{total}</span>
     </div>
   </div>
   <div class="h-[6px] bg-[#EAEAEA] rounded-full overflow-hidden mb-[6px]">

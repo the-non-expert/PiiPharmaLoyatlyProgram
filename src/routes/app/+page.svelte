@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { slide } from 'svelte/transition';
   import type { PageData } from './$types';
   import BottomNav from '$lib/components/BottomNav.svelte';
   import QrGlyph from '$lib/components/QrGlyph.svelte';
@@ -141,13 +142,13 @@
         </div>
       </div>
 
-      <!-- hero scan button -->
-      <div class="mt-9 flex flex-col items-center gap-[18px] relative z-10">
-        <button
-          onclick={openScanner}
-          aria-label="Scan a coupon QR code"
-          class="relative w-[168px] h-[168px] flex items-center justify-center cursor-pointer bg-transparent border-none p-0"
-        >
+      <!-- hero scan button — whole block (circle + labels) is the tap target -->
+      <button
+        onclick={openScanner}
+        aria-label="Scan a coupon QR code"
+        class="mt-9 flex flex-col items-center gap-[18px] relative z-10 bg-transparent border-none p-0 cursor-pointer w-full"
+      >
+        <div class="relative w-[168px] h-[168px] flex items-center justify-center">
           <!-- outer halo -->
           <div
             class="absolute rounded-full pointer-events-none"
@@ -167,18 +168,18 @@
           >
             <QrGlyph size={84} color="#2372B9" />
           </div>
-        </button>
+        </div>
 
         <div class="text-center">
           <div class="text-[19px] font-bold text-white mb-1">{heroLabel.main}</div>
           <div class="text-[13px]" style="color:rgba(255,255,255,0.8)">{heroLabel.sub}</div>
         </div>
-      </div>
+      </button>
     </div>
 
-    <!-- ── Error banner (overlaps hero/body seam) ────────────── -->
+    <!-- ── Error banner — slides down from hero seam, 240ms ────── -->
     {#if appState.kind === 'error'}
-      <div class="mx-4 relative z-10" style="margin-top:-18px">
+      <div class="mx-4 relative z-10" style="margin-top:-18px" transition:slide={{ duration: 240 }}>
         <ScanErrorBanner
           reason={appState.reason}
           detail={appState.detail}

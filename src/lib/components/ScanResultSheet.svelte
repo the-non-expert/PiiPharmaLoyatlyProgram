@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { fly, fade } from 'svelte/transition';
+  import { cubicOut } from 'svelte/easing';
   import QrGlyph from './QrGlyph.svelte';
 
   export interface ScanResultOk {
@@ -50,9 +52,9 @@
 </script>
 
 <!-- Backdrop: dim home behind -->
-<div class="fixed inset-0 z-30" style="background: rgba(15,30,50,0.55)" aria-hidden="true"></div>
+<div class="fixed inset-0 z-30" style="background: rgba(15,30,50,0.55)" aria-hidden="true" in:fade={{ duration: 200 }} out:fade={{ duration: 150 }}></div>
 
-<!-- Sheet -->
+<!-- Sheet — slides up 320ms cubic-bezier(0.2,0.7,0.1,1) per spec -->
 <div
   class="fixed left-0 right-0 bottom-0 z-40 bg-white max-w-lg mx-auto"
   style="border-radius: 24px 24px 0 0; box-shadow: 0 -16px 48px rgba(0,0,0,0.2); padding: 12px 24px 32px"
@@ -60,6 +62,8 @@
   aria-modal="true"
   aria-label={result.claim_created ? 'Claim completed' : 'Coupon scanned'}
   use:trapFocus
+  in:fly={{ y: '100%', duration: 320, easing: cubicOut }}
+  out:fly={{ y: '100%', duration: 220, easing: cubicOut }}
 >
   <!-- drag handle -->
   <div class="w-11 h-[5px] rounded-full bg-[#d8dde3] mx-auto mb-[18px]"></div>
