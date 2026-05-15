@@ -2,7 +2,7 @@
   import { enhance } from '$app/forms';
   import { invalidateAll } from '$app/navigation';
   import type { PageData, ActionData } from './$types';
-  import BottomNav from '$lib/components/BottomNav.svelte';
+
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -111,10 +111,23 @@
 </script>
 
 <main class="min-h-screen bg-[#F4F6F8] flex flex-col font-[Montserrat]">
-  <div class="max-w-lg mx-auto w-full flex flex-col flex-1 pb-[72px]">
+  <div class="max-w-lg mx-auto w-full flex flex-col flex-1">
 
     <!-- Header -->
     <div class="bg-[#2372B9] px-5 pt-3 pb-6 shrink-0">
+      <!-- back button row -->
+      <div class="flex items-center mb-3">
+        <a
+          href="/app"
+          class="w-8 h-8 rounded-full flex items-center justify-center -ml-1"
+          style="background:rgba(255,255,255,0.15)"
+          aria-label="Back to home"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M15 18l-6-6 6-6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
       <div class="flex items-center gap-4">
         <div
           class="w-[56px] h-[56px] rounded-full flex items-center justify-center shrink-0"
@@ -431,5 +444,4 @@
     </div>
   </div>
 
-  <BottomNav active="profile" />
 </main>

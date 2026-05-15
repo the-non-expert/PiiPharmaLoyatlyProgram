@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { PageData } from './$types';
-  import BottomNav from '$lib/components/BottomNav.svelte';
 
   let { data }: { data: PageData } = $props();
 
@@ -25,11 +24,21 @@
 </script>
 
 <main class="min-h-screen bg-[#F4F6F8] flex flex-col font-[Montserrat]">
-  <div class="max-w-lg mx-auto w-full flex flex-col flex-1 pb-[72px]">
+  <div class="max-w-lg mx-auto w-full flex flex-col flex-1">
 
     <!-- Header -->
-    <div class="bg-white border-b border-[#EAEAEA] px-5 pt-3 pb-4 shrink-0">
-      <h1 class="text-[22px] font-bold text-[#474545]">My Claims</h1>
+    <div class="bg-white border-b border-[#EAEAEA] px-4 pt-3 pb-4 shrink-0 flex items-center gap-2">
+      <a
+        href="/app"
+        class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 -ml-1"
+        style="color:#2372B9"
+        aria-label="Back to home"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M15 18l-6-6 6-6" stroke="#2372B9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <h1 class="text-[20px] font-bold text-[#474545]">My Claims</h1>
     </div>
 
     <!-- Claim list -->
@@ -130,5 +139,4 @@
 
   </div>
 
-  <BottomNav active="claims" />
 </main>
