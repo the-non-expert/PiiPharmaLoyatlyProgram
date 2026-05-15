@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PiiPharma Loyalty Portal — Design System</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Montserrat', sans-serif; background: #f8f9fb; color: #474545; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const C = {
+  primary:'#2372B9', primaryDark:'#1a5a99', primaryLight:'#e8f1fb',
+  secondary:'#24AEB1', secondaryLight:'#e6f7f7',
+  success:'#93CB52', successLight:'#f0f9e6',
+  error:'#E53E3E', errorLight:'#fde8e8',
+  warning:'#F59E0B', warningLight:'#fef3cd',
+  body:'#474545', muted:'#686868', white:'#FFFFFF',
+  surface:'#F4F6F8', border:'#EAEAEA',
+};
+
+// ── Primitives ─────────────────────────────────────────────
+const Lbl = ({t}) => <div style={{fontSize:10,fontWeight:600,color:C.muted,fontFamily:'Montserrat',textTransform:'uppercase',letterSpacing:'0.08em',marginTop:6,textAlign:'center'}}>{t}</div>;
+const Col = ({children,style}) => <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:4,...style}}>{children}</div>;
+const Row = ({children,style}) => <div style={{display:'flex',flexWrap:'wrap',gap:12,alignItems:'flex-start',...style}}>{children}</div>;
+
+function Section({id,num,title,children}) {
+  return (
+    <section id={id} style={{marginBottom:64}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:24,paddingBottom:14,borderBottom:`2px solid ${C.border}`}}>
+        <span style={{background:C.primary,color:'#fff',borderRadius:6,width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,flexShrink:0}}>{num}</span>
+        <h2 style={{fontSize:15,fontWeight:700,color:C.body,fontFamily:'Montserrat',letterSpacing:'0.04em',textTransform:'uppercase'}}>{title}</h2>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// ── Badge ──────────────────────────────────────────────────
+function Badge({status}) {
+  const m = {
+    Pending: {bg:'#fef3cd',color:'#92640a',dot:'#F59E0B'},
+    Approved:{bg:C.successLight,color:'#3d6e10',dot:C.success},
+    Rejected:{bg:C.errorLight,color:'#9b2626',dot:C.error},
+    Paid:    {bg:C.primaryLight,color:'#14407a',dot:C.primary},
+  }[status];
+  return (
+    <span style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 12px',borderRadius:99,background:m.bg,color:m.color,fontSize:11,fontWeight:700,fontFamily:'Montserrat',whiteSpace:'nowrap'}}>
+      <span style={{width:6,height:6,borderRadius:'50%',background:m.dot,flexShrink:0}}/>
+      {status}
+    </span>
+  );
+}
+
+// ── Buttons ────────────────────────────────────────────────
+function Btn({variant='primary',size='md',state='default',fullWidth,children}) {
+  const sz = {lg:{p:'13px 26px',fs:14,r:6},md:{p:'9px 18px',fs:13,r:6},sm:{p:'6px 13px',fs:11,r:4}}[size];
+  const base = {fontFamily:'Montserrat',fontWeight:600,border:'2px solid transparent',cursor:state==='disabled'?'not-allowed':'pointer',display:'inline-flex',alignItems:'center',gap:7,transition:'all 0.15s',lineHeight:1.2,opacity:state==='disabled'?0.42:1,padding:sz.p,fontSize:sz.fs,borderRadius:sz.r,width:fullWidth?'100%':'auto',justifyContent:fullWidth?'center':'flex-start'};
+  const v = {
+    primary:    {background:state==='hover'?C.primaryDark:C.primary,color:'#fff',borderColor:state==='hover'?C.primaryDark:C.primary},
+    secondary:  {background:state==='hover'?'#1d9699':C.secondary,color:'#fff',borderColor:state==='hover'?'#1d9699':C.secondary},
+    ghost:      {background:state==='hover'?C.primaryLight:'transparent',color:C.primary,borderColor:C.primary},
+    destructive:{background:state==='hover'?'#c53030':C.error,color:'#fff',borderColor:state==='hover'?'#c53030':C.error},
+  }[variant];
+  const Sp = () => <span style={{width:11,height:11,border:'2px solid rgba(255,255,255,0.35)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin 0.7s linear infinite',display:'inline-block'}}/>;
+  return <button style={{...base,...v}}>{state==='loading'&&<Sp/>}{children}</button>;
+}
+
+function ButtonsSection() {
+  const variants = ['primary','secondary','ghost','destructive'];
+  const states = ['default','hover','disabled','loading'];
+  const sizes = ['lg','md','sm'];
+  const labels = {primary:'Save',secondary:'Preview',ghost:'Cancel',destructive:'Delete'};
+  return (
+    <Section id="buttons" num="01" title="Buttons">
+      {variants.map(v => (
+        <div key={v} style={{marginBottom:28}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'capitalize',marginBottom:10,fontFamily:'Montserrat'}}>{v}</div>
+          <Row style={{gap:32,alignItems:'flex-end'}}>
+            {states.map(st=>(
+              <Col key={st}>
+                <Row style={{gap:8,alignItems:'flex-end'}}>
+                  {sizes.map(sz=><Btn key={sz} variant={v} size={sz} state={st}>{labels[v]}</Btn>)}
+                </Row>
+                <Lbl t={st}/>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      ))}
+    </Section>
+  );
+}
+
+// ── Inputs ────────────────────────────────────────────────
+function Input({label,state='default',prefix,placeholder}) {
+  const ss = {
+    default: {border:`2px solid ${C.border}`},
+    focused: {border:`2px solid ${C.primary}`,boxShadow:`0 0 0 3px ${C.primaryLight}`},
+    filled:  {border:`2px solid ${C.border}`},
+    error:   {border:`2px solid ${C.error}`,boxShadow:`0 0 0 3px ${C.errorLight}`},
+    disabled:{border:`2px solid ${C.border}`,background:C.surface},
+  }[state];
+  const val = state==='filled'?'Sample value':state==='error'?'Wrong input':'';
+  return (
+    <Col>
+      <div style={{fontSize:11,fontWeight:600,color:C.body,fontFamily:'Montserrat',marginBottom:2}}>{label}</div>
+      <div style={{display:'flex',alignItems:'stretch',width:210,borderRadius:6,background:state==='disabled'?C.surface:C.white,overflow:'hidden',...ss}}>
+        {prefix&&<span style={{padding:'0 10px',fontSize:12,fontWeight:600,color:C.muted,borderRight:`1px solid ${C.border}`,display:'flex',alignItems:'center',background:C.surface,whiteSpace:'nowrap'}}>{prefix}</span>}
+        <input readOnly value={val} placeholder={placeholder||`Enter ${label?.toLowerCase()||'value'}`} disabled={state==='disabled'}
+          style={{flex:1,padding:'9px 11px',border:'none',outline:'none',fontFamily:'Montserrat',fontSize:12,color:C.body,background:'transparent',minWidth:0}}/>
+        {state==='error'&&<span style={{padding:'0 10px',fontSize:13,color:C.error,display:'flex',alignItems:'center'}}>!</span>}
+      </div>
+      {state==='error'&&<div style={{fontSize:10,color:C.error,fontWeight:600,fontFamily:'Montserrat'}}>This field is required</div>}
+      <Lbl t={state}/>
+    </Col>
+  );
+}
+
+function OtpInput({state='default'}) {
+  return (
+    <Col>
+      <div style={{display:'flex',gap:7}}>
+        {[...Array(6)].map((_,i)=>(
+          <div key={i} style={{width:42,height:50,border:`2px solid ${state==='focused'&&i===2?C.primary:state==='error'?C.error:C.border}`,borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,fontWeight:700,color:C.body,background:state==='disabled'?C.surface:C.white,boxShadow:state==='focused'&&i===2?`0 0 0 3px ${C.primaryLight}`:undefined,fontFamily:'Montserrat'}}>
+            {state!=='default'&&state!=='focused'?(i<3?i+1:''):''}
+          </div>
+        ))}
+      </div>
+      {state==='error'&&<div style={{fontSize:10,color:C.error,fontWeight:600,fontFamily:'Montserrat'}}>Invalid OTP entered</div>}
+      <Lbl t={state}/>
+    </Col>
+  );
+}
+
+function Textarea({state='default'}) {
+  const ss = {
+    default:{border:`2px solid ${C.border}`},
+    focused:{border:`2px solid ${C.primary}`,boxShadow:`0 0 0 3px ${C.primaryLight}`},
+    filled: {border:`2px solid ${C.border}`},
+    error:  {border:`2px solid ${C.error}`,boxShadow:`0 0 0 3px ${C.errorLight}`},
+    disabled:{border:`2px solid ${C.border}`,background:C.surface},
+  }[state];
+  const val = state==='filled'?'Prescription verified and approved for claim.':state==='error'?'Too short':'';
+  return (
+    <Col>
+      <div style={{fontSize:11,fontWeight:600,color:C.body,fontFamily:'Montserrat',marginBottom:2}}>Notes</div>
+      <textarea readOnly value={val} placeholder="Add notes…" disabled={state==='disabled'}
+        style={{width:210,height:78,resize:'none',padding:'9px 11px',borderRadius:6,fontFamily:'Montserrat',fontSize:12,color:C.body,background:state==='disabled'?C.surface:C.white,outline:'none',...ss}}/>
+      <Lbl t={state}/>
+    </Col>
+  );
+}
+
+function InputsSection() {
+  const states = ['default','focused','filled','error','disabled'];
+  return (
+    <Section id="inputs" num="02" title="Input Fields">
+      {[
+        {label:'Text Input', comp: s => <Input key={s} label="Full Name" state={s}/>},
+        {label:'Number Input', comp: s => <Input key={s} label="Quantity" state={s} placeholder="0"/>},
+        {label:'Phone Input (+91)', comp: s => <Input key={s} label="Phone" state={s} prefix="+91" placeholder="98765 43210"/>},
+        {label:'OTP Input (6-digit)', comp: s => <OtpInput key={s} state={s}/>},
+        {label:'Textarea', comp: s => <Textarea key={s} state={s}/>},
+      ].map(({label,comp})=>(
+        <div key={label} style={{marginBottom:28}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.muted,marginBottom:10,fontFamily:'Montserrat'}}>{label}</div>
+          <Row style={{gap:20,alignItems:'flex-start'}}>{states.map(comp)}</Row>
+        </div>
+      ))}
+    </Section>
+  );
+}
+
+// ── Dropdown ──────────────────────────────────────────────
+function Dropdown({state='default'}) {
+  return (
+    <Col>
+      <div style={{position:'relative',width:190}}>
+        <div style={{border:`2px solid ${state==='open'?C.primary:C.border}`,borderRadius:6,padding:'9px 12px',background:state==='disabled'?C.surface:C.white,display:'flex',justifyContent:'space-between',alignItems:'center',cursor:state==='disabled'?'not-allowed':'pointer',boxShadow:state==='open'?`0 0 0 3px ${C.primaryLight}`:undefined,fontFamily:'Montserrat',fontSize:12,color:state==='default'?C.muted:C.body}}>
+          <span>{state==='selected'||state==='open'?'North India Zone':'Select zone'}</span>
+          <span style={{color:C.muted,fontSize:9,transform:state==='open'?'rotate(180deg)':'none',transition:'transform 0.2s'}}>▼</span>
+        </div>
+        {state==='open'&&(
+          <div style={{position:'absolute',top:'calc(100% + 4px)',left:0,right:0,background:C.white,border:`1px solid ${C.border}`,borderRadius:6,boxShadow:'0 8px 24px rgba(0,0,0,0.1)',zIndex:10,overflow:'hidden'}}>
+            {['North India Zone','South India Zone','East India Zone','West India Zone'].map((o,i)=>(
+              <div key={o} style={{padding:'9px 13px',fontSize:12,fontFamily:'Montserrat',color:i===0?C.primary:C.body,background:i===0?C.primaryLight:'transparent',fontWeight:i===0?600:400}}>{o}</div>
+            ))}
+          </div>
+        )}
+      </div>
+      <Lbl t={state}/>
+    </Col>
+  );
+}
+
+// ── File Upload ───────────────────────────────────────────
+function FileUpload({state='idle'}) {
+  const cfgs = {
+    idle:     {border:`2px dashed ${C.border}`,bg:C.white},
+    dragover: {border:`2px dashed ${C.primary}`,bg:C.primaryLight},
+    uploading:{border:`2px dashed ${C.secondary}`,bg:C.secondaryLight},
+    uploaded: {border:`2px solid ${C.success}`,bg:C.successLight},
+    error:    {border:`2px dashed ${C.error}`,bg:C.errorLight},
+  }[state];
+  return (
+    <Col>
+      <div style={{width:185,height:128,borderRadius:8,background:cfgs.bg,border:cfgs.border,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:7,cursor:'pointer',padding:14}}>
+        {state==='idle'&&<><div style={{width:34,height:34,borderRadius:'50%',background:C.surface,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>☁</div><div style={{fontSize:11,color:C.muted,textAlign:'center',fontFamily:'Montserrat',fontWeight:600,lineHeight:1.4}}>Drop file or <span style={{color:C.primary}}>browse</span></div><div style={{fontSize:9,color:C.muted,fontFamily:'Montserrat'}}>PNG, JPG · max 5 MB</div></>}
+        {state==='dragover'&&<><div style={{fontSize:22}}>📎</div><div style={{fontSize:12,color:C.primary,fontWeight:700,fontFamily:'Montserrat'}}>Drop to upload</div></>}
+        {state==='uploading'&&<><div style={{fontSize:11,color:C.secondary,fontWeight:600,fontFamily:'Montserrat'}}>Uploading…</div><div style={{width:'80%',height:6,background:'rgba(0,0,0,0.08)',borderRadius:99}}><div style={{width:'60%',height:'100%',background:C.secondary,borderRadius:99}}/></div><div style={{fontSize:10,color:C.muted,fontFamily:'Montserrat'}}>60% complete</div></>}
+        {state==='uploaded'&&<><div style={{width:48,height:48,background:'#ddeebb',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>🖼</div><div style={{fontSize:10,color:C.success,fontWeight:700,fontFamily:'Montserrat'}}>receipt_001.jpg</div><div style={{fontSize:9,color:C.muted,fontFamily:'Montserrat'}}>Upload complete ✓</div></>}
+        {state==='error'&&<><div style={{fontSize:22}}>⚠️</div><div style={{fontSize:11,color:C.error,fontWeight:700,fontFamily:'Montserrat'}}>Upload failed</div><div style={{fontSize:9,color:C.muted,fontFamily:'Montserrat',textAlign:'center'}}>File exceeds 5 MB limit</div></>}
+      </div>
+      <Lbl t={state}/>
+    </Col>
+  );
+}
+
+// ── Progress ──────────────────────────────────────────────
+function ProgressBar({fill,label}) {
+  const done = fill===100;
+  return (
+    <Col style={{width:360}}>
+      <div style={{display:'flex',justifyContent:'space-between',width:'100%',marginBottom:5}}>
+        <span style={{fontSize:12,fontWeight:600,color:C.body,fontFamily:'Montserrat'}}>{label}</span>
+        <span style={{fontSize:12,fontWeight:700,color:done?C.success:C.primary,fontFamily:'Montserrat'}}>{fill}%</span>
+      </div>
+      <div style={{width:'100%',height:10,background:C.border,borderRadius:99,overflow:'hidden'}}>
+        <div style={{width:`${fill}%`,height:'100%',background:done?C.success:C.primary,borderRadius:99}}/>
+      </div>
+      <Lbl t={done?'complete (5/5)':fill===60?'partial (3/5)':'started (1/5)'}/>
+    </Col>
+  );
+}
+
+// ── Cards ─────────────────────────────────────────────────
+function ProductCard() {
+  return (
+    <div style={{width:196,background:C.white,borderRadius:8,border:`1px solid ${C.border}`,overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,0.06)'}}>
+      <div style={{height:96,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',borderBottom:`1px solid ${C.border}`}}>
+        <div style={{width:56,height:56,background:C.border,borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,color:C.muted,fontFamily:'Montserrat',textAlign:'center',fontWeight:600,lineHeight:1.4,padding:4}}>product<br/>image</div>
+      </div>
+      <div style={{padding:12}}>
+        <div style={{fontSize:12,fontWeight:700,color:C.body,fontFamily:'Montserrat',marginBottom:2}}>Amoxicillin 500mg</div>
+        <div style={{fontSize:10,color:C.muted,fontFamily:'Montserrat',marginBottom:8}}>SKU: AMX-500-10</div>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span style={{fontSize:15,fontWeight:700,color:C.primary,fontFamily:'Montserrat'}}>₹ 120</span>
+          <Badge status="Approved"/>
+        </div>
+        <div style={{marginTop:9,background:C.successLight,borderRadius:4,padding:'4px 8px',fontSize:10,fontWeight:600,color:'#3d6e10',fontFamily:'Montserrat'}}>🎁 Earn 12 points</div>
+      </div>
+    </div>
+  );
+}
+
+function ClaimCard() {
+  return (
+    <div style={{width:214,background:C.white,borderRadius:8,border:`1px solid ${C.border}`,padding:14,boxShadow:'0 2px 8px rgba(0,0,0,0.06)'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+        <div><div style={{fontSize:11,fontWeight:700,color:C.body,fontFamily:'Montserrat'}}>Claim #CLM-2048</div><div style={{fontSize:10,color:C.muted,fontFamily:'Montserrat',marginTop:2}}>14 Apr 2025</div></div>
+        <Badge status="Pending"/>
+      </div>
+      <div style={{background:C.surface,borderRadius:6,padding:8,marginBottom:10}}>
+        <div style={{fontSize:10,color:C.muted,fontFamily:'Montserrat',marginBottom:4,fontWeight:600}}>Items claimed</div>
+        <div style={{fontSize:11,color:C.body,fontFamily:'Montserrat',marginBottom:2}}>Amoxicillin 500mg × 5</div>
+        <div style={{fontSize:11,color:C.body,fontFamily:'Montserrat'}}>Paracetamol 650mg × 10</div>
+      </div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <span style={{fontSize:11,color:C.muted,fontFamily:'Montserrat'}}>Points earned</span>
+        <span style={{fontSize:16,fontWeight:700,color:C.secondary,fontFamily:'Montserrat'}}>+240 pts</span>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({label,value,sub,color}) {
+  return (
+    <div style={{width:172,background:C.white,borderRadius:8,border:`1px solid ${C.border}`,padding:16,boxShadow:'0 2px 8px rgba(0,0,0,0.06)'}}>
+      <div style={{fontSize:10,fontWeight:600,color:C.muted,fontFamily:'Montserrat',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>{label}</div>
+      <div style={{fontSize:26,fontWeight:700,color:color||C.primary,fontFamily:'Montserrat',marginBottom:3}}>{value}</div>
+      <div style={{fontSize:10,color:C.muted,fontFamily:'Montserrat'}}>{sub}</div>
+      <div style={{marginTop:10,height:3,background:C.border,borderRadius:99}}><div style={{width:'68%',height:'100%',background:color||C.primary,borderRadius:99}}/></div>
+    </div>
+  );
+}
+
+// ── Nav ───────────────────────────────────────────────────
+function MobileNav() {
+  const tabs = [{icon:'🏠',label:'Home',active:true},{icon:'📋',label:'Claims'},{icon:'🎁',label:'Rewards'},{icon:'👤',label:'Profile'}];
+  return (
+    <div style={{width:350,background:C.white,borderTop:`1px solid ${C.border}`,display:'flex',borderRadius:'0 0 10px 10px',boxShadow:'0 -2px 12px rgba(0,0,0,0.07)'}}>
+      {tabs.map(t=>(
+        <div key={t.label} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',padding:'10px 4px 10px',cursor:'pointer'}}>
+          <div style={{fontSize:18,marginBottom:3}}>{t.icon}</div>
+          <span style={{fontSize:10,fontWeight:t.active?700:600,color:t.active?C.primary:C.muted,fontFamily:'Montserrat'}}>{t.label}</span>
+          {t.active&&<div style={{width:20,height:3,background:C.primary,borderRadius:99,marginTop:4}}/>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DesktopSidebar() {
+  const items=[{icon:'📊',label:'Dashboard',active:true},{icon:'📋',label:'Claims Queue'},{icon:'👥',label:'Retailers'},{icon:'💊',label:'Products'},{icon:'📈',label:'Reports'},{icon:'⚙️',label:'Settings'}];
+  return (
+    <div style={{width:210,background:C.white,borderRadius:8,border:`1px solid ${C.border}`,display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 2px 12px rgba(0,0,0,0.05)'}}>
+      <div style={{padding:'16px 14px',borderBottom:`1px solid ${C.border}`,display:'flex',alignItems:'center',gap:9}}>
+        <div style={{width:30,height:30,borderRadius:6,background:C.primary,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'#fff',fontWeight:700}}>P</div>
+        <div><div style={{fontSize:12,fontWeight:700,color:C.body,fontFamily:'Montserrat'}}>PiiPharma</div><div style={{fontSize:9,color:C.muted,fontFamily:'Montserrat'}}>Admin Portal</div></div>
+      </div>
+      <div style={{flex:1,padding:'6px 0'}}>
+        {items.map(it=>(
+          <div key={it.label} style={{display:'flex',alignItems:'center',gap:9,padding:'9px 14px',cursor:'pointer',background:it.active?C.primaryLight:'transparent',borderLeft:it.active?`3px solid ${C.primary}`:'3px solid transparent'}}>
+            <span style={{fontSize:14}}>{it.icon}</span>
+            <span style={{fontSize:12,fontWeight:it.active?700:600,color:it.active?C.primary:C.body,fontFamily:'Montserrat'}}>{it.label}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{padding:'10px 14px',borderTop:`1px solid ${C.border}`,display:'flex',alignItems:'center',gap:9}}>
+        <div style={{width:28,height:28,borderRadius:'50%',background:C.secondary,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'#fff',fontWeight:700}}>AK</div>
+        <div><div style={{fontSize:11,fontWeight:700,color:C.body,fontFamily:'Montserrat'}}>Anil Kumar</div><div style={{fontSize:9,color:C.muted,fontFamily:'Montserrat'}}>Super Admin</div></div>
+      </div>
+    </div>
+  );
+}
+
+// ── Toasts ────────────────────────────────────────────────
+function Toast({type}) {
+  const m = {
+    success:{bg:C.successLight,border:C.success,color:'#3d6e10',icon:'✓',title:'Success',msg:'Claim approved successfully.'},
+    error:  {bg:C.errorLight,border:C.error,color:'#9b2626',icon:'✕',title:'Error',msg:'Failed to submit. Please try again.'},
+    info:   {bg:C.primaryLight,border:C.primary,color:'#14407a',icon:'i',title:'Info',msg:'Points reflect within 24 hours.'},
+    warning:{bg:C.warningLight,border:C.warning,color:'#92640a',icon:'!',title:'Warning',msg:'Session expires in 5 minutes.'},
+  }[type];
+  return (
+    <div style={{width:270,background:m.bg,border:`1px solid ${m.border}`,borderLeft:`4px solid ${m.border}`,borderRadius:6,padding:'11px 13px',display:'flex',gap:9,alignItems:'flex-start'}}>
+      <div style={{width:20,height:20,borderRadius:'50%',background:m.border,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,flexShrink:0}}>{m.icon}</div>
+      <div style={{flex:1}}><div style={{fontSize:12,fontWeight:700,color:m.color,fontFamily:'Montserrat',marginBottom:2}}>{m.title}</div><div style={{fontSize:11,color:C.body,fontFamily:'Montserrat'}}>{m.msg}</div></div>
+      <span style={{fontSize:14,color:C.muted,cursor:'pointer'}}>×</span>
+    </div>
+  );
+}
+
+// ── Modal / Sheet ─────────────────────────────────────────
+function DesktopModal() {
+  return (
+    <div style={{position:'relative',width:350,height:210,background:'rgba(0,0,0,0.38)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{background:C.white,borderRadius:10,padding:24,width:300,boxShadow:'0 16px 48px rgba(0,0,0,0.2)'}}>
+        <div style={{fontSize:15,fontWeight:700,color:C.body,fontFamily:'Montserrat',marginBottom:6}}>Confirm Approval</div>
+        <div style={{fontSize:12,color:C.muted,fontFamily:'Montserrat',marginBottom:18,lineHeight:1.7}}>Approve Claim #CLM-2048? This action cannot be undone.</div>
+        <div style={{display:'flex',gap:9,justifyContent:'flex-end'}}><Btn variant="ghost" size="sm">Cancel</Btn><Btn variant="primary" size="sm">Approve</Btn></div>
+      </div>
+    </div>
+  );
+}
+
+function BottomSheet() {
+  return (
+    <div style={{width:350,height:220,background:'rgba(0,0,0,0.38)',borderRadius:8,display:'flex',alignItems:'flex-end',overflow:'hidden'}}>
+      <div style={{background:C.white,borderRadius:'14px 14px 0 0',padding:'14px 18px 20px',width:'100%',boxShadow:'0 -8px 32px rgba(0,0,0,0.12)'}}>
+        <div style={{width:32,height:4,background:C.border,borderRadius:99,margin:'0 auto 14px'}}/>
+        <div style={{fontSize:14,fontWeight:700,color:C.body,fontFamily:'Montserrat',marginBottom:5}}>Confirm Claim</div>
+        <div style={{fontSize:12,color:C.muted,fontFamily:'Montserrat',marginBottom:16,lineHeight:1.6}}>Submit Claim #CLM-2049 for ₹240 worth of points?</div>
+        <Btn variant="primary" size="md" fullWidth>Confirm &amp; Submit</Btn>
+        <div style={{textAlign:'center',marginTop:10,fontSize:12,color:C.muted,fontFamily:'Montserrat',cursor:'pointer'}}>Cancel</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Avatar ────────────────────────────────────────────────
+function Avatar({initials,size=40}) {
+  const colors=[C.primary,C.secondary,'#7c5cbf','#e27a2a','#16a085'];
+  const bg=colors[initials.charCodeAt(0)%colors.length];
+  return <div style={{width:size,height:size,borderRadius:'50%',background:bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:size*0.34,fontWeight:700,color:'#fff',fontFamily:'Montserrat',flexShrink:0}}>{initials}</div>;
+}
+
+// ── Data Table ────────────────────────────────────────────
+function DataTable() {
+  const rows=[
+    {id:'#CLM-2048',retailer:'Rajesh Kumar',product:'Amoxicillin 500mg',amount:'₹600',pts:60,status:'Pending',hover:false},
+    {id:'#CLM-2047',retailer:'Sunita Patel',product:'Paracetamol 650mg',amount:'₹240',pts:24,status:'Approved',hover:true},
+    {id:'#CLM-2046',retailer:'Arvind Mehta',product:'Metformin 500mg',amount:'₹180',pts:18,status:'Rejected',hover:false},
+  ];
+  const cols='120px 1fr 1.4fr 90px 80px 110px 90px';
+  return (
+    <div style={{background:C.white,borderRadius:8,border:`1px solid ${C.border}`,overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,0.04)'}}>
+      <div style={{display:'grid',gridTemplateColumns:cols,padding:'9px 14px',background:C.surface,borderBottom:`1px solid ${C.border}`}}>
+        {['Claim ID','Retailer','Product','Amount','Points','Status','Actions'].map(h=><div key={h} style={{fontSize:10,fontWeight:700,color:C.muted,fontFamily:'Montserrat',textTransform:'uppercase',letterSpacing:'0.06em'}}>{h}</div>)}
+      </div>
+      {rows.map((r,i)=>(
+        <div key={r.id} style={{display:'grid',gridTemplateColumns:cols,padding:'11px 14px',borderBottom:i<rows.length-1?`1px solid ${C.border}`:'none',background:r.hover?C.primaryLight:C.white,alignItems:'center'}}>
+          <div style={{fontSize:12,fontWeight:700,color:C.primary,fontFamily:'Montserrat'}}>{r.id}</div>
+          <div style={{display:'flex',alignItems:'center',gap:8}}><Avatar initials={r.retailer.split(' ').map(n=>n[0]).join('')} size={24}/><span style={{fontSize:12,color:C.body,fontFamily:'Montserrat'}}>{r.retailer}</span></div>
+          <div style={{fontSize:12,color:C.body,fontFamily:'Montserrat'}}>{r.product}</div>
+          <div style={{fontSize:12,fontWeight:600,color:C.body,fontFamily:'Montserrat'}}>{r.amount}</div>
+          <div style={{fontSize:12,fontWeight:700,color:C.secondary,fontFamily:'Montserrat'}}>+{r.pts}</div>
+          <div><Badge status={r.status}/></div>
+          <div style={{display:'flex',gap:10}}>
+            <span style={{cursor:'pointer',fontSize:14,color:C.primary}} title="View">👁</span>
+            <span style={{cursor:'pointer',fontSize:14,color:C.success}} title="Approve">✓</span>
+            <span style={{cursor:'pointer',fontSize:14,color:C.error}} title="Reject">✕</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Empty State ───────────────────────────────────────────
+function EmptyState() {
+  return (
+    <div style={{width:330,background:C.white,borderRadius:10,border:`1px solid ${C.border}`,padding:'36px 28px',display:'flex',flexDirection:'column',alignItems:'center',gap:11,boxShadow:'0 2px 8px rgba(0,0,0,0.04)'}}>
+      <div style={{width:90,height:90,borderRadius:12,background:C.surface,border:`2px dashed ${C.border}`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:4}}>
+        <div style={{width:58,height:58,background:'#d8e7f4',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26}}>📋</div>
+      </div>
+      <div style={{fontSize:16,fontWeight:700,color:C.body,fontFamily:'Montserrat',textAlign:'center'}}>No claims yet</div>
+      <div style={{fontSize:12,color:C.muted,fontFamily:'Montserrat',textAlign:'center',lineHeight:1.7}}>You haven't submitted any claims. Start by scanning a product and uploading your receipt.</div>
+      <Btn variant="primary" size="md">Submit Your First Claim</Btn>
+    </div>
+  );
+}
+
+// ── Skeletons ─────────────────────────────────────────────
+const shimStyle = {background:'linear-gradient(90deg,#eeeeee 25%,#e0e0e0 50%,#eeeeee 75%)',backgroundSize:'400% 100%',animation:'shimmer 1.5s infinite'};
+const Sh = ({w,h,r=4,style={}}) => <div style={{width:w,height:h,borderRadius:r,...shimStyle,...style}}/>;
+
+function CardSkeleton() {
+  return (
+    <div style={{width:196,background:C.white,borderRadius:8,border:`1px solid ${C.border}`,overflow:'hidden'}}>
+      <Sh w={196} h={96} r={0}/>
+      <div style={{padding:12,display:'flex',flexDirection:'column',gap:8}}>
+        <Sh w={120} h={11}/><Sh w={80} h={9}/>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:3}}><Sh w={48} h={15}/><Sh w={65} h={20} r={99}/></div>
+      </div>
+    </div>
+  );
+}
+
+function ListSkeleton() {
+  return (
+    <div style={{background:C.white,borderRadius:8,border:`1px solid ${C.border}`,overflow:'hidden'}}>
+      {[...Array(4)].map((_,i)=>(
+        <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 14px',borderBottom:i<3?`1px solid ${C.border}`:'none'}}>
+          <Sh w={30} h={30} r={99}/>
+          <div style={{flex:1,display:'flex',gap:14,alignItems:'center'}}>
+            <Sh w={78} h={9}/><Sh w={115} h={9}/><Sh w={95} h={9}/><Sh w={55} h={18} r={99}/>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── OTP Timer ─────────────────────────────────────────────
+function OtpTimer({mode='countdown'}) {
+  const boxes = [...Array(6)].map((_,i)=>i<3?i+4:0);
+  return (
+    <div style={{background:C.white,borderRadius:8,border:`1px solid ${C.border}`,padding:18,width:232,display:'flex',flexDirection:'column',alignItems:'center',gap:11}}>
+      <div style={{fontSize:11,color:C.muted,fontFamily:'Montserrat',fontWeight:600,textAlign:'center'}}>Enter OTP sent to +91 98765 XXXXX</div>
+      <div style={{display:'flex',gap:7}}>
+        {boxes.map((v,i)=>(
+          <div key={i} style={{width:32,height:40,border:`2px solid ${C.border}`,borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',fontSize:17,fontWeight:700,color:C.body,fontFamily:'Montserrat'}}>{v||''}</div>
+        ))}
+      </div>
+      {mode==='countdown'&&(
+        <>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <span style={{fontSize:13,color:C.secondary}}>⏱</span>
+            <span style={{fontSize:12,color:C.muted,fontFamily:'Montserrat',fontWeight:600}}>Resend in <b style={{color:C.secondary}}>00:42</b></span>
+          </div>
+          <div style={{fontSize:11,color:C.border,fontFamily:'Montserrat',fontWeight:600,cursor:'not-allowed',userSelect:'none'}}>Resend OTP</div>
+        </>
+      )}
+      {mode==='resend'&&(
+        <>
+          <div style={{fontSize:11,color:C.muted,fontFamily:'Montserrat',fontWeight:600}}>Didn't receive it?</div>
+          <div style={{fontSize:13,color:C.primary,fontFamily:'Montserrat',fontWeight:700,cursor:'pointer',textDecoration:'underline'}}>Resend OTP</div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Tokens ────────────────────────────────────────────────
+function TokensSection() {
+  const palette = [
+    {name:'Primary',val:C.primary,token:'--color-primary'},{name:'Secondary',val:C.secondary,token:'--color-secondary'},
+    {name:'Success',val:C.success,token:'--color-success'},{name:'Error',val:C.error,token:'--color-error'},
+    {name:'Warning',val:C.warning,token:'--color-warning'},{name:'Body Text',val:C.body,token:'--color-body'},
+    {name:'Muted',val:C.muted,token:'--color-muted'},{name:'Surface',val:C.surface,token:'--color-surface'},
+    {name:'Border',val:C.border,token:'--color-border'},{name:'White',val:C.white,token:'--color-white'},
+  ];
+  const typeScale=[
+    {name:'Display',size:38,w:700},{name:'H1',size:30,w:700},{name:'H2',size:22,w:700},
+    {name:'H3',size:18,w:600},{name:'Body Large',size:15,w:400},{name:'Body',size:13,w:400},
+    {name:'Body Small',size:12,w:400},{name:'Caption',size:10,w:400},{name:'Label',size:10,w:600},
+  ];
+  const spacing=[4,8,12,16,24,32,48,64];
+  const radii=[{label:'4px · inputs/cards',v:4},{label:'8px · panels',v:8},{label:'24px · pills',v:24},{label:'50% · avatars',v:999}];
+  return (
+    <Section id="tokens" num="00" title="Design Tokens">
+      <div style={{display:'flex',flexDirection:'column',gap:40}}>
+        {/* Colors */}
+        <div>
+          <div style={{fontSize:11,fontWeight:700,color:C.muted,marginBottom:12,fontFamily:'Montserrat',textTransform:'uppercase',letterSpacing:'0.08em'}}>Color Palette</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:12}}>
+            {palette.map(ct=>(
+              <div key={ct.name} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5}}>
+                <div style={{width:64,height:64,borderRadius:8,background:ct.val,border:`1px solid ${C.border}`,boxShadow:'0 1px 4px rgba(0,0,0,0.08)'}}/>
+                <div style={{fontSize:10,fontWeight:700,color:C.body,fontFamily:'Montserrat',textAlign:'center'}}>{ct.name}</div>
+                <div style={{fontSize:9,color:C.muted,fontFamily:'Montserrat',fontWeight:600}}>{ct.val}</div>
+                <div style={{fontSize:8,color:C.muted,fontFamily:'Montserrat',fontStyle:'italic',opacity:0.7}}>{ct.token}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Type */}
+        <div>
+          <div style={{fontSize:11,fontWeight:700,color:C.muted,marginBottom:12,fontFamily:'Montserrat',textTransform:'uppercase',letterSpacing:'0.08em'}}>Typography Scale — Montserrat</div>
+          <div style={{background:C.white,borderRadius:8,border:`1px solid ${C.border}`,overflow:'hidden'}}>
+            {typeScale.map((t,i)=>(
+              <div key={t.name} style={{display:'flex',alignItems:'baseline',gap:20,padding:'7px 14px',borderBottom:i<typeScale.length-1?`1px solid ${C.border}`:'none',background:i%2===0?C.white:C.surface}}>
+                <span style={{width:76,fontSize:10,fontWeight:700,color:C.muted,fontFamily:'Montserrat',textTransform:'uppercase',letterSpacing:'0.06em',flexShrink:0}}>{t.name}</span>
+                <span style={{fontSize:t.size,fontWeight:t.w,color:C.body,fontFamily:'Montserrat',lineHeight:1.15}}>PiiPharma Loyalty</span>
+                <span style={{fontSize:10,color:C.muted,fontFamily:'Montserrat',marginLeft:'auto',whiteSpace:'nowrap'}}>{t.size}px / {t.w}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Spacing */}
+        <div>
+          <div style={{fontSize:11,fontWeight:700,color:C.muted,marginBottom:12,fontFamily:'Montserrat',textTransform:'uppercase',letterSpacing:'0.08em'}}>Spacing Scale — 8px Base Grid</div>
+          <Row style={{gap:16,alignItems:'flex-end',flexWrap:'nowrap'}}>
+            {spacing.map(sp=>(
+              <Col key={sp} style={{alignItems:'center',gap:5}}>
+                <div style={{width:sp,height:sp,background:C.primary,borderRadius:2,opacity:0.7,minWidth:4}}/>
+                <div style={{fontSize:10,fontWeight:700,color:C.body,fontFamily:'Montserrat'}}>{sp}px</div>
+              </Col>
+            ))}
+          </Row>
+        </div>
+        {/* Radius */}
+        <div>
+          <div style={{fontSize:11,fontWeight:700,color:C.muted,marginBottom:12,fontFamily:'Montserrat',textTransform:'uppercase',letterSpacing:'0.08em'}}>Border Radius Scale</div>
+          <Row style={{gap:24,alignItems:'center'}}>
+            {radii.map(r=>(
+              <Col key={r.label} style={{alignItems:'center',gap:6}}>
+                <div style={{width:56,height:56,background:C.primaryLight,border:`2px solid ${C.primary}`,borderRadius:r.v>100?'50%':r.v}}/>
+                <div style={{fontSize:10,fontWeight:700,color:C.body,fontFamily:'Montserrat',textAlign:'center',maxWidth:80,lineHeight:1.4}}>{r.label}</div>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+// ── Sidebar TOC ───────────────────────────────────────────
+const sections = [
+  {id:'tokens',num:'00',title:'Tokens'},
+  {id:'buttons',num:'01',title:'Buttons'},
+  {id:'inputs',num:'02',title:'Inputs'},
+  {id:'dropdown',num:'03',title:'Dropdown'},
+  {id:'upload',num:'04',title:'File Upload'},
+  {id:'progress',num:'05',title:'Progress'},
+  {id:'badges',num:'06',title:'Badges'},
+  {id:'cards',num:'07',title:'Cards'},
+  {id:'nav',num:'08',title:'Navigation'},
+  {id:'toasts',num:'09',title:'Alerts'},
+  {id:'modal',num:'10',title:'Modal'},
+  {id:'avatar',num:'11',title:'Avatar'},
+  {id:'table',num:'12',title:'Data Table'},
+  {id:'empty',num:'13',title:'Empty State'},
+  {id:'skeleton',num:'14',title:'Skeletons'},
+  {id:'otp',num:'15',title:'OTP Timer'},
+];
+
+function Sidebar() {
+  const [active, setActive] = React.useState('tokens');
+  return (
+    <div style={{width:200,flexShrink:0,position:'sticky',top:0,height:'100vh',overflowY:'auto',background:C.white,borderRight:`1px solid ${C.border}`,display:'flex',flexDirection:'column'}}>
+      <div style={{padding:'20px 16px 16px',borderBottom:`1px solid ${C.border}`}}>
+        <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:4}}>
+          <div style={{width:28,height:28,background:C.primary,borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:13}}>P</div>
+          <div>
+            <div style={{fontSize:12,fontWeight:700,color:C.body,fontFamily:'Montserrat'}}>PiiPharma</div>
+            <div style={{fontSize:9,color:C.muted,fontFamily:'Montserrat'}}>Design System v1.0</div>
+          </div>
+        </div>
+      </div>
+      <nav style={{flex:1,padding:'8px 0'}}>
+        {sections.map(s=>(
+          <a key={s.id} href={`#${s.id}`} onClick={()=>setActive(s.id)}
+            style={{display:'flex',alignItems:'center',gap:8,padding:'7px 14px',textDecoration:'none',background:active===s.id?C.primaryLight:'transparent',borderLeft:active===s.id?`3px solid ${C.primary}`:'3px solid transparent',transition:'all 0.1s'}}>
+            <span style={{fontSize:9,fontWeight:700,color:active===s.id?C.primary:C.muted,fontFamily:'Montserrat',width:16}}>{s.num}</span>
+            <span style={{fontSize:11,fontWeight:active===s.id?700:600,color:active===s.id?C.primary:C.body,fontFamily:'Montserrat'}}>{s.title}</span>
+          </a>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+// ── App ───────────────────────────────────────────────────
+function App() {
+  return (
+    <div style={{display:'flex',minHeight:'100vh',background:'#f8f9fb'}}>
+      <Sidebar/>
+      <main style={{flex:1,padding:'40px 48px',maxWidth:1100,overflowX:'hidden'}}>
+        {/* Header */}
+        <div style={{marginBottom:48,paddingBottom:20,borderBottom:`2px solid ${C.primary}`}}>
+          <div style={{fontSize:26,fontWeight:700,color:C.body,fontFamily:'Montserrat',marginBottom:4}}>PiiPharma Loyalty Portal</div>
+          <div style={{fontSize:13,color:C.muted,fontFamily:'Montserrat'}}>loyalty.piipharma.com · Component Library · Montserrat · 8px grid</div>
+        </div>
+
+        <TokensSection/>
+
+        <ButtonsSection/>
+
+        <InputsSection/>
+
+        <Section id="dropdown" num="03" title="Dropdown / Select">
+          <Row style={{gap:24}}>
+            {['default','open','selected','disabled'].map(s=><Dropdown key={s} state={s}/>)}
+          </Row>
+        </Section>
+
+        <Section id="upload" num="04" title="File / Photo Upload">
+          <Row style={{gap:16}}>
+            {['idle','dragover','uploading','uploaded','error'].map(s=><FileUpload key={s} state={s}/>)}
+          </Row>
+        </Section>
+
+        <Section id="progress" num="05" title="Progress Bar">
+          <div style={{display:'flex',flexDirection:'column',gap:20}}>
+            <ProgressBar fill={20} label="1 of 5 coupons claimed"/>
+            <ProgressBar fill={60} label="3 of 5 coupons claimed"/>
+            <ProgressBar fill={100} label="5 of 5 coupons claimed"/>
+          </div>
+        </Section>
+
+        <Section id="badges" num="06" title="Status Badges">
+          <Row style={{gap:14,alignItems:'flex-start'}}>
+            {['Pending','Approved','Rejected','Paid'].map(s=>(
+              <Col key={s}><Badge status={s}/><Lbl t={s}/></Col>
+            ))}
+          </Row>
+        </Section>
+
+        <Section id="cards" num="07" title="Cards">
+          <Row style={{gap:28,alignItems:'flex-start'}}>
+            <Col><ProductCard/><Lbl t="Product Card · retailer dashboard"/></Col>
+            <Col><ClaimCard/><Lbl t="Claim Card · claim history"/></Col>
+            <Col>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                <StatCard label="Total Retailers" value="1,248" sub="↑ 12% this month" color={C.primary}/>
+                <StatCard label="Claims Approved" value="94%" sub="Last 30 days" color={C.success}/>
+                <StatCard label="Points Issued" value="82.4K" sub="₹ 41,200 value" color={C.secondary}/>
+                <StatCard label="Pending Claims" value="36" sub="Needs review" color={C.warning}/>
+              </div>
+              <Lbl t="Stat Cards · admin overview"/>
+            </Col>
+          </Row>
+        </Section>
+
+        <Section id="nav" num="08" title="Navigation">
+          <Row style={{gap:40,alignItems:'flex-start'}}>
+            <Col>
+              <div style={{width:350,height:64,background:'#e8eaed',borderRadius:'10px 10px 0 0',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <span style={{fontSize:10,color:C.muted,fontFamily:'Montserrat',fontWeight:600}}>— mobile screen —</span>
+              </div>
+              <MobileNav/>
+              <Lbl t="Mobile Bottom Tab Bar · retailer portal"/>
+            </Col>
+            <Col><DesktopSidebar/><Lbl t="Desktop Sidebar Nav · admin portal"/></Col>
+          </Row>
+        </Section>
+
+        <Section id="toasts" num="09" title="Alerts / Toasts">
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {['success','error','info','warning'].map(t=>(
+              <Col key={t}><Toast type={t}/><Lbl t={t}/></Col>
+            ))}
+          </div>
+        </Section>
+
+        <Section id="modal" num="10" title="Modal / Bottom Sheet">
+          <Row style={{gap:28,alignItems:'flex-start'}}>
+            <Col><DesktopModal/><Lbl t="Desktop Modal"/></Col>
+            <Col><BottomSheet/><Lbl t="Mobile Bottom Sheet"/></Col>
+          </Row>
+        </Section>
+
+        <Section id="avatar" num="11" title="Avatar / Initials Chip">
+          <Row style={{gap:32,alignItems:'flex-start'}}>
+            <Col>
+              <Row style={{gap:10,alignItems:'flex-end'}}>
+                {[56,40,32,24].map(s=><Col key={s} style={{alignItems:'center'}}><Avatar initials="RK" size={s}/><Lbl t={`${s}px`}/></Col>)}
+              </Row>
+              <Lbl t="Sizes"/>
+            </Col>
+            <Col>
+              <div style={{display:'flex',flexDirection:'column',gap:7}}>
+                {[{i:'RK',n:'Rajesh Kumar',s:'Approved'},{i:'SP',n:'Sunita Patel',s:'Pending'},{i:'AM',n:'Arvind Mehta',s:'Rejected'},{i:'PD',n:'Priya Das',s:'Paid'}].map(p=>(
+                  <div key={p.i} style={{display:'flex',alignItems:'center',gap:9,background:C.surface,padding:'7px 11px',borderRadius:7,border:`1px solid ${C.border}`}}>
+                    <Avatar initials={p.i} size={30}/>
+                    <span style={{fontSize:12,fontWeight:600,color:C.body,fontFamily:'Montserrat',flex:1}}>{p.n}</span>
+                    <Badge status={p.s}/>
+                  </div>
+                ))}
+              </div>
+              <Lbl t="In-context chips · admin retailer list"/>
+            </Col>
+          </Row>
+        </Section>
+
+        <Section id="table" num="12" title="Data Table Row">
+          <DataTable/>
+          <div style={{marginTop:7,fontSize:10,color:C.muted,fontFamily:'Montserrat',fontWeight:600}}>Row 2 shown in hover state · Row actions: view, approve, reject</div>
+        </Section>
+
+        <Section id="empty" num="13" title="Empty State">
+          <EmptyState/>
+        </Section>
+
+        <Section id="skeleton" num="14" title="Loading Skeleton">
+          <Row style={{gap:28,alignItems:'flex-start'}}>
+            <Col><CardSkeleton/><Lbl t="Card Skeleton"/></Col>
+            <Col><div style={{width:500}}><ListSkeleton/></div><Lbl t="List Row Skeleton"/></Col>
+          </Row>
+        </Section>
+
+        <Section id="otp" num="15" title="OTP Timer / Resend">
+          <Row style={{gap:28}}>
+            <Col><OtpTimer mode="countdown"/><Lbl t="Countdown active"/></Col>
+            <Col><OtpTimer mode="resend"/><Lbl t="Resend active"/></Col>
+          </Row>
+        </Section>
+
+        <div style={{height:48}}/>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
