@@ -161,10 +161,34 @@
 		return true;
 	}
 
-	// Pre-fill serial prefix from product name when modal opens
+	// Derive a meaningful, mostly-unique prefix from a medicine name.
+	// Strategy: first 3 alpha chars of the primary drug name (salt forms stripped)
+	// + dose digits (up to 4) → e.g. "Amoxicillin 500mg" → "AMO500",
+	// "Metformin HCl 1000mg" → "MET1000", "Co-Amoxiclav 625mg" → "COA625".
+	function derivePrefix(name: string): string {
+		const SALTS = /\b(HYDROCHLORIDE|HCL|HBR|HYDROBROMIDE|SODIUM|POTASSIUM|CALCIUM|MAGNESIUM|ZINC|SULPHATE|SULFATE|PHOSPHATE|ACETATE|CITRATE|TARTRATE|MALEATE|FUMARATE|MESYLATE|BESYLATE|TOSYLATE|SUCCINATE|GLUCONATE|LACTATE|TRIHYDRATE|MONOHYDRATE|ANHYDROUS|DIHYDRATE|AXETIL|PROXETIL|PIVOXIL|ESTER)\b/g;
+
+		const upper = name.toUpperCase();
+
+		// Extract dose: number immediately before a recognised unit
+		const doseMatch = upper.match(/(\d{1,4})\s*(?:MCG|MG|G\b|IU\b|ML\b|%)/);
+		const dose = doseMatch ? doseMatch[1] : (upper.match(/\d{1,4}/) || [''])[0];
+
+		// Drug name = everything before the first digit
+		const drugRaw = upper.replace(/\d.*$/, '').trim();
+
+		// Strip salt/form descriptors, collapse separators, take first token
+		const drugClean = drugRaw.replace(SALTS, '').replace(/[-\s]+/g, ' ').trim();
+		const firstToken = (drugClean.split(' ')[0] || drugRaw).replace(/[^A-Z]/g, '');
+
+		const abbrev = firstToken.slice(0, 3);
+		return (abbrev + dose).slice(0, 8);
+	}
+
+	// Pre-fill when the modal opens for a new product (don't overwrite on re-open same product)
 	$effect(() => {
 		if (product) {
-			fSerialPrefix = product.name.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase();
+			fSerialPrefix = derivePrefix(product.name);
 		}
 	});
 
