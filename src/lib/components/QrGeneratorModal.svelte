@@ -83,7 +83,8 @@
 		if (!bid || bid.length > 32 || !/^[A-Z0-9-]+$/.test(bid)) return false;
 		const n = parseInt(fQuantity);
 		if (isNaN(n) || !Number.isInteger(n) || n < 1 || n > 10000) return false;
-		if (fSerialPrefix && (fSerialPrefix.length > 8 || !/^[A-Z0-9-]*$/i.test(fSerialPrefix))) return false;
+		const sp = fSerialPrefix.trim();
+		if (!sp || sp.length > 8 || !/^[A-Z0-9-]+$/i.test(sp)) return false;
 		return true;
 	});
 	const formDirty = $derived(fBatchId !== '' || fQuantity !== '1000' || fSerialPrefix !== '');
@@ -152,12 +153,20 @@
 	}
 
 	function validateSerialPrefix() {
-		if (!fSerialPrefix) { eSerialPrefix = ''; return true; }
-		if (fSerialPrefix.length > 8) { eSerialPrefix = 'Max 8 characters'; return false; }
-		if (!/^[A-Z0-9-]*$/i.test(fSerialPrefix)) { eSerialPrefix = 'Uppercase letters, digits, hyphens only'; return false; }
+		const sp = fSerialPrefix.trim();
+		if (!sp) { eSerialPrefix = 'Serial prefix is required'; return false; }
+		if (sp.length > 8) { eSerialPrefix = 'Max 8 characters'; return false; }
+		if (!/^[A-Z0-9-]+$/i.test(sp)) { eSerialPrefix = 'Uppercase letters, digits, hyphens only'; return false; }
 		eSerialPrefix = '';
 		return true;
 	}
+
+	// Pre-fill serial prefix from product name when modal opens
+	$effect(() => {
+		if (product) {
+			fSerialPrefix = product.name.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase();
+		}
+	});
 
 	function trySubmit() {
 		tBatchId = true; tQuantity = true; tSerialPrefix = true;
@@ -347,10 +356,7 @@
 					<!-- Serial prefix -->
 					<div>
 						<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
-							<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#474545;">
-								Serial prefix
-								<span style="font-size:9.5px;font-weight:600;color:#686868;background:#F4F6F8;border:1px solid #EAEAEA;padding:1px 6px;border-radius:99px;">Optional</span>
-							</label>
+							<label style="font-size:12px;font-weight:700;color:#474545;">Serial prefix <span style="color:#E53E3E;">*</span></label>
 							{#if tSerialPrefix && eSerialPrefix}
 								<span style="display:flex;align-items:center;gap:3px;font-size:10.5px;color:#E53E3E;"><span style="width:4px;height:4px;border-radius:50%;background:#E53E3E;display:inline-block;"></span>{eSerialPrefix}</span>
 							{/if}
@@ -363,9 +369,7 @@
 							onblur={() => { tSerialPrefix = true; validateSerialPrefix(); }}
 							style="width:100%;box-sizing:border-box;border:{tSerialPrefix && eSerialPrefix ? '1.5px solid #E53E3E;box-shadow:0 0 0 3px #fde8e8' : '1.5px solid #EAEAEA'};border-radius:7px;padding:9px 12px;font-family:'Montserrat',sans-serif;font-size:13px;color:#474545;outline:none;height:38px;"
 						/>
-						{#if qty > 0}
-							<div style="font-size:10px;color:#686868;margin-top:3px;">Serials become <span style="font-family:monospace;font-weight:600;">{serialStart} … {serialEnd}</span></div>
-						{/if}
+						<div style="font-size:10px;color:#686868;margin-top:3px;">Serials become <span style="font-family:monospace;font-weight:600;">{serialStart}{qty > 0 ? ` … ${serialEnd}` : ''}</span></div>
 					</div>
 
 					<!-- Output format -->
