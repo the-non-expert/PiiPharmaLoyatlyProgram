@@ -1,13 +1,31 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
 	import QrGeneratorModal from '$lib/components/QrGeneratorModal.svelte';
+	import { enhance } from '$app/forms';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let search      = $state('');
 	let modalOpen   = $state(false);
 	let activeTab   = $state<'overview' | 'batches' | 'settings'>('batches');
 	let openMenuId  = $state<string | null>(null);
+
+	// Overview edit state
+	let editingDetails  = $state(false);
+	let editName        = $state('');
+	let editCoupons     = $state(0);
+	let editCashback    = $state(0);
+
+	function startEdit() {
+		editName     = data.product.name;
+		editCoupons  = data.product.coupons_required;
+		editCashback = data.product.cashback_amount;
+		editingDetails = true;
+	}
+
+	$effect(() => {
+		if (form && !(form as any)?.updateError) editingDetails = false;
+	});
 
 	const filtered = $derived(
 		search.trim()
@@ -248,8 +266,100 @@
 		{/if}
 
 	{:else if activeTab === 'overview'}
-		<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:28px;text-align:center;color:#686868;font-size:13px;">
-			Overview content coming soon.
+		<div style="background:#fff;border-radius:10px;border:{editingDetails ? '2px solid #2372B9' : '1px solid #EAEAEA'};padding:24px 28px;box-shadow:{editingDetails ? '0 0 0 3px #e8f1fb' : '0 1px 4px rgba(0,0,0,0.04)'};">
+			<!-- Section header -->
+			<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+				<div style="font-size:14px;font-weight:700;color:#474545;">Product details</div>
+				{#if !editingDetails}
+					<button
+						type="button"
+						onclick={startEdit}
+						style="display:inline-flex;align-items:center;gap:5px;background:#fff;color:#474545;border:1.5px solid #EAEAEA;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;"
+					>
+						<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+						Edit
+					</button>
+				{/if}
+			</div>
+
+			{#if editingDetails}
+				<form method="POST" action="?/update" use:enhance>
+					<div style="display:grid;grid-template-columns:1fr 160px 160px;gap:16px;margin-bottom:18px;" class="overview-fields">
+						<!-- Name -->
+						<div>
+							<label for="ov-name" style="display:block;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Product name</label>
+							<input
+								id="ov-name"
+								name="name"
+								bind:value={editName}
+								required
+								style="width:100%;box-sizing:border-box;border:2px solid #2372B9;border-radius:7px;padding:9px 12px;font-family:'Montserrat',sans-serif;font-size:13px;color:#474545;outline:none;"
+							/>
+						</div>
+						<!-- Coupons required -->
+						<div>
+							<label for="ov-coupons" style="display:block;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Coupons req.</label>
+							<input
+								id="ov-coupons"
+								name="coupons_required"
+								type="number"
+								min="1"
+								bind:value={editCoupons}
+								required
+								style="width:100%;box-sizing:border-box;border:2px solid #2372B9;border-radius:7px;padding:9px 12px;font-family:'Montserrat',sans-serif;font-size:13px;color:#474545;outline:none;"
+							/>
+						</div>
+						<!-- Cashback -->
+						<div>
+							<label for="ov-cashback" style="display:block;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Cashback (₹)</label>
+							<input
+								id="ov-cashback"
+								name="cashback_amount"
+								type="number"
+								min="1"
+								bind:value={editCashback}
+								required
+								style="width:100%;box-sizing:border-box;border:2px solid #2372B9;border-radius:7px;padding:9px 12px;font-family:'Montserrat',sans-serif;font-size:13px;color:#474545;outline:none;"
+							/>
+						</div>
+					</div>
+					{#if (form as any)?.updateError}
+						<p style="font-size:12px;color:#E53E3E;margin:0 0 12px;">{(form as any).updateError}</p>
+					{/if}
+					<div style="display:flex;gap:8px;">
+						<button
+							type="submit"
+							style="background:#3d8c1a;color:#fff;border:none;border-radius:7px;padding:9px 20px;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;"
+						>Save</button>
+						<button
+							type="button"
+							onclick={() => editingDetails = false}
+							style="background:#fff;color:#474545;border:1.5px solid #EAEAEA;border-radius:7px;padding:9px 20px;font-size:12px;font-weight:600;font-family:'Montserrat',sans-serif;cursor:pointer;"
+						>Cancel</button>
+					</div>
+				</form>
+
+			{:else}
+				<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;" class="overview-fields">
+					<!-- Name -->
+					<div style="background:#F4F6F8;border-radius:8px;padding:14px 16px;">
+						<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Product name</div>
+						<div style="font-size:14px;font-weight:700;color:#474545;">{data.product.name}</div>
+					</div>
+					<!-- Coupons required -->
+					<div style="background:#F4F6F8;border-radius:8px;padding:14px 16px;">
+						<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Coupons required</div>
+						<div style="font-size:24px;font-weight:700;color:#2372B9;line-height:1;">{data.product.coupons_required}</div>
+						<div style="font-size:11px;color:#686868;margin-top:4px;">per claim</div>
+					</div>
+					<!-- Cashback -->
+					<div style="background:#F4F6F8;border-radius:8px;padding:14px 16px;">
+						<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Cashback amount</div>
+						<div style="font-size:24px;font-weight:700;color:#3d8c1a;line-height:1;">₹{data.product.cashback_amount}</div>
+						<div style="font-size:11px;color:#686868;margin-top:4px;">per approved claim</div>
+					</div>
+				</div>
+			{/if}
 		</div>
 	{:else}
 		<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:28px;text-align:center;color:#686868;font-size:13px;">
@@ -280,4 +390,7 @@
 		.batch-cards { display: flex !important; }
 	}
 	.batch-row:hover { background: #fafafa; }
+	@media (max-width: 640px) {
+		.overview-fields { grid-template-columns: 1fr !important; }
+	}
 </style>

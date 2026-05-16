@@ -1,6 +1,27 @@
 import { getServiceClient } from '$lib/server/supabase';
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import type { Product } from '$lib/types/database';
+
+export const actions = {
+	update: async ({ request, params }: { request: Request; params: { productId: string } }) => {
+		const supabase = getServiceClient();
+		const formData = await request.formData();
+		const name             = formData.get('name')?.toString().trim();
+		const coupons_required = parseInt(formData.get('coupons_required')?.toString() || '0');
+		const cashback_amount  = parseInt(formData.get('cashback_amount')?.toString() || '0');
+
+		if (!name)                return fail(400, { updateError: 'Product name is required.' });
+		if (coupons_required < 1) return fail(400, { updateError: 'Coupons required must be at least 1.' });
+		if (cashback_amount < 1)  return fail(400, { updateError: 'Cashback must be at least ₹1.' });
+
+		const { error: err } = await supabase
+			.from('products')
+			.update({ name, coupons_required, cashback_amount } as never)
+			.eq('id', params.productId);
+		if (err) return fail(500, { updateError: 'Failed to update product.' });
+		return {};
+	},
+};
 
 export async function load({ params }: { params: { productId: string } }) {
 	const supabase = getServiceClient();
