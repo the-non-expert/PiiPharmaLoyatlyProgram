@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import { getServiceClient } from '$lib/server/supabase';
 
 export const load: PageServerLoad = async ({ url }) => {
-	const tab = url.searchParams.get('tab') ?? 'pending'; // 'pending' | 'allClaims'
+	const tab = url.searchParams.get('tab') ?? 'pendingPayout'; // 'pendingPayout' | 'allClaims'
 	const productFilter = url.searchParams.get('product') ?? '';
 	const statusFilter  = url.searchParams.get('status') ?? '';
 	const sort          = url.searchParams.get('sort') ?? 'newest'; // 'newest' | 'oldest'
@@ -22,8 +22,8 @@ export const load: PageServerLoad = async ({ url }) => {
 		`)
 		.order('created_at', { ascending: sort === 'oldest' });
 
-	if (tab === 'pending') {
-		query = query.eq('status', 'pending');
+	if (tab === 'pendingPayout') {
+		query = query.eq('status', 'pending_payout');
 	} else if (tab === 'allClaims' && statusFilter) {
 		query = query.eq('status', statusFilter);
 	}
@@ -33,7 +33,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	const [{ data: claims }, { data: products }, { count: pendingCount }] = await Promise.all([
 		query,
 		db.from('products').select('id, name').order('name'),
-		db.from('claims').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+		db.from('claims').select('*', { count: 'exact', head: true }).eq('status', 'pending_payout'),
 	]);
 
 	const mapped = (claims ?? []).map((c) => {

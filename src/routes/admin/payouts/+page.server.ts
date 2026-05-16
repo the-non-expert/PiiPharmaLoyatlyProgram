@@ -13,7 +13,7 @@ export const load: PageServerLoad = async () => {
 			retailers ( id, name, upi_id ),
 			products ( name, cashback_amount )
 		`)
-		.eq('status', 'approved')
+		.eq('status', 'pending_payout')
 		.order('approved_at', { ascending: true });
 
 	// Group by retailer_id — one row per retailer
@@ -82,7 +82,7 @@ export const actions: Actions = {
 		const { data: updated, error } = await db
 			.from('claims')
 			.update({ status: 'paid', paid_at: now })
-			.eq('status', 'approved')
+			.eq('status', 'pending_payout')
 			.select('id');
 
 		if (error) return fail(500, { error: 'Failed to mark claims as paid.' });

@@ -24,10 +24,11 @@
 	}
 
 	const statusColors: Record<string, { bg: string; text: string; dot: string }> = {
-		pending:  { bg: '#fef3cd', text: '#92640a', dot: '#F59E0B' },
-		approved: { bg: '#f0f9e6', text: '#3d6e10', dot: '#93CB52' },
-		rejected: { bg: '#fde8e8', text: '#9b2626', dot: '#E53E3E' },
-		paid:     { bg: '#e8f1fb', text: '#14407a', dot: '#2372B9' },
+		pending:         { bg: '#fef3cd', text: '#92640a', dot: '#F59E0B' },
+		pending_payout:  { bg: '#eef5ff', text: '#1a5a99', dot: '#2372B9' },
+		approved:        { bg: '#f0f9e6', text: '#3d6e10', dot: '#93CB52' },
+		rejected:        { bg: '#fde8e8', text: '#9b2626', dot: '#E53E3E' },
+		paid:            { bg: '#e8f1fb', text: '#14407a', dot: '#2372B9' },
 	};
 
 	const sc = $derived(statusColors[data.claim.status] ?? { bg:'#F4F6F8', text:'#686868', dot:'#686868' });
@@ -59,7 +60,7 @@
 		<h1 class="claim-title" style="font-size:21px;font-weight:700;color:#474545;margin:0;word-break:break-all;">Claim #{claimLabel}</h1>
 		<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;background:{sc.bg};color:{sc.text};font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:4px;">
 			<span style="width:5px;height:5px;border-radius:50%;background:{sc.dot};flex-shrink:0;"></span>
-			{data.claim.status.charAt(0).toUpperCase() + data.claim.status.slice(1)}
+			{ data.claim.status === 'pending_payout' ? 'Pending Payout' : data.claim.status.charAt(0).toUpperCase() + data.claim.status.slice(1) }
 		</span>
 	</div>
 
@@ -136,16 +137,9 @@
 			</div>
 
 			<!-- Actions -->
-			{#if data.claim.status === 'pending'}
+			{#if data.claim.status === 'pending_payout'}
 				<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-					<!-- Approve -->
-					<form method="POST" action="?/approve" use:enhance>
-						<button
-							type="submit"
-							style="width:100%;background:#3d8c1a;color:#fff;border:none;border-radius:7px;padding:10px;font-size:13px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;margin-bottom:10px;opacity:{showRejectForm ? 0.35 : 1};transition:opacity 0.15s;"
-						>✓ Approve Claim</button>
-					</form>
-
+					<div style="font-size:12px;color:#686868;margin-bottom:12px;line-height:1.5;">This claim was auto-approved on a valid QR scan and is ready for payout export. You can reject it if there is a legitimate dispute.</div>
 					<!-- Reject toggle / form -->
 					{#if !showRejectForm}
 						<button
@@ -181,12 +175,12 @@
 					{/if}
 				</div>
 			{:else}
-				<!-- Non-pending: show status + rejection reason if any -->
+				<!-- Non-actionable: show status + rejection reason if any -->
 				<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
 					<div style="font-size:13px;font-weight:700;color:#474545;margin-bottom:10px;">Status</div>
 					<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;background:{sc.bg};color:{sc.text};font-size:11px;font-weight:700;">
 						<span style="width:5px;height:5px;border-radius:50%;background:{sc.dot};flex-shrink:0;"></span>
-						{data.claim.status.charAt(0).toUpperCase() + data.claim.status.slice(1)}
+						{ data.claim.status === 'pending_payout' ? 'Pending Payout' : data.claim.status.charAt(0).toUpperCase() + data.claim.status.slice(1) }
 					</span>
 					{#if data.claim.rejection_reason}
 						<p style="font-size:13px;color:#686868;margin-top:10px;line-height:1.5;">{data.claim.rejection_reason}</p>

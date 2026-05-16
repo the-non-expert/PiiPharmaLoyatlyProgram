@@ -2,7 +2,7 @@
 //   npx supabase gen types typescript --project-id <your-project-id> > src/lib/types/database.ts
 // Manual types below match the migration exactly — replace once connected to a real project.
 
-export type ClaimStatus = 'pending' | 'approved' | 'rejected' | 'paid';
+export type ClaimStatus = 'pending' | 'pending_payout' | 'approved' | 'rejected' | 'paid';
 
 export interface Retailer {
   id: string;

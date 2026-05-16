@@ -94,7 +94,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			id: claimId,
 			retailer_id: session.retailer_id,
 			product_id: productId,
-			status: 'pending'
+			status: 'pending_payout'
 		});
 		const unlinkedIds = (unlinked ?? []).map((r) => r.id);
 		await supabase.from('coupon_submissions').update({ claim_id: claimId }).in('id', unlinkedIds);

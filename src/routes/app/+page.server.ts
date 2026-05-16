@@ -25,8 +25,8 @@ export const load: PageServerLoad = async ({ locals }) => {
     const [{ data: products }, { data: counts }, { data: activeClaims }, { data: earnedClaims }] = await Promise.all([
       supabase.from('products').select('*').eq('active', true).order('name'),
       supabase.from('coupon_submissions').select('product_id').eq('retailer_id', session.retailer_id).is('claim_id', null),
-      supabase.from('claims').select('product_id, status').eq('retailer_id', session.retailer_id).in('status', ['pending', 'approved']),
-      supabase.from('claims').select('product_id').eq('retailer_id', session.retailer_id).in('status', ['approved', 'paid']),
+      supabase.from('claims').select('product_id, status').eq('retailer_id', session.retailer_id).in('status', ['pending', 'pending_payout', 'approved']),
+      supabase.from('claims').select('product_id').eq('retailer_id', session.retailer_id).in('status', ['pending_payout', 'approved', 'paid']),
     ]);
 
     const countByProduct = (counts ?? []).reduce<Record<string, number>>((acc, row) => {
