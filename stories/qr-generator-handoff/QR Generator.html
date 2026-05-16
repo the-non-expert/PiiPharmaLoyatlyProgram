@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PiiPharma Admin — Bulk QR Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: #0f1218; font-family: 'Montserrat', sans-serif; }
+#root { height: 100%; }
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 99px; }
+@keyframes qrpulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+@keyframes popIn { from { opacity:0; transform:scale(0.97) } to { opacity:1; transform:scale(1) } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<!-- Load primitives first (Sidebar/AdminLayout/Btn/THead/TR/TD/ABadge live on window) -->
+<script type="text/babel" src="admin-screens.jsx"></script>
+<script type="text/babel" src="qr-screens.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const SCREENS = [
+  { id:'s1', num:'01', label:'Product list — Generate QR trigger',  Component: () => <QRScreen1Trigger/>,  note:'A QR-icon button + active toggle live on each product card. Non-intrusive but reachable in one click.' },
+  { id:'s2', num:'02', label:'Generator modal — form state',         Component: () => <QRScreen2Modal/>,    note:'Centered modal (720 × auto). Form left, live sample QR + encoded payload right. Works down to 768 px.' },
+  { id:'s3', num:'03', label:'Generation in-progress',               Component: () => <QRScreen3Progress/>, note:'Same modal, content swapped. Live count, progress bar, ETA. Cancel discards.' },
+  { id:'s4', num:'04', label:'Success — download-ready',             Component: () => <QRScreen4Success/>,  note:'File card + summary (product, batch, qty, serial range, generated-at). Primary CTA is Download. Re-downloadable from Batch History.' },
+  { id:'s5', num:'05', label:'Batch history — product detail',       Component: () => <QRScreen5History/>,  note:'Product → Batches tab. KPI strip, batch table, per-row re-download. Generate new batch is in the header.' },
+  { id:'s6', num:'06', label:'Error — serial range collision',       Component: () => <QRScreen6Error/>,    note:'Names the conflicting batch, offers one-click "Use next available range" recovery. No partial state.' },
+];
+
+const THUMB_W = 520;
+const THUMB_H = 325;
+const SCALE = THUMB_W / 1440;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "showLabels": true,
+  "showNotes": true,
+  "shadow": true
+}/*EDITMODE-END*/;
+
+function App() {
+  const [focused, setFocused] = useState(() => {
+    try { return parseInt(localStorage.getItem('qr_focused') ?? 'null', 10); } catch { return NaN; }
+  });
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+  const [tweaks, setTweaks] = useState(() => {
+    try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem('qr_tweaks') || '{}') }; } catch { return TWEAK_DEFAULTS; }
+  });
+  const focusedValid = Number.isInteger(focused) && focused >= 0 && focused < SCREENS.length;
+
+  useEffect(() => {
+    localStorage.setItem('qr_tweaks', JSON.stringify(tweaks));
+    window.parent.postMessage({ type:'__edit_mode_set_keys', edits:tweaks }, '*');
+  }, [tweaks]);
+
+  useEffect(() => {
+    if (focusedValid) localStorage.setItem('qr_focused', String(focused));
+    else localStorage.removeItem('qr_focused');
+  }, [focused, focusedValid]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === '__activate_edit_mode') setTweaksOpen(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ type:'__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  useEffect(() => {
+    if (!focusedValid) return;
+    const handler = (e) => {
+      if (e.key === 'Escape') setFocused(NaN);
+      if (e.key === 'ArrowRight') setFocused(f => f < SCREENS.length - 1 ? f + 1 : f);
+      if (e.key === 'ArrowLeft')  setFocused(f => f > 0 ? f - 1 : f);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [focusedValid]);
+
+  const focusedScreen = focusedValid ? SCREENS[focused] : null;
+
+  return (
+    <>
+      <div style={{
+        width:'100%', height:'100%', overflowX:'auto', overflowY:'auto',
+        background:'#0f1218',
+        backgroundImage:'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0)',
+        backgroundSize:'24px 24px',
+      }} data-screen-label="Canvas">
+        {/* Header */}
+        <div style={{ padding:'24px 40px 4px', display:'flex', alignItems:'center', gap:14 }}>
+          <div style={{ width:34, height:34, background:'#2372B9', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="7" height="7" rx="1" stroke="#fff" strokeWidth="2"/>
+              <rect x="14" y="3" width="7" height="7" rx="1" stroke="#fff" strokeWidth="2"/>
+              <rect x="3" y="14" width="7" height="7" rx="1" stroke="#fff" strokeWidth="2"/>
+              <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 19h2M19 14h2" stroke="#fff" strokeWidth="2" strokeLinecap="square"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize:15, fontWeight:700, color:'#fff', fontFamily:'Montserrat' }}>PiiPharma Admin · Bulk QR Code Generator</div>
+            <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', fontFamily:'Montserrat', marginTop:2 }}>6 screens · 1440 × 900 desktop · loyalty.piipharma.com/admin</div>
+          </div>
+          <div style={{ flex:1 }}/>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', fontFamily:'Montserrat' }}>Click any screen to focus · Esc to exit · ← → navigate</div>
+        </div>
+
+        {/* Sub-header — design system context */}
+        <div style={{ padding:'14px 40px 0', display:'flex', gap:8, flexWrap:'wrap' }}>
+          {[
+            'Trigger lives on Product card',
+            'Modal swaps states (form → progress → success/error)',
+            'Batch history per product',
+            'No partial state on errors',
+            'Re-downloadable forever',
+          ].map((t,i) => (
+            <span key={i} style={{ fontSize:10.5, fontWeight:600, color:'rgba(255,255,255,0.55)', fontFamily:'Montserrat', padding:'4px 10px', background:'rgba(35,114,185,0.14)', border:'1px solid rgba(35,114,185,0.3)', borderRadius:99 }}>{t}</span>
+          ))}
+        </div>
+
+        {/* Screen grid — 3×2 */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3, auto)', gap:32, padding:'28px 40px 60px', width:'max-content' }}>
+          {SCREENS.map((s, i) => {
+            const { Component } = s;
+            return (
+              <div key={s.id} style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:10, width:THUMB_W }} data-screen-label={`${s.num} ${s.label}`}>
+                <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+                  <div style={{ width:22, height:22, borderRadius:'50%', background:'#2372B9', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <span style={{ fontSize:9, fontWeight:700, color:'#fff', fontFamily:'Montserrat' }}>{s.num}</span>
+                  </div>
+                  {tweaks.showLabels && (
+                    <span style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.7)', fontFamily:'Montserrat' }}>{s.label}</span>
+                  )}
+                </div>
+                <div onClick={() => setFocused(i)}
+                  style={{
+                    width:THUMB_W, height:THUMB_H, borderRadius:10, overflow:'hidden',
+                    cursor:'zoom-in', position:'relative',
+                    boxShadow: tweaks.shadow ? '0 18px 50px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.3)',
+                    transition:'transform 0.18s, box-shadow 0.18s',
+                    border:'1px solid rgba(255,255,255,0.07)',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.015)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <div style={{ width:1440, height:900, transform:`scale(${SCALE})`, transformOrigin:'top left', pointerEvents:'none', userSelect:'none' }}>
+                    <Component/>
+                  </div>
+                </div>
+                {tweaks.showNotes && (
+                  <div style={{ width:THUMB_W, fontSize:11, color:'rgba(255,255,255,0.5)', fontFamily:'Montserrat', lineHeight:1.55, paddingTop:2 }}>{s.note}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Focus overlay */}
+      {focusedScreen && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.92)', backdropFilter:'blur(10px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }} onClick={() => setFocused(NaN)}>
+          <button onClick={e => { e.stopPropagation(); setFocused(f => f > 0 ? f-1 : f); }}
+            style={{ position:'absolute', left:20, top:'50%', transform:'translateY(-50%)', width:44, height:44, borderRadius:'50%', background:'rgba(255,255,255,0.1)', border:'1.5px solid rgba(255,255,255,0.18)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', opacity: focused===0 ? 0.25 : 1 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 19l-7-7 7-7" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/></svg>
+          </button>
+
+          <div onClick={e => e.stopPropagation()} style={{ animation:'popIn 0.18s ease', borderRadius:12, overflow:'hidden', boxShadow:'0 40px 100px rgba(0,0,0,0.8)', border:'1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{
+              width:1440, height:900,
+              transform:`scale(${Math.min((window.innerWidth*0.88)/1440, (window.innerHeight*0.86)/900)})`,
+              transformOrigin:'top left',
+            }}>
+              <focusedScreen.Component/>
+            </div>
+          </div>
+
+          <button onClick={e => { e.stopPropagation(); setFocused(f => f < SCREENS.length-1 ? f+1 : f); }}
+            style={{ position:'absolute', right:20, top:'50%', transform:'translateY(-50%)', width:44, height:44, borderRadius:'50%', background:'rgba(255,255,255,0.1)', border:'1.5px solid rgba(255,255,255,0.18)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', opacity: focused===SCREENS.length-1 ? 0.25 : 1 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/></svg>
+          </button>
+
+          <div style={{ position:'absolute', top:20, left:'50%', transform:'translateX(-50%)', background:'rgba(0,0,0,0.6)', borderRadius:99, padding:'5px 16px', border:'1px solid rgba(255,255,255,0.14)' }}>
+            <span style={{ fontSize:12, fontWeight:600, color:'#fff', fontFamily:'Montserrat' }}>{focusedScreen.num} · {focusedScreen.label}</span>
+          </div>
+
+          <div style={{ position:'absolute', bottom:20, left:'50%', transform:'translateX(-50%)', display:'flex', gap:7, alignItems:'center' }}>
+            {SCREENS.map((s,i) => (
+              <div key={s.id} onClick={e => { e.stopPropagation(); setFocused(i); }}
+                style={{ width: i===focused ? 22 : 7, height:7, borderRadius:99, background: i===focused ? '#2372B9' : 'rgba(255,255,255,0.22)', cursor:'pointer', transition:'all 0.2s' }}/>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tweaks panel */}
+      {tweaksOpen && (
+        <div style={{ position:'fixed', bottom:24, right:24, background:'#fff', borderRadius:14, boxShadow:'0 16px 48px rgba(0,0,0,0.3)', padding:'18px 20px', width:240, zIndex:2000, fontFamily:'Montserrat' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'#474545' }}>Tweaks</div>
+            <span style={{ cursor:'pointer', color:'#686868', fontSize:14 }} onClick={() => { setTweaksOpen(false); window.parent.postMessage({type:'__edit_mode_dismissed'}, '*'); }}>×</span>
+          </div>
+          {[['showLabels','Screen labels'],['showNotes','Designer notes'],['shadow','Card shadows']].map(([key,label]) => (
+            <label key={key} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, cursor:'pointer' }}>
+              <span style={{ fontSize:13, color:'#474545' }}>{label}</span>
+              <div onClick={() => setTweaks(t => ({...t, [key]: !t[key]}))}
+                style={{ width:38, height:21, borderRadius:99, background:tweaks[key] ? '#2372B9' : '#ccc', position:'relative', cursor:'pointer', transition:'background 0.2s', flexShrink:0 }}>
+                <div style={{ width:17, height:17, borderRadius:'50%', background:'#fff', position:'absolute', top:2, left:tweaks[key] ? 19 : 2, transition:'left 0.2s', boxShadow:'0 1px 3px rgba(0,0,0,0.2)' }}/>
+              </div>
+            </label>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
