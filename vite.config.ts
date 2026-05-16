@@ -4,10 +4,15 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
 	plugins: [sveltekit(), tailwindcss()],
+	optimizeDeps: {
+		esbuildOptions: {
+			// jsPDF optionally imports these for SVG/HTML rendering — we don't use those features.
+			// Without this, Vite's dep pre-bundler fails to resolve them in dev.
+			external: ['canvg', 'html2canvas', 'dompurify'],
+		},
+	},
 	build: {
 		rollupOptions: {
-			// jsPDF optionally imports these for SVG/HTML rendering — we don't use those features.
-			// Marking them external prevents the "failed to resolve" build error.
 			external: ['canvg', 'html2canvas', 'dompurify'],
 		},
 	},
