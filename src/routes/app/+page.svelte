@@ -39,7 +39,7 @@
   );
 
   // ── QR decode → POST /app/scan ────────────────────────────
-  async function handleScanResult(payload: { s: string; p: string; h: string }) {
+  async function handleScanResult(payload: { s: string; p: string; b: string; h: string }) {
     submitting = true;
     try {
       const res = await fetch('/app/scan', {

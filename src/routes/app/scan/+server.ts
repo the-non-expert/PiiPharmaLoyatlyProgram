@@ -1,14 +1,14 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getServiceClient } from '$lib/server/supabase';
-import { createHmac } from 'crypto';
+import { verifyHmac } from '$lib/server/qr-gen';
 import { env } from '$env/dynamic/private';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const session = locals.retailerSession;
 	if (!session) error(401, 'Unauthorized');
 
-	let body: { s?: string; p?: string; h?: string };
+	let body: { s?: string; p?: string; b?: string; h?: string };
 	try {
 		body = await request.json();
 	} catch {
@@ -17,22 +17,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const serial = (body.s ?? '').trim().toUpperCase();
 	const productId = (body.p ?? '').trim();
+	const batchId = (body.b ?? '').trim();
 	const hmac = (body.h ?? '').trim();
 
-	if (!serial || !productId) {
+	if (!serial || !productId || !batchId) {
 		return json({ status: 'invalid' });
 	}
 
-	// HMAC verification — skip in dev if secret not set
 	const hmacSecret = env.HMAC_SECRET;
-	if (hmacSecret) {
-		const expected = createHmac('sha256', hmacSecret)
-			.update(`${serial}:${productId}`)
-			.digest('hex')
-			.substring(0, 16);
-		if (hmac !== expected) {
-			return json({ status: 'hmac_failed' });
-		}
+	if (!hmacSecret) error(500, 'HMAC_SECRET not configured');
+	if (!verifyHmac(hmacSecret, serial, productId, batchId, hmac)) {
+		return json({ status: 'hmac_failed' });
 	}
 
 	const supabase = getServiceClient();
@@ -64,13 +59,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ status: 'invalid' });
 	}
 
-	// Insert new submission (no photo in QR flow)
 	const submissionId = crypto.randomUUID();
 	const { error: insertError } = await supabase.from('coupon_submissions').insert({
 		id: submissionId,
 		retailer_id: session.retailer_id,
 		product_id: productId,
-		photo_url: '',
 		serial,
 		claim_id: null
 	});

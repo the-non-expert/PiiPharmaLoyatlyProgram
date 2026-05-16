@@ -15,7 +15,7 @@
 
 	// Form values
 	let fBatchId = $state('');
-	let fQuantity = $state('1000');
+	let fQuantity = $state(1000);
 	let fSerialPrefix = $state('');
 	let fFormat = $state<'pdf' | 'zip'>('pdf');
 
@@ -54,13 +54,12 @@
 	} | null>(null);
 
 	// Error
-	let errCode = $state('QR_SERIAL_COLLISION');
-	let errRange = $state('PP-000001 → PP-010000');
-	let errConflict = $state({ id: 'APR-2026-C', qty: 5000, range: 'PP-000001 → PP-005000', date: '28 Apr 2026' });
+	let errCode = $state('');
+	let errMessage = $state('');
 
 	// ── Derived ────────────────────────────────────────────────────────────────
 	const prefix = $derived(fSerialPrefix.toUpperCase().trim() || 'PP');
-	const qty = $derived(parseInt(fQuantity) || 0);
+	const qty = $derived(fQuantity || 0);
 	const serialStart = $derived(`${prefix}-000001`);
 	const serialEnd = $derived(`${prefix}-${String(qty).padStart(6, '0')}`);
 	const qrSeed = $derived(`${serialStart}:${fBatchId || 'BATCH'}`);
@@ -81,13 +80,13 @@
 	const formValid = $derived.by(() => {
 		const bid = fBatchId.trim();
 		if (!bid || bid.length > 32 || !/^[A-Z0-9-]+$/.test(bid)) return false;
-		const n = parseInt(fQuantity);
-		if (isNaN(n) || !Number.isInteger(n) || n < 1 || n > 10000) return false;
+		const n = fQuantity;
+		if (!Number.isInteger(n) || n < 1 || n > 10000) return false;
 		const sp = fSerialPrefix.trim();
 		if (!sp || sp.length > 8 || !/^[A-Z0-9-]+$/i.test(sp)) return false;
 		return true;
 	});
-	const formDirty = $derived(fBatchId !== '' || fQuantity !== '1000' || fSerialPrefix !== '');
+	const formDirty = $derived(fBatchId !== '' || fQuantity !== 1000 || fSerialPrefix !== '');
 	const modalWidth = $derived(phase === 'form' ? '720px' : phase === 'error' ? '620px' : '560px');
 
 	// ── Sample QR computation ───────────────────────────────────────────────────
@@ -142,10 +141,9 @@
 	}
 
 	function validateQuantity() {
-		const raw = fQuantity.trim();
-		if (!raw) { eQuantity = 'Quantity is required'; return false; }
-		const n = Number(raw);
-		if (isNaN(n) || !Number.isInteger(n)) { eQuantity = 'Whole numbers only'; return false; }
+		const n = fQuantity;
+		if (!n && n !== 0) { eQuantity = 'Quantity is required'; return false; }
+		if (!Number.isInteger(n)) { eQuantity = 'Whole numbers only'; return false; }
 		if (n < 1) { eQuantity = 'Quantity must be at least 1'; return false; }
 		if (n > 10000) { eQuantity = "Quantity can't exceed 10,000 per batch"; return false; }
 		eQuantity = '';
@@ -185,10 +183,23 @@
 		return (abbrev + dose).slice(0, 8);
 	}
 
-	// Pre-fill when the modal opens for a new product (don't overwrite on re-open same product)
+	// Pre-fill serial prefix and suggested batch label when modal opens
 	$effect(() => {
 		if (product) {
 			fSerialPrefix = derivePrefix(product.name);
+		}
+	});
+
+	$effect(() => {
+		if (open && product) {
+			fetch('/admin/qr/generate', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ action: 'suggest', product_id: product.id })
+			})
+				.then(r => r.json())
+				.then((d: { suggested_label?: string }) => { if (d.suggested_label) fBatchId = d.suggested_label; })
+				.catch(() => {});
 		}
 	});
 
@@ -201,57 +212,261 @@
 		startGeneration();
 	}
 
-	// ── Progress simulation ─────────────────────────────────────────────────────
-	function startGeneration() {
-		const total = parseInt(fQuantity) || 1000;
+	// ── Real generation ─────────────────────────────────────────────────────────
+	const CHUNK_SIZE = 1000;
+	const PARALLEL = 3;
+
+	// Accumulated serials+HMACs from all chunk responses (used for rendering)
+	let generatedSerials = $state<Array<{ serial: string; hmac: string }>>([]);
+	// Download blob URL for triggering the browser download
+	let downloadUrl = $state('');
+	let downloadName = $state('');
+	// Cancellation flag — checked between parallel group rounds
+	let cancelled = false;
+
+	async function startGeneration() {
+		if (!product) return;
+		const total = fQuantity || 1000;
 		progDone = 0;
 		progTotal = total;
 		progStarted = Date.now();
 		now = Date.now();
 		phase = 'progress';
+		cancelled = false;
+		generatedSerials = [];
+		downloadUrl = '';
 
 		nowIntervalId = setInterval(() => { now = Date.now(); }, 200);
 
-		progIntervalId = setInterval(() => {
-			const tick = Math.floor(progTotal * 0.018) + Math.floor(Math.random() * 35);
-			progDone = Math.min(progDone + tick, progTotal);
-			if (progDone >= progTotal) {
-				clearInterval(progIntervalId!); progIntervalId = null;
-				clearInterval(nowIntervalId!); nowIntervalId = null;
-				setTimeout(() => {
-					const p = prefix;
-					const q = progTotal;
-					const fmt = fFormat;
-					successData = {
-						batchId: fBatchId,
-						quantity: q,
-						serialStart: `${p}-000001`,
-						serialEnd: `${p}-${String(q).padStart(6, '0')}`,
-						format: fmt,
-						fileSize: fmt === 'pdf'
-							? `${(q / 10000 * 8.4).toFixed(1)} MB`
-							: `${(q / 10000 * 62).toFixed(1)} MB`,
-						pages: fmt === 'pdf' ? Math.ceil(q / 35) : null,
-						filename: `piipharma_${product?.name?.toLowerCase().replace(/\s+/g, '-') ?? 'product'}_${fBatchId}.${fmt === 'pdf' ? 'pdf' : 'zip'}`,
-						generatedAt: new Date().toLocaleString('en-IN', {
-							day: 'numeric', month: 'short', year: 'numeric',
-							hour: '2-digit', minute: '2-digit', hour12: false
-						})
-					};
-					phase = 'success';
-				}, 400);
+		try {
+			// Phase 1: init — create batch row, get batch_id and serial start num
+			const initRes = await fetch('/admin/qr/generate', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					action: 'init',
+					product_id: product.id,
+					batch_label: fBatchId,
+					prefix: prefix,
+					quantity: total
+				})
+			});
+
+			if (!initRes.ok) {
+				const err = await initRes.json().catch(() => ({}));
+				throw { code: 'INIT_FAILED', message: (err as { message?: string }).message ?? 'Failed to initialise batch' };
 			}
-		}, 80);
+
+			const { batch_id, start_num, serial_start, serial_end } = await initRes.json() as {
+				batch_id: string; start_num: number; serial_start: string; serial_end: string;
+			};
+
+			// Phase 2: chunked generation — 3 chunks in parallel
+			const numChunks = Math.ceil(total / CHUNK_SIZE);
+
+			for (let groupStart = 0; groupStart < numChunks; groupStart += PARALLEL) {
+				if (cancelled) { phase = 'form'; return; }
+
+				const groupEnd = Math.min(groupStart + PARALLEL, numChunks);
+				const promises = [];
+
+				for (let ci = groupStart; ci < groupEnd; ci++) {
+					const chunkStartNum = start_num + ci * CHUNK_SIZE;
+					const count = Math.min(CHUNK_SIZE, total - ci * CHUNK_SIZE);
+
+					promises.push(
+						fetch('/admin/qr/generate', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({
+								action: 'chunk',
+								batch_id,
+								product_id: product.id,
+								prefix: prefix,
+								start_num: chunkStartNum,
+								count
+							})
+						}).then(async (r) => {
+							if (!r.ok) {
+								const err = await r.json().catch(() => ({}));
+								throw { code: 'CHUNK_FAILED', message: (err as { message?: string }).message ?? 'Chunk failed' };
+							}
+							const data = await r.json() as { inserted: number; serials: Array<{ serial: string; hmac: string }> };
+							generatedSerials = [...generatedSerials, ...data.serials];
+							progDone = Math.min(progDone + data.inserted, total);
+						})
+					);
+				}
+
+				await Promise.all(promises);
+			}
+
+			if (cancelled) { phase = 'form'; return; }
+
+			// Phase 3: render output (client-side, heavy but avoids server memory)
+			progDone = total; // snap to 100%
+			const fmt = fFormat;
+			const filename = `piipharma_${product.name.toLowerCase().replace(/\s+/g, '-')}_${fBatchId}.${fmt === 'pdf' ? 'pdf' : 'zip'}`;
+
+			const blob = fmt === 'pdf'
+				? await renderPdf(generatedSerials, product.id, batch_id)
+				: await renderZip(generatedSerials, product.id, batch_id);
+
+			const fileSizeMb = (blob.size / 1024 / 1024).toFixed(1);
+			downloadUrl = URL.createObjectURL(blob);
+			downloadName = filename;
+
+			// Trigger download automatically
+			const a = document.createElement('a');
+			a.href = downloadUrl;
+			a.download = downloadName;
+			a.click();
+
+			successData = {
+				batchId: fBatchId,
+				quantity: total,
+				serialStart: serial_start,
+				serialEnd: serial_end,
+				format: fmt,
+				fileSize: `${fileSizeMb} MB`,
+				pages: fmt === 'pdf' ? Math.ceil(total / 35) : null,
+				filename,
+				generatedAt: new Date().toLocaleString('en-IN', {
+					day: 'numeric', month: 'short', year: 'numeric',
+					hour: '2-digit', minute: '2-digit', hour12: false
+				})
+			};
+			phase = 'success';
+
+		} catch (e: unknown) {
+			const err = e as { code?: string; message?: string };
+			errCode = err.code ?? 'UNKNOWN_ERROR';
+			errMessage = err.message ?? 'An unexpected error occurred. Please try again.';
+			phase = 'error';
+		} finally {
+			if (nowIntervalId) { clearInterval(nowIntervalId); nowIntervalId = null; }
+		}
+	}
+
+	// ── PDF rendering ─────────────────────────────────────────────────────────
+	// 35 codes per page (5 cols × 7 rows), A4 portrait.
+	const COLS = 5, ROWS = 7, PER_PAGE = COLS * ROWS;
+
+	async function renderPdf(
+		serials: Array<{ serial: string; hmac: string }>,
+		productId: string,
+		batchId: string
+	): Promise<Blob> {
+		const [{ default: jsPDF }, { default: QRCode }] = await Promise.all([
+			import('jspdf'),
+			import('qrcode')
+		]);
+		const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+		const pageW = doc.internal.pageSize.getWidth();
+		const pageH = doc.internal.pageSize.getHeight();
+		const cellW = pageW / COLS;
+		const cellH = pageH / ROWS;
+		const qrSize = Math.min(cellW, cellH) * 0.72; // QR square within cell
+		const margin = (cellW - qrSize) / 2;
+
+		const offscreen = document.createElement('canvas');
+		offscreen.width = 200;
+		offscreen.height = 200;
+
+		for (let i = 0; i < serials.length; i++) {
+			const { serial, hmac } = serials[i];
+			const pageIdx = Math.floor(i / PER_PAGE);
+			const posInPage = i % PER_PAGE;
+			const col = posInPage % COLS;
+			const row = Math.floor(posInPage / COLS);
+
+			if (posInPage === 0 && pageIdx > 0) doc.addPage();
+
+			const payload = JSON.stringify({ s: serial, p: productId, b: batchId, h: hmac });
+			await QRCode.toCanvas(offscreen, payload, { width: 200, margin: 1, errorCorrectionLevel: 'M' });
+
+			const x = col * cellW + margin;
+			const y = row * cellH + margin * 0.5;
+			doc.addImage(offscreen.toDataURL('image/png'), 'PNG', x, y, qrSize, qrSize);
+
+			// Serial label below QR
+			doc.setFontSize(5.5);
+			doc.setTextColor(60, 60, 60);
+			doc.text(serial, x + qrSize / 2, y + qrSize + 2.5, { align: 'center' });
+		}
+
+		return doc.output('blob');
+	}
+
+	// ── PNG sheet rendering ───────────────────────────────────────────────────
+	// A4 at 300 DPI = 2480×3508 px, 35 codes per sheet.
+	const SHEET_W = 2480, SHEET_H = 3508;
+
+	async function renderZip(
+		serials: Array<{ serial: string; hmac: string }>,
+		productId: string,
+		batchId: string
+	): Promise<Blob> {
+		const [{ default: JSZip }, { default: QRCode }] = await Promise.all([
+			import('jszip'),
+			import('qrcode')
+		]);
+		const zip = new JSZip();
+		const numSheets = Math.ceil(serials.length / PER_PAGE);
+		const cellW = Math.floor(SHEET_W / COLS);
+		const cellH = Math.floor(SHEET_H / ROWS);
+		const qrPx = Math.floor(Math.min(cellW, cellH) * 0.78);
+
+		const canvas = document.createElement('canvas');
+		canvas.width = SHEET_W;
+		canvas.height = SHEET_H;
+		const ctx = canvas.getContext('2d')!;
+
+		const offscreen = document.createElement('canvas');
+		offscreen.width = qrPx;
+		offscreen.height = qrPx;
+
+		for (let sheet = 0; sheet < numSheets; sheet++) {
+			ctx.fillStyle = '#ffffff';
+			ctx.fillRect(0, 0, SHEET_W, SHEET_H);
+
+			for (let pos = 0; pos < PER_PAGE; pos++) {
+				const idx = sheet * PER_PAGE + pos;
+				if (idx >= serials.length) break;
+
+				const { serial, hmac } = serials[idx];
+				const col = pos % COLS;
+				const row = Math.floor(pos / COLS);
+				const x = col * cellW + Math.floor((cellW - qrPx) / 2);
+				const y = row * cellH + Math.floor((cellH - qrPx) / 2) - 20;
+
+				const payload = JSON.stringify({ s: serial, p: productId, b: batchId, h: hmac });
+				await QRCode.toCanvas(offscreen, payload, { width: qrPx, margin: 1, errorCorrectionLevel: 'M' });
+				ctx.drawImage(offscreen, x, y);
+
+				// Serial label
+				ctx.fillStyle = '#333333';
+				ctx.font = `bold ${Math.floor(cellH * 0.07)}px monospace`;
+				ctx.textAlign = 'center';
+				ctx.fillText(serial, col * cellW + cellW / 2, y + qrPx + Math.floor(cellH * 0.08));
+			}
+
+			const blob = await new Promise<Blob>((res) => canvas.toBlob((b) => res(b!), 'image/png'));
+			zip.file(`sheet_${String(sheet + 1).padStart(4, '0')}.png`, blob);
+		}
+
+		return await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
 	}
 
 	function cancelGeneration() {
+		cancelled = true;
 		if (progIntervalId) { clearInterval(progIntervalId); progIntervalId = null; }
 		if (nowIntervalId) { clearInterval(nowIntervalId); nowIntervalId = null; }
 		phase = 'form';
 	}
 
 	function generateAnother() {
-		fBatchId = ''; fQuantity = '1000';
+		fBatchId = ''; fQuantity = 1000;
 		tBatchId = false; tQuantity = false; tSerialPrefix = false;
 		eBatchId = ''; eQuantity = ''; eSerialPrefix = '';
 		successData = null;
@@ -263,7 +478,7 @@
 		if (progIntervalId) { clearInterval(progIntervalId); progIntervalId = null; }
 		if (nowIntervalId) { clearInterval(nowIntervalId); nowIntervalId = null; }
 		phase = 'form';
-		fBatchId = ''; fQuantity = '1000'; fSerialPrefix = ''; fFormat = 'pdf';
+		fBatchId = ''; fQuantity = 1000; fSerialPrefix = ''; fFormat = 'pdf';
 		tBatchId = false; tQuantity = false; tSerialPrefix = false;
 		eBatchId = ''; eQuantity = ''; eSerialPrefix = '';
 		successData = null;
@@ -393,7 +608,7 @@
 							onblur={() => { tSerialPrefix = true; validateSerialPrefix(); }}
 							style="width:100%;box-sizing:border-box;border:{tSerialPrefix && eSerialPrefix ? '1.5px solid #E53E3E;box-shadow:0 0 0 3px #fde8e8' : '1.5px solid #EAEAEA'};border-radius:7px;padding:9px 12px;font-family:'Montserrat',sans-serif;font-size:13px;color:#474545;outline:none;height:38px;"
 						/>
-						<div style="font-size:10px;color:#686868;margin-top:3px;">Serials become <span style="font-family:monospace;font-weight:600;">{serialStart}{qty > 0 ? ` … ${serialEnd}` : ''}</span></div>
+						<div style="font-size:10px;color:#686868;margin-top:3px;">Format: <span style="font-family:monospace;font-weight:600;">{prefix}-XXXXXX</span> — exact range assigned at generation</div>
 					</div>
 
 					<!-- Output format -->
@@ -560,17 +775,18 @@
 				<!-- Info note -->
 				<div style="display:flex;align-items:center;gap:8px;">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#2372B9" stroke-width="2"/><path d="M12 11v5M12 8h.01" stroke="#2372B9" stroke-width="2.2" stroke-linecap="round"/></svg>
-					<span style="font-size:11px;color:#686868;">You can re-download this batch any time from <strong style="color:#2372B9;">Batch History</strong>.</span>
+					<span style="font-size:11px;color:#686868;">File downloaded automatically. Click below to save again.</span>
 				</div>
 			</div>
 
 			<!-- Footer -->
 			<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:14px 24px;border-top:1px solid #EAEAEA;background:#fbfbfc;border-radius:0 0 14px 14px;">
 				<button type="button" onclick={generateAnother} style="background:#fff;color:#474545;border:1.5px solid #EAEAEA;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:600;font-family:'Montserrat',sans-serif;cursor:pointer;">Generate another</button>
-				<button type="button" onclick={handleClose} style="display:flex;align-items:center;gap:6px;background:#2372B9;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(35,114,185,0.3);">
+				<a href={downloadUrl} download={downloadName} style="display:flex;align-items:center;gap:6px;background:#2372B9;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(35,114,185,0.3);text-decoration:none;">
 					<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M7 10l5 5 5-5M12 15V3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-					Download {successData.format.toUpperCase()}
-				</button>
+					Save {successData.format.toUpperCase()} again
+				</a>
+				<button type="button" onclick={onclose} style="background:#474545;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;">Close</button>
 			</div>
 
 		<!-- ══════════════════ ERROR PHASE ══════════════════ -->
@@ -595,45 +811,27 @@
 						<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M10.3 3.7L2.5 17.2A2 2 0 004.2 20.2h15.6a2 2 0 001.7-3l-7.8-13.5a2 2 0 00-3.4 0z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>
 					</div>
 					<div>
-						<div style="font-size:13px;font-weight:700;color:#9b2626;margin-bottom:4px;">Serial range collision</div>
-						<div style="font-size:12px;color:#7a1c1c;line-height:1.5;">Serials <span style="font-family:monospace;font-weight:700;">{errRange}</span> overlap with an existing batch. Choose a different serial prefix or let the system auto-assign the next available range.</div>
+						{#if errCode === 'INIT_FAILED'}
+							<div style="font-size:13px;font-weight:700;color:#9b2626;margin-bottom:4px;">Batch label already used</div>
+							<div style="font-size:12px;color:#7a1c1c;line-height:1.5;">A batch with label <span style="font-family:monospace;font-weight:700;">{fBatchId}</span> already exists for this product. Choose a different batch label.</div>
+						{:else if errCode === 'CHUNK_FAILED'}
+							<div style="font-size:13px;font-weight:700;color:#9b2626;margin-bottom:4px;">Serial collision during generation</div>
+							<div style="font-size:12px;color:#7a1c1c;line-height:1.5;">One or more serials in the requested range already exist. The batch may be incomplete — delete it from Batch History and retry with a different prefix.</div>
+						{:else}
+							<div style="font-size:13px;font-weight:700;color:#9b2626;margin-bottom:4px;">Generation failed</div>
+							<div style="font-size:12px;color:#7a1c1c;line-height:1.5;">{errMessage}</div>
+						{/if}
 					</div>
-				</div>
-
-				<!-- Conflicts with -->
-				<div style="background:#F4F6F8;border-radius:10px;border:1px solid #EAEAEA;padding:12px 14px;">
-					<div style="font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Conflicts with</div>
-					<div style="display:flex;align-items:center;justify-content:space-between;">
-						<div>
-							<div style="font-size:12.5px;font-weight:700;color:#474545;font-family:monospace;">{errConflict.id}</div>
-							<div style="font-size:11px;color:#686868;margin-top:2px;">{errConflict.qty.toLocaleString('en-IN')} codes · printed {errConflict.date} · serials <span style="font-family:monospace;">{errConflict.range}</span></div>
-						</div>
-						<button type="button" style="display:flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:#2372B9;font-family:'Montserrat',sans-serif;padding:4px 0;">
-							<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 109-9 9 9 0 00-6.4 2.6L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M3 3v5h5M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-							View batch
-						</button>
-					</div>
-				</div>
-
-				<!-- Suggested fix -->
-				<div style="background:#e8f1fb;border:1px solid #2372B9;border-radius:10px;padding:12px 14px;display:flex;gap:10px;">
-					<div style="width:24px;height:24px;border-radius:50%;background:#2372B9;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-						<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/><path d="M12 11v5M12 8h.01" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
-					</div>
-					<div style="font-size:12px;color:#14407a;line-height:1.5;"><strong>Suggested:</strong> Use next available range <span style="font-family:monospace;font-weight:700;">PP-045001 → PP-055000</span>, or change prefix to e.g. <span style="font-family:monospace;font-weight:700;">PP-MAY-</span>.</div>
 				</div>
 
 				<!-- Trace -->
-				<div style="font-family:monospace;font-size:10.5px;color:#686868;">Error code: QR_SERIAL_COLLISION · trace: req_8c4a91e2</div>
+				<div style="font-family:monospace;font-size:10.5px;color:#686868;">Error code: {errCode}</div>
 			</div>
 
 			<!-- Footer -->
 			<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid #EAEAEA;background:#fbfbfc;border-radius:0 0 14px 14px;">
-				<span style="font-size:11px;color:#686868;">No codes were generated. No charges or changes to inventory.</span>
-				<div style="display:flex;gap:8px;">
-					<button type="button" onclick={() => phase = 'form'} style="background:#fff;color:#474545;border:1.5px solid #EAEAEA;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:600;font-family:'Montserrat',sans-serif;cursor:pointer;">Edit values</button>
-					<button type="button" onclick={startGeneration} style="background:#2372B9;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(35,114,185,0.3);">Use next available range</button>
-				</div>
+				<span style="font-size:11px;color:#686868;">No complete batch was generated.</span>
+				<button type="button" onclick={() => phase = 'form'} style="background:#fff;color:#474545;border:1.5px solid #EAEAEA;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:600;font-family:'Montserrat',sans-serif;cursor:pointer;">Edit values</button>
 			</div>
 		{/if}
 

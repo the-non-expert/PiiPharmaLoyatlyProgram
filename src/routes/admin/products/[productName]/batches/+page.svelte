@@ -11,6 +11,35 @@
 	let modalOpen  = $state(false);
 	let openMenuId = $state<string | null>(null);
 
+	// Preview state
+	let previewOpen      = $state(false);
+	let previewLabel     = $state('');
+	let previewLoading   = $state(false);
+	let previewQrs       = $state<Array<{ serial: string; url: string }>>([]);
+
+	async function openPreview(batch: { uuid: string; id: string }) {
+		previewLabel   = batch.id;
+		previewQrs     = [];
+		previewLoading = true;
+		previewOpen    = true;
+		try {
+			const res  = await fetch('/admin/qr/generate', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ action: 'serials', batch_id: batch.uuid })
+			});
+			const d = await res.json() as { product_id: string; batch_id: string; serials: { serial: string; hmac: string }[] };
+			const { default: QRCode } = await import('qrcode');
+			previewQrs = await Promise.all(d.serials.map(async ({ serial, hmac }) => {
+				const payload = JSON.stringify({ s: serial, p: d.product_id, b: d.batch_id, h: hmac });
+				const url = await QRCode.toDataURL(payload, { width: 180, margin: 1 });
+				return { serial, url };
+			}));
+		} finally {
+			previewLoading = false;
+		}
+	}
+
 	const activeTab = $derived.by((): 'overview' | 'batches' => {
 		const t = page.url.searchParams.get('tab');
 		return t === 'overview' ? 'overview' : 'batches';
@@ -146,11 +175,11 @@
 
 		<!-- Table (desktop) -->
 		{#if filtered.length > 0}
-			<div class="batch-table-wrap" style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+			<div class="batch-table-wrap" style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:visible;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
 				<table style="width:100%;border-collapse:collapse;">
 					<thead>
 						<tr style="border-bottom:2px solid #EAEAEA;">
-							{#each ['Batch ID', 'Quantity', 'Serial Range', 'Format', 'Generated', 'By', 'Status', 'Actions'] as col}
+							{#each ['Batch ID', 'Quantity', 'Serial Range', 'Format', 'Generated', 'Actions'] as col}
 								<th style="padding:9px 14px;font-size:11px;font-weight:700;color:#686868;text-align:left;white-space:nowrap;">{col}</th>
 							{/each}
 						</tr>
@@ -181,22 +210,6 @@
 								<td style="padding:11px 14px;font-size:12px;color:#686868;white-space:nowrap;">
 									{formatDate(batch.generated_at)}
 								</td>
-								<td style="padding:11px 14px;font-size:12px;color:#474545;white-space:nowrap;">
-									{batch.generated_by}
-								</td>
-								<td style="padding:11px 14px;">
-									{#if batch.status === 'active'}
-										<span style="display:inline-flex;align-items:center;gap:4px;background:#f0f9e6;color:#3d6e10;border-radius:99px;padding:3px 9px;font-size:10px;font-weight:700;">
-											<span style="width:5px;height:5px;border-radius:50%;background:#3d8c1a;display:inline-block;"></span>
-											Active
-										</span>
-									{:else}
-										<span style="display:inline-flex;align-items:center;gap:4px;background:#F4F6F8;color:#686868;border-radius:99px;padding:3px 9px;font-size:10px;font-weight:700;">
-											<span style="width:5px;height:5px;border-radius:50%;background:#686868;display:inline-block;"></span>
-											Archived
-										</span>
-									{/if}
-								</td>
 								<td style="padding:11px 14px;">
 									<div style="display:flex;align-items:center;gap:6px;">
 										<button
@@ -206,30 +219,14 @@
 											<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 											Re-download
 										</button>
-										<div style="position:relative;">
-											<button
-												type="button"
-												onclick={(e) => { e.stopPropagation(); toggleMenu(batch.id); }}
-												style="width:28px;height:26px;display:flex;align-items:center;justify-content:center;background:#fff;color:#686868;border:1.5px solid #EAEAEA;border-radius:6px;cursor:pointer;font-size:14px;"
-												aria-label="More actions"
-											>⋯</button>
-											{#if openMenuId === batch.id}
-												<div
-													onclick={(e) => e.stopPropagation()}
-													style="position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #EAEAEA;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:4px;z-index:100;width:188px;"
-												>
-													{#each ['View payload sample', 'Copy serial range', batch.status === 'active' ? 'Archive batch' : 'Restore batch', 'Download CSV of serials'] as action}
-														<button
-															type="button"
-															onclick={() => openMenuId = null}
-															style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:12px;font-weight:500;color:{action === 'Archive batch' ? '#E53E3E' : '#474545'};background:none;border:none;cursor:pointer;border-radius:6px;font-family:'Montserrat',sans-serif;"
-															onmouseenter={(e) => (e.currentTarget.style.background='#F4F6F8')}
-															onmouseleave={(e) => (e.currentTarget.style.background='none')}
-														>{action}</button>
-													{/each}
-												</div>
-											{/if}
-										</div>
+										<button
+											type="button"
+											onclick={() => openPreview(batch)}
+											title="Preview QR codes"
+											style="width:28px;height:26px;display:flex;align-items:center;justify-content:center;background:#fff;color:#686868;border:1.5px solid #EAEAEA;border-radius:6px;cursor:pointer;"
+										>
+											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+										</button>
 									</div>
 								</td>
 							</tr>
@@ -403,6 +400,44 @@
 		</div>
 	{/if}
 </div>
+
+<!-- QR Preview Modal -->
+{#if previewOpen}
+	<div
+		style="position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;"
+		onclick={() => previewOpen = false}
+	>
+		<div
+			style="background:#fff;border-radius:14px;width:100%;max-width:860px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.18);"
+			onclick={(e) => e.stopPropagation()}
+		>
+			<!-- Header -->
+			<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid #EAEAEA;flex-shrink:0;">
+				<div>
+					<div style="font-size:15px;font-weight:700;color:#474545;">Batch {previewLabel}</div>
+					<div style="font-size:11.5px;color:#686868;margin-top:2px;">{previewLoading ? 'Loading…' : `${previewQrs.length} stickers`}</div>
+				</div>
+				<button type="button" onclick={() => previewOpen = false} style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:#F4F6F8;border:none;border-radius:7px;font-size:18px;cursor:pointer;color:#686868;">×</button>
+			</div>
+
+			<!-- Grid -->
+			<div style="overflow-y:auto;padding:20px;">
+				{#if previewLoading}
+					<div style="text-align:center;padding:40px;color:#686868;font-size:13px;">Generating previews…</div>
+				{:else}
+					<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:16px;">
+						{#each previewQrs as { serial, url }}
+							<div style="display:flex;flex-direction:column;align-items:center;background:#F9FAFB;border:1px solid #EAEAEA;border-radius:8px;padding:10px 8px;">
+								<img src={url} alt={serial} style="width:110px;height:110px;" />
+								<div style="font-family:monospace;font-size:9px;color:#474545;margin-top:6px;text-align:center;">{serial}</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
 
 <!-- QR Generator Modal -->
 <QrGeneratorModal

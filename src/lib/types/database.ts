@@ -78,6 +78,26 @@ export interface AdminSession {
   created_at: string;
 }
 
+export interface QrBatch {
+  id: string;
+  product_id: string;
+  batch_label: string;
+  serial_prefix: string;
+  quantity: number;
+  serial_start: string;
+  serial_end: string;
+  serial_start_num: number;
+  created_at: string;
+}
+
+export interface QrSerial {
+  id: string;
+  batch_id: string;
+  serial: string;
+  hmac: string;
+  created_at: string;
+}
+
 // Joined types used in server load functions
 export interface ClaimWithDetails extends Claim {
   retailer: Pick<Retailer, 'name' | 'city' | 'state' | 'upi_id' | 'mobile'>;

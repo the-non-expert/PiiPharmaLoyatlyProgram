@@ -8,7 +8,7 @@
     onerror
   }: {
     onclose: () => void;
-    onresult: (payload: { s: string; p: string; h: string }) => void;
+    onresult: (payload: { s: string; p: string; b: string; h: string }) => void;
     onerror: (msg: string) => void;
   } = $props();
 
@@ -77,7 +77,7 @@
     const code = jsQR(imageData.data, w, h, { inversionAttempts: 'dontInvert' });
     if (!code) return;
 
-    let payload: { s?: string; p?: string; h?: string } = {};
+    let payload: { s?: string; p?: string; b?: string; h?: string } = {};
     try {
       payload = JSON.parse(code.data);
     } catch {
@@ -85,7 +85,7 @@
       return;
     }
 
-    if (!payload.s || !payload.p) {
+    if (!payload.s || !payload.p || !payload.b) {
       onerror('qr_invalid');
       return;
     }
@@ -93,7 +93,7 @@
     decoded = true;
     stopCamera();
     if (typeof navigator.vibrate === 'function') navigator.vibrate(40);
-    onresult({ s: payload.s, p: payload.p, h: payload.h ?? '' });
+    onresult({ s: payload.s, p: payload.p, b: payload.b, h: payload.h ?? '' });
   }
 
   function animateScanLine() {
