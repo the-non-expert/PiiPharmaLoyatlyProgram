@@ -57,6 +57,9 @@
 	let errCode = $state('');
 	let errMessage = $state('');
 
+	// Discard confirmation
+	let discardOpen = $state(false);
+
 	// ── Derived ────────────────────────────────────────────────────────────────
 	const prefix = $derived(fSerialPrefix.toUpperCase().trim() || 'PP');
 	const qty = $derived(fQuantity || 0);
@@ -473,8 +476,7 @@
 		phase = 'form';
 	}
 
-	function handleClose() {
-		if (phase === 'form' && formDirty && !confirm('Discard unsaved changes?')) return;
+	function resetAndClose() {
 		if (progIntervalId) { clearInterval(progIntervalId); progIntervalId = null; }
 		if (nowIntervalId) { clearInterval(nowIntervalId); nowIntervalId = null; }
 		phase = 'form';
@@ -482,7 +484,13 @@
 		tBatchId = false; tQuantity = false; tSerialPrefix = false;
 		eBatchId = ''; eQuantity = ''; eSerialPrefix = '';
 		successData = null;
+		discardOpen = false;
 		onclose();
+	}
+
+	function handleClose() {
+		if (phase === 'form' && formDirty) { discardOpen = true; return; }
+		resetAndClose();
 	}
 
 	function handleBackdropClick() { handleClose(); }
@@ -836,6 +844,34 @@
 		{/if}
 
 		</div><!-- /modal-shell -->
+
+		<!-- Discard confirmation overlay -->
+		{#if discardOpen}
+			<div
+				style="position:fixed;inset:0;z-index:210;display:flex;align-items:center;justify-content:center;padding:16px;"
+				onclick={() => discardOpen = false}
+			>
+				<div
+					onclick={(e) => e.stopPropagation()}
+					style="background:#fff;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.22);padding:24px 28px;width:100%;max-width:360px;font-family:'Montserrat',sans-serif;"
+				>
+					<div style="font-size:15px;font-weight:700;color:#474545;margin-bottom:8px;">Discard changes?</div>
+					<div style="font-size:13px;color:#686868;line-height:1.6;margin-bottom:20px;">You have unsaved form data. Closing will lose your batch ID, quantity, and format settings.</div>
+					<div style="display:flex;gap:8px;justify-content:flex-end;">
+						<button
+							type="button"
+							onclick={() => discardOpen = false}
+							style="background:#fff;color:#474545;border:1.5px solid #EAEAEA;border-radius:7px;padding:9px 16px;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;"
+						>Keep editing</button>
+						<button
+							type="button"
+							onclick={resetAndClose}
+							style="background:#E53E3E;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;"
+						>Discard</button>
+					</div>
+				</div>
+			</div>
+		{/if}
 	</div><!-- /backdrop -->
 {/if}
 
