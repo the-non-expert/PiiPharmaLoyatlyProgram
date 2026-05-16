@@ -97,6 +97,23 @@
 	{/if}
 
 	<!-- Product grid -->
+	{#if data.products.length === 0}
+		<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 24px;text-align:center;">
+			<div style="width:56px;height:56px;border-radius:14px;background:#e8f1fb;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+				<svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#2372B9" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#2372B9" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#2372B9" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#2372B9" stroke-width="2"/></svg>
+			</div>
+			<div style="font-size:17px;font-weight:700;color:#474545;margin-bottom:8px;">No products yet</div>
+			<div style="font-size:13px;color:#686868;max-width:320px;line-height:1.6;margin-bottom:24px;">Products are the medicine SKUs enrolled in the cashback program. Each product has a coupon threshold and a cashback amount.</div>
+			<button
+				type="button"
+				onclick={() => showAddForm = true}
+				style="display:inline-flex;align-items:center;gap:6px;background:#2372B9;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;"
+			>
+				<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+				Add your first product
+			</button>
+		</div>
+	{:else}
 	<div class="prod-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
 		{#each data.products as p}
 			{@const editing   = editingId === p.id}
@@ -107,7 +124,10 @@
 			>
 				<!-- Card header: name + toggle -->
 				<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;">
-					<div style="font-size:14px;font-weight:700;color:{active ? '#474545' : '#999'};line-height:1.3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{p.name}</div>
+					<a
+						href="/admin/products/{slugify(p.name)}/batches"
+						style="font-size:16px;font-weight:700;color:{active ? '#474545' : '#999'};line-height:1.3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;pointer-events:{editing ? 'none' : 'auto'};"
+					>{p.name}</a>
 
 					{#if !editing}
 						<!-- iOS-style toggle -->
@@ -209,19 +229,12 @@
 						>
 							<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
 						</button>
-						<!-- View batches link -->
-						<a
-							href="/admin/products/{slugify(p.name)}/batches"
-							title="View batch history"
-							style="width:34px;height:32px;display:flex;align-items:center;justify-content:center;background:#fff;color:#686868;border:1.5px solid #EAEAEA;border-radius:7px;text-decoration:none;flex-shrink:0;"
-						>
-							<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 109-9 9 9 0 00-6.4 2.6L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M3 3v5h5M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-						</a>
 					</div>
 				{/if}
 			</div>
 		{/each}
 	</div>
+	{/if}
 </div>
 
 <!-- QR Generator Modal -->
