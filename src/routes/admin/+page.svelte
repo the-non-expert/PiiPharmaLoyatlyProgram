@@ -13,17 +13,17 @@
 	<!-- Stat cards -->
 	<div class="stat-cards" style="display:flex;gap:16px;margin-bottom:28px;">
 		{#each [
-			{ label:'Pending Claims',      value: String(data.stats.pendingCount),              sub:'Awaiting review',          accent:'#F59E0B' },
-			{ label:'Approved This Cycle', value: String(data.stats.approvedCount),             sub:'Since last export',        accent:'#93CB52' },
-			{ label:'Total Retailers',     value: String(data.stats.totalRetailers),            sub:'Registered retailers',     accent:'#2372B9' },
-			{ label:'Coupon Submissions',  value: data.stats.totalSubmissions.toLocaleString('en-IN'), sub:'All time total',   accent:'#24AEB1' },
-			{ label:'Cashback Queued',     value: inr(data.stats.cashbackQueued),               sub:'Ready for payout',        accent:'#E53E3E' },
+			{ label:'Pending Claims',      value: String(data.stats.pendingCount),              sub:'Awaiting review',      accent:'#F59E0B', href:'/admin/claims?status=pending'  },
+			{ label:'Approved This Cycle', value: String(data.stats.approvedCount),             sub:'Since last export',    accent:'#93CB52', href:'/admin/claims?status=approved' },
+			{ label:'Total Retailers',     value: String(data.stats.totalRetailers),            sub:'Registered retailers', accent:'#2372B9', href:'/admin/retailers'              },
+			{ label:'QR Scans',            value: data.stats.totalSubmissions.toLocaleString('en-IN'), sub:'All time total', accent:'#24AEB1', href:'/admin/submissions'           },
+			{ label:'Cashback Queued',     value: inr(data.stats.cashbackQueued),               sub:'Ready for payout',     accent:'#E53E3E', href:'/admin/payouts'                },
 		] as card}
-			<div class="stat-card" style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:18px 20px;flex:1;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+			<a class="stat-card" href={card.href} style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:18px 20px;flex:1;box-shadow:0 1px 4px rgba(0,0,0,0.04);text-decoration:none;display:block;transition:box-shadow 150ms,border-color 150ms,transform 150ms;">
 				<div style="font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">{card.label}</div>
 				<div style="font-size:26px;font-weight:700;color:{card.accent};line-height:1;margin-bottom:6px;">{card.value}</div>
 				<div style="font-size:11px;color:#686868;">{card.sub}</div>
-			</div>
+			</a>
 		{/each}
 	</div>
 
@@ -86,6 +86,7 @@
 </div>
 
 <style>
+	.stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.10) !important; border-color: #d0d0d0 !important; transform: translateY(-2px); }
 	@media (max-width: 768px) {
 		.pg { padding: 16px 14px !important; }
 		.stat-cards { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
