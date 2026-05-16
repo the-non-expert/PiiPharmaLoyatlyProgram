@@ -30,11 +30,11 @@ export function signSerial(secret: string, serial: string, productId: string, ba
  * the recomputed value. Always use this — never plain string ===.
  */
 export function verifyHmac(secret: string, serial: string, productId: string, batchId: string, supplied: string): boolean {
+	if (supplied.length !== 16) return false;
 	const expected = signSerial(secret, serial, productId, batchId);
-	// timingSafeEqual requires equal-length Buffers
 	const a = Buffer.from(expected, 'utf8');
-	const b = Buffer.from(supplied.padEnd(expected.length).slice(0, expected.length), 'utf8');
-	return a.length === b.length && timingSafeEqual(a, b);
+	const b = Buffer.from(supplied, 'utf8');
+	return timingSafeEqual(a, b);
 }
 
 /**

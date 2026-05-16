@@ -1,8 +1,5 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import QRCode from 'qrcode';
-	import jsPDF from 'jspdf';
-	import JSZip from 'jszip';
 
 	let {
 		open = false,
@@ -18,7 +15,7 @@
 
 	// Form values
 	let fBatchId = $state('');
-	let fQuantity = $state('1000');
+	let fQuantity = $state(1000);
 	let fSerialPrefix = $state('');
 	let fFormat = $state<'pdf' | 'zip'>('pdf');
 
@@ -62,7 +59,7 @@
 
 	// ── Derived ────────────────────────────────────────────────────────────────
 	const prefix = $derived(fSerialPrefix.toUpperCase().trim() || 'PP');
-	const qty = $derived(parseInt(fQuantity) || 0);
+	const qty = $derived(fQuantity || 0);
 	const serialStart = $derived(`${prefix}-000001`);
 	const serialEnd = $derived(`${prefix}-${String(qty).padStart(6, '0')}`);
 	const qrSeed = $derived(`${serialStart}:${fBatchId || 'BATCH'}`);
@@ -83,13 +80,13 @@
 	const formValid = $derived.by(() => {
 		const bid = fBatchId.trim();
 		if (!bid || bid.length > 32 || !/^[A-Z0-9-]+$/.test(bid)) return false;
-		const n = parseInt(fQuantity);
-		if (isNaN(n) || !Number.isInteger(n) || n < 1 || n > 10000) return false;
+		const n = fQuantity;
+		if (!Number.isInteger(n) || n < 1 || n > 10000) return false;
 		const sp = fSerialPrefix.trim();
 		if (!sp || sp.length > 8 || !/^[A-Z0-9-]+$/i.test(sp)) return false;
 		return true;
 	});
-	const formDirty = $derived(fBatchId !== '' || fQuantity !== '1000' || fSerialPrefix !== '');
+	const formDirty = $derived(fBatchId !== '' || fQuantity !== 1000 || fSerialPrefix !== '');
 	const modalWidth = $derived(phase === 'form' ? '720px' : phase === 'error' ? '620px' : '560px');
 
 	// ── Sample QR computation ───────────────────────────────────────────────────
@@ -144,10 +141,9 @@
 	}
 
 	function validateQuantity() {
-		const raw = fQuantity.trim();
-		if (!raw) { eQuantity = 'Quantity is required'; return false; }
-		const n = Number(raw);
-		if (isNaN(n) || !Number.isInteger(n)) { eQuantity = 'Whole numbers only'; return false; }
+		const n = fQuantity;
+		if (!n && n !== 0) { eQuantity = 'Quantity is required'; return false; }
+		if (!Number.isInteger(n)) { eQuantity = 'Whole numbers only'; return false; }
 		if (n < 1) { eQuantity = 'Quantity must be at least 1'; return false; }
 		if (n > 10000) { eQuantity = "Quantity can't exceed 10,000 per batch"; return false; }
 		eQuantity = '';
@@ -187,10 +183,23 @@
 		return (abbrev + dose).slice(0, 8);
 	}
 
-	// Pre-fill when the modal opens for a new product (don't overwrite on re-open same product)
+	// Pre-fill serial prefix and suggested batch label when modal opens
 	$effect(() => {
 		if (product) {
 			fSerialPrefix = derivePrefix(product.name);
+		}
+	});
+
+	$effect(() => {
+		if (open && product) {
+			fetch('/admin/qr/generate', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ action: 'suggest', product_id: product.id })
+			})
+				.then(r => r.json())
+				.then((d: { suggested_label?: string }) => { if (d.suggested_label) fBatchId = d.suggested_label; })
+				.catch(() => {});
 		}
 	});
 
@@ -217,7 +226,7 @@
 
 	async function startGeneration() {
 		if (!product) return;
-		const total = parseInt(fQuantity) || 1000;
+		const total = fQuantity || 1000;
 		progDone = 0;
 		progTotal = total;
 		progStarted = Date.now();
@@ -348,6 +357,10 @@
 		productId: string,
 		batchId: string
 	): Promise<Blob> {
+		const [{ default: jsPDF }, { default: QRCode }] = await Promise.all([
+			import('jspdf'),
+			import('qrcode')
+		]);
 		const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 		const pageW = doc.internal.pageSize.getWidth();
 		const pageH = doc.internal.pageSize.getHeight();
@@ -394,6 +407,10 @@
 		productId: string,
 		batchId: string
 	): Promise<Blob> {
+		const [{ default: JSZip }, { default: QRCode }] = await Promise.all([
+			import('jszip'),
+			import('qrcode')
+		]);
 		const zip = new JSZip();
 		const numSheets = Math.ceil(serials.length / PER_PAGE);
 		const cellW = Math.floor(SHEET_W / COLS);
@@ -449,7 +466,7 @@
 	}
 
 	function generateAnother() {
-		fBatchId = ''; fQuantity = '1000';
+		fBatchId = ''; fQuantity = 1000;
 		tBatchId = false; tQuantity = false; tSerialPrefix = false;
 		eBatchId = ''; eQuantity = ''; eSerialPrefix = '';
 		successData = null;
@@ -461,7 +478,7 @@
 		if (progIntervalId) { clearInterval(progIntervalId); progIntervalId = null; }
 		if (nowIntervalId) { clearInterval(nowIntervalId); nowIntervalId = null; }
 		phase = 'form';
-		fBatchId = ''; fQuantity = '1000'; fSerialPrefix = ''; fFormat = 'pdf';
+		fBatchId = ''; fQuantity = 1000; fSerialPrefix = ''; fFormat = 'pdf';
 		tBatchId = false; tQuantity = false; tSerialPrefix = false;
 		eBatchId = ''; eQuantity = ''; eSerialPrefix = '';
 		successData = null;
@@ -591,7 +608,7 @@
 							onblur={() => { tSerialPrefix = true; validateSerialPrefix(); }}
 							style="width:100%;box-sizing:border-box;border:{tSerialPrefix && eSerialPrefix ? '1.5px solid #E53E3E;box-shadow:0 0 0 3px #fde8e8' : '1.5px solid #EAEAEA'};border-radius:7px;padding:9px 12px;font-family:'Montserrat',sans-serif;font-size:13px;color:#474545;outline:none;height:38px;"
 						/>
-						<div style="font-size:10px;color:#686868;margin-top:3px;">Serials become <span style="font-family:monospace;font-weight:600;">{serialStart}{qty > 0 ? ` … ${serialEnd}` : ''}</span></div>
+						<div style="font-size:10px;color:#686868;margin-top:3px;">Format: <span style="font-family:monospace;font-weight:600;">{prefix}-XXXXXX</span> — exact range assigned at generation</div>
 					</div>
 
 					<!-- Output format -->
@@ -769,6 +786,7 @@
 					<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M7 10l5 5 5-5M12 15V3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					Save {successData.format.toUpperCase()} again
 				</a>
+				<button type="button" onclick={onclose} style="background:#474545;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;">Close</button>
 			</div>
 
 		<!-- ══════════════════ ERROR PHASE ══════════════════ -->

@@ -89,6 +89,20 @@ async function handleChunk(
 	if (!Number.isInteger(startNum) || startNum < 1) error(400, 'Invalid start_num');
 	if (!Number.isInteger(count) || count < 1 || count > CHUNK_SIZE) error(400, 'Invalid count');
 
+	// Validate supplied params against the batch row to prevent tampering
+	const { data: batch } = await supabase
+		.from('qr_batches')
+		.select('product_id, serial_prefix, serial_start_num, quantity')
+		.eq('id', batchId)
+		.single();
+	if (!batch) error(404, 'Batch not found');
+	if (batch.product_id !== productId) error(400, 'product_id does not match batch');
+	if (batch.serial_prefix !== prefix) error(400, 'prefix does not match batch');
+	const batchEnd = batch.serial_start_num + batch.quantity - 1;
+	if (startNum < batch.serial_start_num || startNum + count - 1 > batchEnd) {
+		error(400, 'Serial range is outside the authorised batch range');
+	}
+
 	const items = generateChunk(hmacSecret, prefix, productId, batchId, startNum, count);
 
 	// Bulk insert — let the UNIQUE constraint on serial reject any collision
@@ -105,6 +119,69 @@ async function handleChunk(
 	}
 
 	return json({ inserted: count, serials: items });
+}
+
+// ── Action: serials ───────────────────────────────────────────────────────────
+// Returns all serials+HMACs for a batch so the client can render a preview.
+async function handleSerials(
+	supabase: ReturnType<typeof getServiceClient>,
+	body: Record<string, unknown>
+) {
+	const batchId = String(body.batch_id ?? '').trim();
+	if (!batchId) error(400, 'Missing batch_id');
+
+	const { data: batch } = await supabase
+		.from('qr_batches')
+		.select('product_id, batch_label')
+		.eq('id', batchId)
+		.single();
+	if (!batch) error(404, 'Batch not found');
+
+	const { data: serials } = await supabase
+		.from('qr_serials')
+		.select('serial, hmac')
+		.eq('batch_id', batchId)
+		.order('serial', { ascending: true });
+
+	return json({
+		product_id: (batch as unknown as { product_id: string }).product_id,
+		batch_id: batchId,
+		serials: serials ?? []
+	});
+}
+
+// ── Action: suggest ───────────────────────────────────────────────────────────
+// Returns the next suggested batch label for a product in the current month.
+// Format: MAY-2026-A, MAY-2026-B, …
+async function handleSuggest(
+	supabase: ReturnType<typeof getServiceClient>,
+	body: Record<string, unknown>
+) {
+	const productId = String(body.product_id ?? '').trim();
+	if (!productId) error(400, 'Missing product_id');
+
+	const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+	const now = new Date();
+	const monthYear = `${MONTHS[now.getMonth()]}-${now.getFullYear()}`;
+
+	const { data } = await supabase
+		.from('qr_batches')
+		.select('batch_label')
+		.eq('product_id', productId)
+		.like('batch_label', `${monthYear}-%`)
+		.order('batch_label', { ascending: false })
+		.limit(1);
+
+	let nextLabel: string;
+	if (!data || data.length === 0) {
+		nextLabel = `${monthYear}-A`;
+	} else {
+		const lastLetter = (data[0].batch_label as string).split('-').pop() ?? 'A';
+		const next = lastLetter.charCodeAt(0) + 1;
+		nextLabel = `${monthYear}-${next <= 90 ? String.fromCharCode(next) : 'A'}`;
+	}
+
+	return json({ suggested_label: nextLabel });
 }
 
 // ── Request handler ───────────────────────────────────────────────────────────
@@ -126,8 +203,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const supabase = getServiceClient();
 	const action = String(body.action ?? '');
 
+	if (action === 'serials') return await handleSerials(supabase, body);
+	if (action === 'suggest') return await handleSuggest(supabase, body);
 	if (action === 'init') return await handleInit(supabase, body);
 	if (action === 'chunk') return await handleChunk(supabase, body, hmacSecret);
 
-	error(400, 'Unknown action — expected "init" or "chunk"');
+	error(400, 'Unknown action — expected "suggest", "init" or "chunk"');
 };

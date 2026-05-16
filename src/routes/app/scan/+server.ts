@@ -24,12 +24,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ status: 'invalid' });
 	}
 
-	// HMAC verification — skip in dev if secret not set
 	const hmacSecret = env.HMAC_SECRET;
-	if (hmacSecret) {
-		if (!verifyHmac(hmacSecret, serial, productId, batchId, hmac)) {
-			return json({ status: 'hmac_failed' });
-		}
+	if (!hmacSecret) error(500, 'HMAC_SECRET not configured');
+	if (!verifyHmac(hmacSecret, serial, productId, batchId, hmac)) {
+		return json({ status: 'hmac_failed' });
 	}
 
 	const supabase = getServiceClient();
@@ -61,13 +59,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ status: 'invalid' });
 	}
 
-	// Insert new submission (no photo in QR flow)
 	const submissionId = crypto.randomUUID();
 	const { error: insertError } = await supabase.from('coupon_submissions').insert({
 		id: submissionId,
 		retailer_id: session.retailer_id,
 		product_id: productId,
-		photo_url: '',
 		serial,
 		claim_id: null
 	});

@@ -68,6 +68,7 @@ export async function load({ params }: { params: Params }) {
 		const row = b as unknown as BatchRow;
 		return {
 			id: row.batch_label,
+			uuid: row.id,
 			quantity: row.quantity,
 			serial_start: row.serial_start,
 			serial_end: row.serial_end,
