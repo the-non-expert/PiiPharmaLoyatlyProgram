@@ -2,8 +2,10 @@ import { getServiceClient } from '$lib/server/supabase';
 import { error, fail } from '@sveltejs/kit';
 import type { Product } from '$lib/types/database';
 
+type Params = { productName: string };
+
 export const actions = {
-	update: async ({ request, params }: { request: Request; params: { productId: string } }) => {
+	update: async ({ request, params }: { request: Request; params: Params }) => {
 		const supabase = getServiceClient();
 		const formData = await request.formData();
 		const name             = formData.get('name')?.toString().trim();
@@ -17,24 +19,44 @@ export const actions = {
 		const { error: err } = await supabase
 			.from('products')
 			.update({ name, coupons_required, cashback_amount } as never)
-			.eq('id', params.productId);
+			.eq('name', decodeURIComponent(params.productName));
 		if (err) return fail(500, { updateError: 'Failed to update product.' });
+		return {};
+	},
+
+	toggleActive: async ({ params }: { params: Params }) => {
+		const supabase = getServiceClient();
+		const productName = decodeURIComponent(params.productName);
+
+		const { data: product } = await supabase
+			.from('products')
+			.select('active')
+			.eq('name', productName)
+			.single();
+		if (!product) return fail(404, { toggleError: 'Product not found.' });
+
+		const next = !(product as unknown as { active: boolean }).active;
+		const { error: err } = await supabase
+			.from('products')
+			.update({ active: next } as never)
+			.eq('name', productName);
+		if (err) return fail(500, { toggleError: 'Failed to toggle product status.' });
 		return {};
 	},
 };
 
-export async function load({ params }: { params: { productId: string } }) {
+export async function load({ params }: { params: Params }) {
 	const supabase = getServiceClient();
 	const { data: raw } = await supabase
 		.from('products')
 		.select('id,name,coupons_required,cashback_amount,active')
-		.eq('id', params.productId)
+		.eq('name', decodeURIComponent(params.productName))
 		.single();
 
 	if (!raw) throw error(404, 'Product not found');
 	const product = raw as unknown as Pick<Product, 'id' | 'name' | 'coupons_required' | 'cashback_amount' | 'active'>;
 
-	// coupon_codes table will be added in #9 — return empty until then
+	// qr_batches table will be added in #23 — return empty until then
 	return {
 		product,
 		batches: [] as {

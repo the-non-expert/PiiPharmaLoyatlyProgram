@@ -7,7 +7,7 @@
 
 	let search      = $state('');
 	let modalOpen   = $state(false);
-	let activeTab   = $state<'overview' | 'batches' | 'settings'>('batches');
+	let activeTab   = $state<'overview' | 'batches'>('batches');
 	let openMenuId  = $state<string | null>(null);
 
 	// Overview edit state
@@ -15,6 +15,10 @@
 	let editName        = $state('');
 	let editCoupons     = $state(0);
 	let editCashback    = $state(0);
+
+	// Optimistic active state for toggle
+	let optimisticActive = $state<boolean | null>(null);
+	const isActive = $derived(optimisticActive !== null ? optimisticActive : data.product.active);
 
 	function startEdit() {
 		editName     = data.product.name;
@@ -24,7 +28,11 @@
 	}
 
 	$effect(() => {
-		if (form && !(form as any)?.updateError) editingDetails = false;
+		if (form && !(form as any)?.updateError) {
+			editingDetails = false;
+			// reset optimistic after server confirms toggle
+			optimisticActive = null;
+		}
 	});
 
 	const filtered = $derived(
@@ -84,10 +92,10 @@
 
 	<!-- Tabs -->
 	<div style="display:flex;gap:0;border-bottom:2px solid #EAEAEA;margin-bottom:18px;">
-		{#each [{ id: 'overview', label: 'Overview' }, { id: 'batches', label: `Batches (${data.batches.length})` }, { id: 'settings', label: 'Settings' }] as tab}
+		{#each [{ id: 'overview', label: 'Overview' }, { id: 'batches', label: `Batches (${data.batches.length})` }] as tab}
 			<button
 				type="button"
-				onclick={() => activeTab = tab.id as 'overview' | 'batches' | 'settings'}
+				onclick={() => activeTab = tab.id as 'overview' | 'batches'}
 				style="background:none;border:none;cursor:pointer;padding:10px 20px;font-size:13px;font-weight:{activeTab === tab.id ? 700 : 500};color:{activeTab === tab.id ? '#2372B9' : '#686868'};font-family:'Montserrat',sans-serif;border-bottom:{activeTab === tab.id ? '2px solid #2372B9' : '2px solid transparent'};margin-bottom:-2px;"
 			>{tab.label}</button>
 		{/each}
@@ -282,6 +290,28 @@
 				{/if}
 			</div>
 
+			<!-- Active / Inactive toggle -->
+			<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid #EAEAEA;border-bottom:1px solid #EAEAEA;margin-bottom:20px;">
+				<div>
+					<div style="font-size:13px;font-weight:700;color:#474545;">Product status</div>
+					<div style="font-size:11px;color:#686868;margin-top:2px;">{isActive ? 'Retailers can submit coupons for this product' : 'Product is hidden from retailers'}</div>
+				</div>
+				<form method="POST" action="?/toggleActive" use:enhance={() => {
+					optimisticActive = !isActive;
+					return async ({ update }) => { await update(); optimisticActive = null; };
+				}}>
+					<button
+						type="submit"
+						style="display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;padding:0;"
+					>
+						<div style="width:36px;height:20px;border-radius:99px;background:{isActive ? '#3d8c1a' : '#cdd0d4'};transition:background 200ms;position:relative;flex-shrink:0;">
+							<div style="position:absolute;top:3px;left:{isActive ? '18px' : '3px'};width:14px;height:14px;border-radius:50%;background:#fff;transition:left 200ms;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+						</div>
+						<span style="font-size:12px;font-weight:700;color:{isActive ? '#3d8c1a' : '#686868'};">{isActive ? 'Active' : 'Inactive'}</span>
+					</button>
+				</form>
+			</div>
+
 			{#if editingDetails}
 				<form method="POST" action="?/update" use:enhance>
 					<div style="display:grid;grid-template-columns:1fr 160px 160px;gap:16px;margin-bottom:18px;" class="overview-fields">
@@ -360,10 +390,6 @@
 					</div>
 				</div>
 			{/if}
-		</div>
-	{:else}
-		<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:28px;text-align:center;color:#686868;font-size:13px;">
-			Settings content coming soon.
 		</div>
 	{/if}
 </div>

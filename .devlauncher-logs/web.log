@@ -1,0 +1,142 @@
+> piipharma@0.0.1 dev
+> vite dev --port 5173
+  [32m[1mVITE[22m v8.0.8[39m  [2mready in [0m[1m1030[22m[2m[0m ms[22m
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[36m7:36:25 AM [vite-plugin-svelte] src/routes/+page.svelte:7:39 This reference only captures the initial value of `form`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally[39m
+[36m7:36:25 AM [vite-plugin-svelte] src/routes/+page.svelte:8:23 This reference only captures the initial value of `form`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally[39m
+[36m7:36:25 AM [vite-plugin-svelte] src/routes/+page.svelte:11:27 This reference only captures the initial value of `form`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally[39m
+[36m7:36:25 AM [vite-plugin-svelte] src/routes/+page.svelte:7:39 This reference only captures the initial value of `form`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally[39m
+[36m7:36:25 AM [vite-plugin-svelte] src/routes/+page.svelte:8:23 This reference only captures the initial value of `form`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally[39m
+[36m7:36:25 AM [vite-plugin-svelte] src/routes/+page.svelte:11:27 This reference only captures the initial value of `form`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally[39m
+[1;31m[404] GET /app/logout[0m
+[2m7:39:38 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/15.js[22m
+[2m7:39:38 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/16.js[22m
+[2m7:39:38 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/app.js[22m
+[2m7:39:48 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m7:39:48 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/profile/+page.server.ts[22m
+[36m7:40:27 AM [vite-plugin-svelte] src/routes/app/profile/+page.svelte:8:12 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally[39m
+[36m7:40:27 AM [vite-plugin-svelte] src/routes/app/profile/+page.svelte:143:14 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control[39m
+[2m7:40:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/app/profile/+page.svelte, /src/app.css[22m
+[2m7:40:27 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/profile/+page.svelte[22m
+[1;31m[404] GET /ad,im[0m
+[2m7:40:37 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m7:40:37 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/register/+page.server.ts[22m
+[1;31m[404] GET /ad,im[0m
+[1;31m[500] POST /admin/login[0m
+Error: Failed to create admin session
+    at createAdminSession (src/lib/server/session.ts:42:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async default (src/routes/admin/login/+page.server.ts:26:3)
+[2m7:41:40 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m7:41:40 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/server/admin-auth.ts[22m
+[36m7:45:55 AM [vite-plugin-svelte] src/routes/admin/payouts/+page.svelte:8:20 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally[39m
+[2m7:51:58 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m7:51:58 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/+page.server.ts[22m
+[2m7:52:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/app/claim/[productId]/+page.svelte, /src/app.css[22m
+[2m7:52:04 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.svelte[22m
+[2m7:52:09 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/app/claim/[productId]/+page.svelte, /src/app.css[22m
+[2m7:52:09 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.svelte[22m
+[2m7:52:31 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m7:52:31 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.server.ts[22m
+[2m7:56:42 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m7:56:42 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.server.ts[22m
+[2m7:57:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/app/claim/[productId]/+page.svelte, /src/app.css[22m
+[2m7:57:06 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.svelte[22m
+[36m8:01:53 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:228:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[2m8:01:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/app/claim/[productId]/+page.svelte, /src/app.css[22m
+[2m8:01:53 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.svelte[22m
+[36m8:01:53 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:228:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[2m8:02:17 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m8:02:17 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.server.ts[22m
+[36m8:02:38 AM [vite-plugin-svelte] src/routes/app/profile/+page.svelte:8:12 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally[39m
+[36m8:02:38 AM [vite-plugin-svelte] src/routes/app/profile/+page.svelte:143:14 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control[39m
+[36m8:08:08 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:230:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[2m8:08:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/app/claim/[productId]/+page.svelte, /src/app.css[22m
+[2m8:08:08 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.svelte[22m
+[36m8:08:08 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:230:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[36m8:08:15 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:234:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[2m8:08:15 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/app/claim/[productId]/+page.svelte, /src/app.css[22m
+[2m8:08:15 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.svelte[22m
+[36m8:08:15 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:234:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[36m8:08:22 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:234:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[2m8:08:22 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/app/claim/[productId]/+page.svelte, /src/app.css[22m
+[2m8:08:22 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.svelte[22m
+[36m8:08:22 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:234:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[36m8:08:27 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:234:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[2m8:08:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/app/claim/[productId]/+page.svelte, /src/app.css[22m
+[2m8:08:27 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.svelte[22m
+[36m8:08:27 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:234:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[36m8:10:16 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:234:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[2m8:10:16 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/app/claim/[productId]/+page.svelte, /src/app.css[22m
+[2m8:10:16 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.svelte[22m
+[36m8:10:16 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:234:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[36m8:10:24 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:234:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[2m8:10:24 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/app/claim/[productId]/+page.svelte, /src/app.css[22m
+[2m8:10:24 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/claim/[productId]/+page.svelte[22m
+[36m8:10:24 AM [vite-plugin-svelte] src/routes/app/claim/[productId]/+page.svelte:234:14 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label[39m
+[2m8:17:10 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m8:17:10 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/+layout.server.ts[22m
+[2m8:17:18 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m8:17:18 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/+page.server.ts[22m
+[2m8:17:26 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m8:17:26 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/+page.server.ts[22m
+[2m8:17:52 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m8:17:52 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/products/+page.server.ts[22m
+[2m8:17:58 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m8:17:58 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/payouts/+page.server.ts[22m
+[2m8:18:01 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m8:18:01 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/app/history/+page.server.ts[22m
+[36m8:23:09 AM [vite-plugin-svelte] src/routes/admin/retailers/+page.svelte:6:26 This reference only captures the initial value of `data`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally[39m
+[2m8:23:52 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m8:23:52 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/[claimId]/+page.server.ts[22m
+[2m8:23:59 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/admin/claims/[claimId]/+page.svelte, /src/app.css[22m
+[2m8:23:59 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/[claimId]/+page.svelte[22m
+[2m8:24:15 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/admin/claims/[claimId]/+page.svelte, /src/app.css[22m
+[2m8:24:15 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/[claimId]/+page.svelte[22m
+[2m8:24:24 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m8:24:24 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/[claimId]/+page.server.ts[22m
+[2m8:24:32 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m8:24:32 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/+page.server.ts[22m
+[2m8:24:35 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+[2m8:24:35 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/+page.server.ts[22m
+[2m8:32:12 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/admin/claims/+page.svelte, /src/app.css[22m
+[2m8:32:12 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/+page.svelte[22m
+[2m8:32:16 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/admin/claims/[claimId]/+page.svelte, /src/app.css[22m
+[2m8:32:16 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/[claimId]/+page.svelte[22m
+[2m8:32:30 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/admin/claims/[claimId]/+page.svelte, /src/app.css[22m
+[2m8:32:30 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/[claimId]/+page.svelte[22m
+[2m8:32:41 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/admin/claims/[claimId]/+page.svelte, /src/app.css[22m
+[2m8:32:41 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/[claimId]/+page.svelte[22m
+[2m8:35:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/admin/claims/[claimId]/+page.svelte, /src/app.css[22m
+[2m8:35:06 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/[claimId]/+page.svelte[22m
+[2m8:35:30 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/admin/claims/[claimId]/+page.svelte, /src/app.css[22m
+[2m8:35:30 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/[claimId]/+page.svelte[22m
+[2m8:35:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/admin/claims/[claimId]/+page.svelte?svelte&type=style&lang.css, /src/app.css[22m
+[2m8:35:34 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/admin/claims/[claimId]/+page.svelte[22m
