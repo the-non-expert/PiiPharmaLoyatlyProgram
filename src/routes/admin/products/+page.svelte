@@ -96,6 +96,25 @@
 		</div>
 	{/if}
 
+	<!-- Empty state -->
+	{#if data.products.length === 0}
+		<div style="background:#fff;border-radius:12px;border:1px solid #EAEAEA;padding:64px 32px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+			<div style="width:64px;height:64px;border-radius:14px;background:#F4F6F8;border:2px dashed #EAEAEA;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+				<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M19 11H5M19 11a7 7 0 11-14 0 7 7 0 0114 0zM12 8v6M9 11h6" stroke="#BDBDBD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+			</div>
+			<p style="font-size:16px;font-weight:700;color:#474545;margin:0 0 8px;">No products yet</p>
+			<p style="font-size:13px;color:#686868;margin:0 0 24px;max-width:340px;margin-left:auto;margin-right:auto;line-height:1.6;">Products are the medicine SKUs in your loyalty program. Each one has a coupon threshold and a cashback amount retailers earn when they hit it.</p>
+			<button
+				type="button"
+				onclick={() => showAddForm = true}
+				style="display:inline-flex;align-items:center;gap:6px;background:#2372B9;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;"
+			>
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+				Add your first product
+			</button>
+		</div>
+	{/if}
+
 	<!-- Product grid -->
 	<div class="prod-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
 		{#each data.products as p}
@@ -107,7 +126,7 @@
 			>
 				<!-- Card header: name + toggle -->
 				<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;">
-					<div style="font-size:14px;font-weight:700;color:{active ? '#474545' : '#999'};line-height:1.3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{p.name}</div>
+					<a href="/admin/products/{slugify(p.name)}/batches" style="font-size:16px;font-weight:700;color:{active ? '#474545' : '#999'};line-height:1.3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;">{p.name}</a>
 
 					{#if !editing}
 						<!-- iOS-style toggle -->
@@ -209,14 +228,6 @@
 						>
 							<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
 						</button>
-						<!-- View batches link -->
-						<a
-							href="/admin/products/{slugify(p.name)}/batches"
-							title="View batch history"
-							style="width:34px;height:32px;display:flex;align-items:center;justify-content:center;background:#fff;color:#686868;border:1.5px solid #EAEAEA;border-radius:7px;text-decoration:none;flex-shrink:0;"
-						>
-							<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 109-9 9 9 0 00-6.4 2.6L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M3 3v5h5M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-						</a>
 					</div>
 				{/if}
 			</div>
