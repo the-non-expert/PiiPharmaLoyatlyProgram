@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { PageData, ActionData } from './$types';
 	import QrGeneratorModal from '$lib/components/QrGeneratorModal.svelte';
+	import { slugify } from '$lib/utils/slug';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -210,7 +211,7 @@
 						</button>
 						<!-- View batches link -->
 						<a
-							href="/admin/products/{encodeURIComponent(p.name)}/batches"
+							href="/admin/products/{slugify(p.name)}/batches"
 							title="View batch history"
 							style="width:34px;height:32px;display:flex;align-items:center;justify-content:center;background:#fff;color:#686868;border:1.5px solid #EAEAEA;border-radius:7px;text-decoration:none;flex-shrink:0;"
 						>

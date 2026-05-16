@@ -2,13 +2,23 @@
 	import type { PageData, ActionData } from './$types';
 	import QrGeneratorModal from '$lib/components/QrGeneratorModal.svelte';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	let search      = $state('');
-	let modalOpen   = $state(false);
-	let activeTab   = $state<'overview' | 'batches'>('batches');
-	let openMenuId  = $state<string | null>(null);
+	let search     = $state('');
+	let modalOpen  = $state(false);
+	let openMenuId = $state<string | null>(null);
+
+	const activeTab = $derived.by((): 'overview' | 'batches' => {
+		const t = page.url.searchParams.get('tab');
+		return t === 'overview' ? 'overview' : 'batches';
+	});
+
+	function switchTab(tab: 'overview' | 'batches') {
+		goto(`?tab=${tab}`, { replaceState: true, noScroll: true, keepFocus: true });
+	}
 
 	// Overview edit state
 	let editingDetails  = $state(false);
@@ -95,7 +105,7 @@
 		{#each [{ id: 'overview', label: 'Overview' }, { id: 'batches', label: `Batches (${data.batches.length})` }] as tab}
 			<button
 				type="button"
-				onclick={() => activeTab = tab.id as 'overview' | 'batches'}
+				onclick={() => switchTab(tab.id as 'overview' | 'batches')}
 				style="background:none;border:none;cursor:pointer;padding:10px 20px;font-size:13px;font-weight:{activeTab === tab.id ? 700 : 500};color:{activeTab === tab.id ? '#2372B9' : '#686868'};font-family:'Montserrat',sans-serif;border-bottom:{activeTab === tab.id ? '2px solid #2372B9' : '2px solid transparent'};margin-bottom:-2px;"
 			>{tab.label}</button>
 		{/each}

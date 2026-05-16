@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { slugify } from '$lib/utils/slug';
 
 	let { data }: { data: PageData } = $props();
 
@@ -86,7 +87,7 @@
 							</td>
 							<td style="padding:12px 16px;">
 								<a
-									href="/admin/products/{encodeURIComponent(p.name)}/batches"
+									href="/admin/products/{slugify(p.name)}/batches"
 									style="display:inline-flex;align-items:center;gap:5px;background:#e8f1fb;color:#2372B9;border:1.5px solid #2372B9;border-radius:6px;padding:5px 11px;font-size:11px;font-weight:700;font-family:'Montserrat',sans-serif;text-decoration:none;white-space:nowrap;"
 								>
 									<svg width="11" height="11" viewBox="0 0 24 24" fill="none">
