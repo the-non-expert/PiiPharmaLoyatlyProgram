@@ -57,14 +57,38 @@ export async function load({ params }: { params: Params }) {
 	const product = await findBySlug(supabase, params.productName);
 	if (!product) throw error(404, 'Product not found');
 
-	// qr_batches table will be added in #23 — return empty until then
+	const { data: rawBatches } = await supabase
+		.from('qr_batches')
+		.select('id,batch_label,serial_prefix,quantity,serial_start,serial_end,created_at')
+		.eq('product_id', product.id)
+		.order('created_at', { ascending: false });
+
+	type BatchRow = { id: string; batch_label: string; serial_prefix: string; quantity: number; serial_start: string; serial_end: string; created_at: string };
+	const batches = (rawBatches ?? []).map((b) => {
+		const row = b as unknown as BatchRow;
+		return {
+			id: row.batch_label,
+			quantity: row.quantity,
+			serial_start: row.serial_start,
+			serial_end: row.serial_end,
+			generated_at: row.created_at,
+		};
+	});
+
+	const totalPrinted = batches.reduce((s, b) => s + b.quantity, 0);
+	const lastBatch = batches[0]
+		? { generated_at: batches[0].generated_at, quantity: batches[0].quantity }
+		: null;
+
 	return {
 		product,
-		batches: [] as {
-			id: string; quantity: number; serial_start: string; serial_end: string;
-			format: string; file_size_mb: number; generated_at: string;
-			generated_by: string; status: string;
-		}[],
-		stats: { totalPrinted: 0, inMarket: 0, scannedOnce: 0, lastBatch: null as null | { generated_at: string; quantity: number }, activeBatchCount: 0 },
+		batches,
+		stats: {
+			totalPrinted,
+			inMarket: totalPrinted,
+			scannedOnce: 0,
+			lastBatch,
+			activeBatchCount: batches.length
+		},
 	};
 }
