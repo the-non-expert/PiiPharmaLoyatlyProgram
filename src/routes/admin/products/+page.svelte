@@ -49,13 +49,13 @@
 	<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:10px;flex-wrap:wrap;">
 		<h1 style="font-size:22px;font-weight:700;color:#474545;margin:0;">Products</h1>
 		<div style="display:flex;gap:8px;">
-			<a
+			<!-- <a
 				href="/admin/products/batches"
 				style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#2372B9;border:1.5px solid #2372B9;border-radius:7px;padding:8px 14px;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;text-decoration:none;"
 			>
 				<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 19h2M19 14h2" stroke="currentColor" stroke-width="2" stroke-linecap="square"/></svg>
 				View All Batches
-			</a>
+			</a> -->
 			<button
 				type="button"
 				onclick={() => showAddForm = !showAddForm}
