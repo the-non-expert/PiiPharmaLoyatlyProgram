@@ -32,7 +32,7 @@ export interface DevClaim {
 	retailer_id: string;
 	product_id: string;
 	product_name: string;
-	status: 'pending' | 'approved' | 'rejected' | 'paid';
+	status: 'pending' | 'pending_payout' | 'approved' | 'rejected' | 'paid';
 	rejection_reason: string | null;
 	created_at: string;
 	serials: string[];

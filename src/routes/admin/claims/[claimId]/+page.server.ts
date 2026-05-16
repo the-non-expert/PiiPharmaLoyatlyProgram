@@ -60,17 +60,6 @@ export const load: PageServerLoad = async ({ params }) => {
 };
 
 export const actions: Actions = {
-	approve: async ({ params }) => {
-		const db = getServiceClient();
-		const { error } = await db
-			.from('claims')
-			.update({ status: 'approved', approved_at: new Date().toISOString() })
-			.eq('id', params.claimId);
-
-		if (error) return fail(500, { error: 'Failed to approve claim.' });
-		redirect(303, '/admin/claims');
-	},
-
 	reject: async ({ params, request }) => {
 		const formData = await request.formData();
 		const reason = (formData.get('reason') as string | null)?.trim() ?? '';

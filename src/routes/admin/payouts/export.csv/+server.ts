@@ -22,7 +22,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			retailers ( id, name, upi_id ),
 			products ( name, cashback_amount )
 		`)
-		.eq('status', 'approved');
+		.eq('status', 'pending_payout');
 
 	// Group by retailer_id — one transfer per retailer
 	const byRetailer = new Map<string, {

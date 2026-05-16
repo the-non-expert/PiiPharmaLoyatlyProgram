@@ -23,10 +23,11 @@
 	}
 
 	const statusColors: Record<string, { bg: string; text: string; dot: string }> = {
-		pending:  { bg: '#fef3cd', text: '#92640a', dot: '#F59E0B' },
-		approved: { bg: '#f0f9e6', text: '#3d6e10', dot: '#93CB52' },
-		rejected: { bg: '#fde8e8', text: '#9b2626', dot: '#E53E3E' },
-		paid:     { bg: '#e8f1fb', text: '#14407a', dot: '#2372B9' },
+		pending:         { bg: '#fef3cd', text: '#92640a', dot: '#F59E0B' },
+		pending_payout:  { bg: '#eef5ff', text: '#1a5a99', dot: '#2372B9' },
+		approved:        { bg: '#f0f9e6', text: '#3d6e10', dot: '#93CB52' },
+		rejected:        { bg: '#fde8e8', text: '#9b2626', dot: '#E53E3E' },
+		paid:            { bg: '#e8f1fb', text: '#14407a', dot: '#2372B9' },
 	};
 
 	function tabHref(t: string, extra = '') {
@@ -58,8 +59,8 @@
 	<!-- Tab bar -->
 	<div style="display:flex;border-bottom:2px solid #EAEAEA;margin-bottom:18px;">
 		{#each [
-			{ id:'pending',    label:'Pending',    badge: data.pendingCount },
-			{ id:'allClaims', label:'All Claims' },
+			{ id:'pendingPayout', label:'Pending Payout', badge: data.pendingCount },
+			{ id:'allClaims',     label:'All Claims' },
 		] as t}
 			{@const on = data.tab === t.id}
 			<a
@@ -96,10 +97,10 @@
 				style="height:32px;border:1.5px solid #EAEAEA;border-radius:7px;padding:0 10px;font-family:'Montserrat',sans-serif;font-size:13px;color:#474545;background:#fff;cursor:pointer;width:150px;outline:none;"
 			>
 				<option value="">All Statuses</option>
-				<option value="pending"  selected={data.statusFilter === 'pending'}>Pending</option>
-				<option value="approved" selected={data.statusFilter === 'approved'}>Approved</option>
-				<option value="rejected" selected={data.statusFilter === 'rejected'}>Rejected</option>
-				<option value="paid"     selected={data.statusFilter === 'paid'}>Paid</option>
+				<option value="pending_payout" selected={data.statusFilter === 'pending_payout'}>Pending Payout</option>
+				<option value="approved"       selected={data.statusFilter === 'approved'}>Approved</option>
+				<option value="rejected"       selected={data.statusFilter === 'rejected'}>Rejected</option>
+				<option value="paid"           selected={data.statusFilter === 'paid'}>Paid</option>
 			</select>
 		{/if}
 
@@ -114,7 +115,7 @@
 		</select>
 
 		<div style="flex:1;"></div>
-		<span style="font-size:12px;color:#686868;">{data.claims.length} {data.tab === 'pending' ? 'pending' : 'total'} claims</span>
+		<span style="font-size:12px;color:#686868;">{data.claims.length} {data.tab === 'pendingPayout' ? 'pending payout' : 'total'} claims</span>
 	</div>
 
 	<!-- Desktop table -->
@@ -164,7 +165,7 @@
 							{/if}
 							<td style="padding:10px 14px;">
 								<span style="display:inline-flex;align-items:center;gap:4px;color:#2372B9;font-size:11px;font-weight:700;white-space:nowrap;">
-									{claim.status === 'pending' ? 'Review' : 'View'}
+									View
 									<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
 								</span>
 							</td>
@@ -205,7 +206,7 @@
 								{claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}
 							</span>
 							<span style="display:inline-flex;align-items:center;gap:3px;color:#2372B9;font-size:11px;font-weight:700;">
-								{claim.status === 'pending' ? 'Review' : 'View'}
+								View
 								<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
 							</span>
 						</div>
@@ -213,7 +214,7 @@
 				{/each}
 			</div>
 			<div style="padding:10px 4px;">
-				<span style="font-size:12px;color:#686868;">{data.claims.length} {data.tab === 'pending' ? 'pending' : 'total'} claims</span>
+				<span style="font-size:12px;color:#686868;">{data.claims.length} {data.tab === 'pendingPayout' ? 'pending payout' : 'total'} claims</span>
 			</div>
 		{/if}
 	</div>

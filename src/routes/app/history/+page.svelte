@@ -12,10 +12,11 @@
   }
 
   const statusMap: Record<string, { bg: string; color: string; dot: string; label: string }> = {
-    pending:  { bg: '#fef3cd', color: '#92640a', dot: '#F59E0B', label: 'Pending' },
-    approved: { bg: '#f0f9e6', color: '#3d6e10', dot: '#93CB52', label: 'Approved' },
-    rejected: { bg: '#fde8e8', color: '#9b2626', dot: '#E53E3E', label: 'Rejected' },
-    paid:     { bg: '#e8f1fb', color: '#14407a', dot: '#2372B9', label: 'Paid' },
+    pending:         { bg: '#fef3cd', color: '#92640a', dot: '#F59E0B', label: 'Pending' },
+    pending_payout:  { bg: '#f0f9e6', color: '#3d6e10', dot: '#93CB52', label: 'Processing' },
+    approved:        { bg: '#f0f9e6', color: '#3d6e10', dot: '#93CB52', label: 'Approved' },
+    rejected:        { bg: '#fde8e8', color: '#9b2626', dot: '#E53E3E', label: 'Rejected' },
+    paid:            { bg: '#e8f1fb', color: '#14407a', dot: '#2372B9', label: 'Paid' },
   };
 
   function badge(status: string) {
@@ -137,9 +138,9 @@
                 <div class="flex justify-between items-center mt-2">
                   <span
                     class="text-[16px] font-bold"
-                    style="color:{claim.status === 'approved' || claim.status === 'paid' ? '#93CB52' : '#474545'}"
+                    style="color:{['pending_payout', 'approved', 'paid'].includes(claim.status) ? '#93CB52' : '#474545'}"
                   >
-                    {#if claim.status === 'approved' || claim.status === 'paid'}
+                    {#if ['pending_payout', 'approved', 'paid'].includes(claim.status)}
                       ✓ ₹{claim.cashback_amount} cashback
                     {:else if claim.status === 'pending'}
                       <span class="text-[13px] font-semibold text-[#92640a]">Under review</span>

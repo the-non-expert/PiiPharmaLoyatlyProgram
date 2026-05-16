@@ -30,12 +30,12 @@
 		<div class="summary-bar" style="background:#e8f1fb;border:1.5px solid #2372B9;border-radius:10px;padding:13px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
 			<span style="font-size:13px;font-weight:600;color:#1a5a99;">
 				{data.rows.length} retailer{data.rows.length === 1 ? '' : 's'} —
-				{data.rows.reduce((s, r) => s + r.claimCount, 0)} approved claim{data.rows.reduce((s, r) => s + r.claimCount, 0) === 1 ? '' : 's'} —
+				{data.rows.reduce((s, r) => s + r.claimCount, 0)} pending payout claim{data.rows.reduce((s, r) => s + r.claimCount, 0) === 1 ? '' : 's'} —
 				Total: <strong style="font-size:16px;">{inr(data.total)}</strong>
 			</span>
-			<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;background:#f0f9e6;color:#3d6e10;font-size:11px;font-weight:700;">
-				<span style="width:5px;height:5px;border-radius:50%;background:#93CB52;flex-shrink:0;"></span>
-				Approved
+			<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;background:#eef5ff;color:#1a5a99;font-size:11px;font-weight:700;">
+				<span style="width:5px;height:5px;border-radius:50%;background:#2372B9;flex-shrink:0;"></span>
+				Pending Payout
 			</span>
 		</div>
 
@@ -116,7 +116,7 @@
 		</form>
 	{:else}
 		<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:48px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04);margin-bottom:28px;">
-			<p style="font-size:13px;color:#686868;margin:0;">No approved claims pending payout.</p>
+			<p style="font-size:13px;color:#686868;margin:0;">No claims pending payout.</p>
 		</div>
 	{/if}
 
