@@ -123,7 +123,6 @@
 		<table style="width:100%;border-collapse:collapse;">
 			<thead>
 				<tr>
-					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Claim ID</th>
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Retailer Name</th>
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Mobile</th>
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Product</th>
@@ -138,7 +137,7 @@
 			<tbody>
 				{#if data.claims.length === 0}
 					<tr>
-						<td colspan="8" style="padding:48px 14px;text-align:center;font-size:13px;color:#686868;">No claims found.</td>
+						<td colspan="7" style="padding:48px 14px;text-align:center;font-size:13px;color:#686868;">No claims found.</td>
 					</tr>
 				{:else}
 					{#each data.claims as claim}
@@ -149,17 +148,37 @@
 							onmouseenter={(e) => (e.currentTarget as HTMLElement).style.background = '#f8fafc'}
 							onmouseleave={(e) => (e.currentTarget as HTMLElement).style.background = '#fff'}
 						>
-							<td style="padding:10px 14px;font-size:12px;font-family:monospace;color:#2372B9;font-weight:700;">{claim.id.toUpperCase().replace('CLAIM-','CLM-')}</td>
-							<td style="padding:10px 14px;font-size:13px;color:#474545;font-weight:600;">{claim.retailer_name}</td>
+							<td style="padding:10px 14px;">
+								<a
+									href="/admin/retailers?q={claim.mobile}"
+									onclick={(e) => e.stopPropagation()}
+									style="font-size:13px;font-weight:600;color:#2372B9;text-decoration:none;"
+								>{claim.retailer_name}</a>
+							</td>
 							<td style="padding:10px 14px;font-size:12px;font-family:monospace;color:#686868;">{claim.mobile}</td>
 							<td style="padding:10px 14px;font-size:13px;color:#474545;">{claim.product_name}</td>
 							<td style="padding:10px 14px;font-size:12px;color:#686868;">{fmt(claim.created_at)}</td>
 							<td style="padding:10px 14px;font-size:13px;color:#474545;font-weight:700;">₹{claim.cashback_amount}</td>
 							{#if data.tab === 'allClaims'}
 								<td style="padding:10px 14px;">
-									<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;background:{sc.bg};color:{sc.text};font-size:11px;font-weight:700;white-space:nowrap;">
-										<span style="width:5px;height:5px;border-radius:50%;background:{sc.dot};flex-shrink:0;"></span>
-										{claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}
+									<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;">
+										<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;background:{sc.bg};color:{sc.text};font-size:11px;font-weight:700;white-space:nowrap;">
+											<span style="width:5px;height:5px;border-radius:50%;background:{sc.dot};flex-shrink:0;"></span>
+											{claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}
+										</span>
+										{#if claim.status === 'pending_payout'}
+											<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:99px;background:#f0f9e6;color:#3d6e10;border:1px solid #93CB52;font-size:10px;font-weight:700;white-space:nowrap;">
+												<svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+												Auto-approved
+											</span>
+										{/if}
+									</div>
+								</td>
+							{:else}
+								<td style="padding:10px 14px;">
+									<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:99px;background:#f0f9e6;color:#3d6e10;border:1px solid #93CB52;font-size:10px;font-weight:700;white-space:nowrap;">
+										<svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+										Auto-approved
 									</span>
 								</td>
 							{/if}
@@ -191,26 +210,39 @@
 			<div style="display:flex;flex-direction:column;gap:8px;">
 				{#each data.claims as claim}
 					{@const sc = statusColors[claim.status] ?? { bg:'#F4F6F8', text:'#686868', dot:'#686868' }}
-					<a
-						href="/admin/claims/{claim.id}"
-						style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;text-decoration:none;"
+					<div
+						role="link"
+						tabindex="0"
+						onclick={() => window.location.href = `/admin/claims/${claim.id}`}
+						onkeydown={(e) => { if (e.key === 'Enter') window.location.href = `/admin/claims/${claim.id}`; }}
+						style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;cursor:pointer;"
 					>
 						<div style="flex:1;min-width:0;">
-							<div style="font-size:14px;font-weight:700;color:#474545;margin-bottom:2px;">{claim.retailer_name}</div>
+							<a
+								href="/admin/retailers?q={claim.mobile}"
+								onclick={(e) => e.stopPropagation()}
+								style="font-size:14px;font-weight:700;color:#2372B9;text-decoration:none;display:block;margin-bottom:2px;"
+							>{claim.retailer_name}</a>
 							<div style="font-size:12px;color:#686868;margin-bottom:6px;">{claim.product_name} · {fmt(claim.created_at)}</div>
 							<div style="font-size:13px;font-weight:700;color:#474545;">₹{claim.cashback_amount}</div>
 						</div>
-						<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">
+						<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
 							<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;background:{sc.bg};color:{sc.text};font-size:11px;font-weight:700;white-space:nowrap;">
 								<span style="width:5px;height:5px;border-radius:50%;background:{sc.dot};flex-shrink:0;"></span>
 								{claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}
 							</span>
+							{#if claim.status === 'pending_payout'}
+								<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:99px;background:#f0f9e6;color:#3d6e10;border:1px solid #93CB52;font-size:10px;font-weight:700;white-space:nowrap;">
+									<svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+									Auto-approved
+								</span>
+							{/if}
 							<span style="display:inline-flex;align-items:center;gap:3px;color:#2372B9;font-size:11px;font-weight:700;">
 								View
 								<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
 							</span>
 						</div>
-					</a>
+					</div>
 				{/each}
 			</div>
 			<div style="padding:10px 4px;">
