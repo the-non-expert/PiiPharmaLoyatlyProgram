@@ -31,21 +31,6 @@
 		Back to Claims
 	</a>
 
-	<!-- Title row -->
-	<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:22px;flex-wrap:wrap;">
-		<h1 style="font-size:21px;font-weight:700;color:#474545;margin:0;">{data.product?.name ?? 'Claim'}</h1>
-		<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;background:{sc.bg};color:{sc.text};font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:4px;">
-			<span style="width:5px;height:5px;border-radius:50%;background:{sc.dot};flex-shrink:0;"></span>
-			{ data.claim.status === 'pending_payout' ? 'Pending Payout' : data.claim.status.charAt(0).toUpperCase() + data.claim.status.slice(1) }
-		</span>
-		{#if data.claim.status === 'pending_payout'}
-			<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:99px;background:#f0f9e6;color:#3d6e10;border:1px solid #93CB52;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:6px;">
-				<svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-				Auto-approved
-			</span>
-		{/if}
-	</div>
-
 	{#if (form as any)?.error}
 		<div style="background:#fde8e8;color:#9b2626;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;">{(form as any).error}</div>
 	{/if}
@@ -157,6 +142,7 @@
 
 			<!-- Product info strip -->
 			<div style="background:#F4F6F8;border-radius:8px;padding:12px 16px;display:flex;gap:24px;flex-wrap:wrap;">
+				<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Product</span><div style="font-size:13px;font-weight:600;color:#474545;">{data.product?.name}</div></div>
 				<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Cashback</span><div style="font-size:13px;font-weight:700;color:#2372B9;">₹{data.product?.cashback_amount}</div></div>
 				<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Coupons req.</span><div style="font-size:13px;font-weight:600;color:#474545;">{data.product?.coupons_required}</div></div>
 			</div>
