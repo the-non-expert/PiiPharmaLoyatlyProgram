@@ -157,7 +157,6 @@
 
 			<!-- Product info strip -->
 			<div style="background:#F4F6F8;border-radius:8px;padding:12px 16px;display:flex;gap:24px;flex-wrap:wrap;">
-				<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Product</span><div style="font-size:13px;font-weight:600;color:#474545;">{data.product?.name}</div></div>
 				<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Cashback</span><div style="font-size:13px;font-weight:700;color:#2372B9;">₹{data.product?.cashback_amount}</div></div>
 				<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Coupons req.</span><div style="font-size:13px;font-weight:600;color:#474545;">{data.product?.coupons_required}</div></div>
 			</div>
