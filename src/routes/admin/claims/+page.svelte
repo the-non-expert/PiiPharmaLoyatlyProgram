@@ -148,13 +148,7 @@
 							onmouseenter={(e) => (e.currentTarget as HTMLElement).style.background = '#f8fafc'}
 							onmouseleave={(e) => (e.currentTarget as HTMLElement).style.background = '#fff'}
 						>
-							<td style="padding:10px 14px;">
-								<a
-									href="/admin/retailers?q={claim.mobile}"
-									onclick={(e) => e.stopPropagation()}
-									style="font-size:13px;font-weight:600;color:#2372B9;text-decoration:none;"
-								>{claim.retailer_name}</a>
-							</td>
+							<td style="padding:10px 14px;font-size:13px;color:#474545;font-weight:600;">{claim.retailer_name}</td>
 							<td style="padding:10px 14px;font-size:12px;font-family:monospace;color:#686868;">{claim.mobile}</td>
 							<td style="padding:10px 14px;font-size:13px;color:#474545;">{claim.product_name}</td>
 							<td style="padding:10px 14px;font-size:12px;color:#686868;">{fmt(claim.created_at)}</td>
@@ -218,11 +212,7 @@
 						style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;cursor:pointer;"
 					>
 						<div style="flex:1;min-width:0;">
-							<a
-								href="/admin/retailers?q={claim.mobile}"
-								onclick={(e) => e.stopPropagation()}
-								style="font-size:14px;font-weight:700;color:#2372B9;text-decoration:none;display:block;margin-bottom:2px;"
-							>{claim.retailer_name}</a>
+							<div style="font-size:14px;font-weight:700;color:#474545;margin-bottom:2px;">{claim.retailer_name}</div>
 							<div style="font-size:12px;color:#686868;margin-bottom:6px;">{claim.product_name} · {fmt(claim.created_at)}</div>
 							<div style="font-size:13px;font-weight:700;color:#474545;">₹{claim.cashback_amount}</div>
 						</div>

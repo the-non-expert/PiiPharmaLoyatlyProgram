@@ -24,7 +24,7 @@
 	const sc = $derived(statusColors[data.claim.status] ?? { bg:'#F4F6F8', text:'#686868', dot:'#686868' });
 </script>
 
-<div class="pg" style="padding:28px 36px;font-family:'Montserrat',sans-serif;max-width:780px;">
+<div class="pg" style="padding:28px 36px;font-family:'Montserrat',sans-serif;">
 	<!-- Back link -->
 	<a href="/admin/claims" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#2372B9;text-decoration:none;margin-bottom:18px;">
 		<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -191,7 +191,7 @@
 
 <style>
 	@media (max-width: 768px) {
-		.pg { padding: 16px 14px !important; max-width: 100% !important; }
+		.pg { padding: 16px 14px !important; }
 		.stats-strip { flex-wrap: wrap; }
 	}
 </style>
