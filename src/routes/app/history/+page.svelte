@@ -136,12 +136,11 @@
 
                 <!-- Bottom row -->
                 <div class="flex justify-between items-center mt-2">
-                  <span
-                    class="text-[16px] font-bold"
-                    style="color:{['pending_payout', 'approved', 'paid'].includes(claim.status) ? '#93CB52' : '#474545'}"
-                  >
-                    {#if ['pending_payout', 'approved', 'paid'].includes(claim.status)}
-                      ✓ ₹{claim.cashback_amount} cashback
+                  <span class="text-[16px] font-bold">
+                    {#if claim.status === 'paid'}
+                      <span style="color:#93CB52">✓ ₹{claim.cashback_amount} cashback</span>
+                    {:else if claim.status === 'pending_payout' || claim.status === 'approved'}
+                      <span class="text-[14px] font-semibold" style="color:#686868">₹{claim.cashback_amount} pending payout</span>
                     {:else if claim.status === 'pending'}
                       <span class="text-[13px] font-semibold text-[#92640a]">Under review</span>
                     {/if}

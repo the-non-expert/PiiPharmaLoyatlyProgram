@@ -20,13 +20,20 @@ export const load: PageServerLoad = async ({ locals }) => {
     .map((w: string) => w[0].toUpperCase())
     .join('');
 
-  // All four queries are independent — run in parallel, streamed to client.
+  // All queries are independent — run in parallel, streamed to client.
   const productsWithStats = (async () => {
-    const [{ data: products }, { data: counts }, { data: activeClaims }, { data: earnedClaims }] = await Promise.all([
+    const [
+      { data: products },
+      { data: counts },
+      { data: activeClaims },
+      { data: earnedClaims },
+      { count: totalSubmissions },
+    ] = await Promise.all([
       supabase.from('products').select('*').eq('active', true).order('name'),
       supabase.from('coupon_submissions').select('product_id').eq('retailer_id', session.retailer_id).is('claim_id', null),
       supabase.from('claims').select('product_id, status').eq('retailer_id', session.retailer_id).in('status', ['pending', 'pending_payout', 'approved']),
       supabase.from('claims').select('product_id').eq('retailer_id', session.retailer_id).in('status', ['pending_payout', 'approved', 'paid']),
+      supabase.from('coupon_submissions').select('*', { count: 'exact', head: true }).eq('retailer_id', session.retailer_id),
     ]);
 
     const countByProduct = (counts ?? []).reduce<Record<string, number>>((acc, row) => {
@@ -34,7 +41,11 @@ export const load: PageServerLoad = async ({ locals }) => {
       return acc;
     }, {});
 
-    const claimStatusByProduct = new Map((activeClaims ?? []).map(c => [c.product_id, c.status]));
+    // Aggregate active claims per product (handles multiple claims per product)
+    const claimsByProduct = (activeClaims ?? []).reduce<Record<string, { count: number }>>((acc, c) => {
+      acc[c.product_id] = { count: (acc[c.product_id]?.count ?? 0) + 1 };
+      return acc;
+    }, {});
 
     const productCashbackMap = new Map((products ?? []).map(p => [p.id, p.cashback_amount]));
     const cashbackEarned = (earnedClaims ?? []).reduce(
@@ -44,14 +55,23 @@ export const load: PageServerLoad = async ({ locals }) => {
     const list = (products ?? []).map(p => ({
       ...p,
       submitted_count: countByProduct[p.id] ?? 0,
-      has_active_claim: claimStatusByProduct.has(p.id),
-      claim_status: claimStatusByProduct.get(p.id) ?? null
+      has_active_claim: p.id in claimsByProduct,
+      claim_count: claimsByProduct[p.id]?.count ?? 0,
+      claim_total_cashback: (claimsByProduct[p.id]?.count ?? 0) * p.cashback_amount,
     }));
 
-    // Completed products (claim already created) go last
-    list.sort((a, b) => Number(a.has_active_claim) - Number(b.has_active_claim));
+    // Sort: in-progress first, then processing, then idle/completed
+    list.sort((a, b) => {
+      const priority = (p: typeof list[0]) => {
+        if (p.submitted_count > 0 && !p.has_active_claim) return 0;
+        if (p.has_active_claim) return 1;
+        return 2;
+      };
+      return priority(a) - priority(b);
+    });
 
-    return { products: list, cashbackEarned };
+    const neverScanned = (totalSubmissions ?? 0) === 0;
+    return { products: list, cashbackEarned, neverScanned };
   })();
 
   return { productsWithStats, retailerName, initials };
