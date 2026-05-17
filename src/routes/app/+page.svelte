@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { slide, fly, fade } from 'svelte/transition';
   import type { PageData } from './$types';
   import QrGlyph from '$lib/components/QrGlyph.svelte';
-  import ProgressPill from '$lib/components/ProgressPill.svelte';
   import ScannerView from '$lib/components/ScannerView.svelte';
   import ScanResultSheet from '$lib/components/ScanResultSheet.svelte';
   import type { ScanResultOk } from '$lib/components/ScanResultSheet.svelte';
@@ -218,9 +217,9 @@
           {/each}
         </div>
 
-      {:then { products }}
+      {:then { products, neverScanned }}
 
-        {#if products.length === 0 || products.every(p => p.submitted_count === 0 && !p.has_active_claim)}
+        {#if neverScanned}
           <!-- ── Empty / first-run state ── -->
           <div class="flex flex-col items-center pt-2">
             <div
@@ -296,12 +295,45 @@
           </div>
           <div class="flex flex-col gap-[10px]">
             {#each filtered as product}
-              <ProgressPill
-                name={product.name}
-                current={product.has_active_claim ? product.coupons_required : product.submitted_count}
-                total={product.coupons_required}
-                cashback={product.cashback_amount}
-              />
+              <div
+                class="bg-white rounded-xl border border-[#EAEAEA] px-[14px] py-3"
+                style="box-shadow:0 1px 4px rgba(0,0,0,0.04)"
+              >
+                <div class="text-[14px] font-bold text-[#474545] mb-2">{product.name}</div>
+
+                {#if product.submitted_count > 0}
+                  {@const pct = Math.min(100, Math.round((product.submitted_count / product.coupons_required) * 100))}
+                  {@const remaining = product.coupons_required - product.submitted_count}
+                  <div class="flex justify-between items-baseline mb-[5px]">
+                    <span class="text-[11px] font-semibold text-[#686868]">{product.submitted_count}/{product.coupons_required} scanned</span>
+                  </div>
+                  <div class="h-[6px] bg-[#EAEAEA] rounded-full overflow-hidden mb-[6px]">
+                    <div class="h-full rounded-full transition-all duration-500" style="width:{pct}%;background:#2372B9"></div>
+                  </div>
+                  <div class="text-[11px] text-[#686868]">
+                    {remaining} more scan{remaining === 1 ? '' : 's'} to unlock ₹{product.cashback_amount} cashback
+                  </div>
+                {/if}
+
+                {#if product.claim_count > 0}
+                  {#if product.submitted_count > 0}
+                    <div class="h-px bg-[#EAEAEA] my-[8px]"></div>
+                  {/if}
+                  <div class="flex items-center gap-[6px]">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="9" stroke="#2372B9" stroke-width="2"/>
+                      <path d="M12 7v5l3 3" stroke="#2372B9" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span class="text-[11px] text-[#686868]">
+                      {product.claim_count} claim{product.claim_count === 1 ? '' : 's'} processing · ₹{product.claim_total_cashback} total queued for payout
+                    </span>
+                  </div>
+                {/if}
+
+                {#if product.submitted_count === 0 && product.claim_count === 0}
+                  <div class="text-[11px] text-[#686868]">₹{product.cashback_amount} cashback when complete</div>
+                {/if}
+              </div>
             {/each}
           </div>
         {/if}
@@ -407,7 +439,7 @@
 {#if appState.kind === 'result'}
   <ScanResultSheet
     result={appState.payload}
-    onscanagain={openScanner}
+    onscanagain={() => { invalidateAll(); openScanner(); }}
     onviewclaims={() => goto('/app/history')}
   />
 {/if}
