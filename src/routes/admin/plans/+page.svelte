@@ -23,13 +23,6 @@
 		return p.id in optimisticActive ? optimisticActive[p.id] : p.active;
 	}
 
-	$effect(() => {
-		if (form && !(form as any)?.createError) {
-			showAddForm = false;
-			draftLegs = [{ product_id: '', coupons_required: 1 }];
-		}
-	});
-
 	// Used products set to avoid duplicate legs
 	const usedProducts = $derived(new Set(draftLegs.map(l => l.product_id).filter(Boolean)));
 </script>
@@ -59,10 +52,11 @@
 			<form
 				method="POST"
 				action="?/create"
-				use:enhance={() => ({ result }) => {
+				use:enhance={() => async ({ result, update }) => {
 					if (result.type !== 'failure') {
 						showAddForm = false;
 						draftLegs = [{ product_id: '', coupons_required: 1 }];
+						await update();
 					}
 				}}
 			>
