@@ -11,7 +11,7 @@ export const load: PageServerLoad = async () => {
 			id,
 			created_at,
 			retailers ( id, name, upi_id ),
-			products ( name, cashback_amount )
+			cashback_plans ( name, cashback_amount )
 		`)
 		.eq('status', 'pending_payout')
 		.order('approved_at', { ascending: true });
@@ -20,38 +20,38 @@ export const load: PageServerLoad = async () => {
 	const byRetailer = new Map<string, {
 		retailer_name: string;
 		upi_id: string;
-		products: string[];
+		plans: string[];
 		totalAmount: number;
 		claimCount: number;
 		earliest_created_at: string;
 	}>();
 
-	for (const c of claims ?? []) {
+	for (const c of ((claims ?? []) as Array<any>)) {
 		const retailer = Array.isArray(c.retailers) ? c.retailers[0] : c.retailers;
-		const product  = Array.isArray(c.products)  ? c.products[0]  : c.products;
+		const plan     = Array.isArray(c.cashback_plans) ? c.cashback_plans[0] : c.cashback_plans;
 		if (!retailer?.id) continue;
 
-		const existing = byRetailer.get(retailer.id);
-		const productName = product?.name ?? 'Unknown';
-		const amount = product?.cashback_amount ?? 0;
+		const existing  = byRetailer.get(retailer.id);
+		const planName  = plan?.name ?? 'Unknown';
+		const amount    = plan?.cashback_amount ?? 0;
 
 		if (existing) {
-			existing.totalAmount  += amount;
-			existing.claimCount   += 1;
-			existing.products.push(productName);
+			existing.totalAmount += amount;
+			existing.claimCount  += 1;
+			existing.plans.push(planName);
 		} else {
 			byRetailer.set(retailer.id, {
-				retailer_name:        retailer.name ?? '—',
-				upi_id:               retailer.upi_id ?? '—',
-				products:             [productName],
-				totalAmount:          amount,
-				claimCount:           1,
-				earliest_created_at:  c.created_at,
+				retailer_name:       retailer.name ?? '—',
+				upi_id:              retailer.upi_id ?? '—',
+				plans:               [planName],
+				totalAmount:         amount,
+				claimCount:          1,
+				earliest_created_at: c.created_at,
 			});
 		}
 	}
 
-	const rows = Array.from(byRetailer.values());
+	const rows  = Array.from(byRetailer.values());
 	const total = rows.reduce((sum, r) => sum + r.totalAmount, 0);
 
 	let historyData = null;
@@ -79,7 +79,7 @@ export const actions: Actions = {
 		const db = getServiceClient();
 		const now = new Date().toISOString();
 
-		const { data: updated, error } = await db
+		const { data: updated, error } = await (db as any)
 			.from('claims')
 			.update({ status: 'paid', paid_at: now })
 			.eq('status', 'pending_payout')
@@ -87,7 +87,7 @@ export const actions: Actions = {
 
 		if (error) return fail(500, { error: 'Failed to mark claims as paid.' });
 
-		const count = updated?.length ?? 0;
+		const count = (updated as any[])?.length ?? 0;
 		return { markedPaid: count };
 	},
 };

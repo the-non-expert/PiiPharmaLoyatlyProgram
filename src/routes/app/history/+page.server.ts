@@ -16,8 +16,9 @@ export const load: PageServerLoad = async ({ locals }) => {
         status,
         rejection_reason,
         created_at,
-        products (name, cashback_amount),
-        coupon_submissions (serial)
+        plan_id,
+        cashback_plans ( name, cashback_amount ),
+        coupon_submissions ( serial )
       `)
       .eq('retailer_id', session.retailer_id)
       .order('created_at', { ascending: false }),
@@ -29,12 +30,12 @@ export const load: PageServerLoad = async ({ locals }) => {
       .is('claim_id', null)
   ]);
 
-  const formattedClaims = (claims || []).map(claim => {
-    const product = Array.isArray(claim.products) ? claim.products[0] : claim.products;
+  const formattedClaims = ((claims || []) as Array<any>).map((claim: any) => {
+    const plan = Array.isArray(claim.cashback_plans) ? claim.cashback_plans[0] : claim.cashback_plans;
     return {
       id: claim.id,
-      product_name: product?.name || 'Unknown Product',
-      cashback_amount: (product as any)?.cashback_amount ?? 0,
+      plan_name: plan?.name || 'Unknown Plan',
+      cashback_amount: plan?.cashback_amount ?? 0,
       status: claim.status,
       rejection_reason: claim.rejection_reason,
       created_at: claim.created_at,
@@ -43,6 +44,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   });
 
   // Group unlinked submissions by product to build in-progress list
+  // (still product-keyed since coupon_submissions is product-keyed)
   const inProgressMap = new Map<string, {
     product_id: string;
     name: string;
@@ -51,7 +53,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     scanned: number;
   }>();
 
-  for (const sub of (pendingSubmissions || [])) {
+  for (const sub of ((pendingSubmissions || []) as Array<any>)) {
     const product = Array.isArray(sub.products) ? sub.products[0] : sub.products;
     if (!product) continue;
     const pid = sub.product_id;

@@ -33,7 +33,7 @@
 	function tabHref(t: string, extra = '') {
 		const p = new URLSearchParams();
 		p.set('tab', t);
-		if (data.productFilter) p.set('product', data.productFilter);
+		if (data.planFilter) p.set('plan', data.planFilter);
 		if (t === 'allClaims' && data.statusFilter) p.set('status', data.statusFilter);
 		if (data.sort !== 'newest') p.set('sort', data.sort);
 		if (extra) extra.split('&').forEach(kv => { const [k,v] = kv.split('='); if (v) p.set(k, v); });
@@ -43,8 +43,8 @@
 	function filterHref(key: string, val: string) {
 		const p = new URLSearchParams();
 		p.set('tab', data.tab);
-		if (key === 'product') { if (val) p.set('product', val); }
-		else if (data.productFilter) p.set('product', data.productFilter);
+		if (key === 'plan') { if (val) p.set('plan', val); }
+		else if (data.planFilter) p.set('plan', data.planFilter);
 		if (key === 'status') { if (val) p.set('status', val); }
 		else if (data.statusFilter) p.set('status', data.statusFilter);
 		if (key === 'sort') { if (val && val !== 'newest') p.set('sort', val); }
@@ -77,15 +77,15 @@
 
 	<!-- Filters -->
 	<div class="filters" style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
-		<!-- Product filter -->
+		<!-- Plan filter -->
 		<select
-			onchange={(e) => { window.location.href = filterHref('product', (e.currentTarget as HTMLSelectElement).value); }}
+			onchange={(e) => { window.location.href = filterHref('plan', (e.currentTarget as HTMLSelectElement).value); }}
 			class="filter-sel"
 			style="height:32px;border:1.5px solid #EAEAEA;border-radius:7px;padding:0 10px;font-family:'Montserrat',sans-serif;font-size:13px;color:#474545;background:#fff;cursor:pointer;width:180px;outline:none;"
 		>
-			<option value="">All Products</option>
-			{#each data.products as p}
-				<option value={p.id} selected={data.productFilter === p.id}>{p.name}</option>
+			<option value="">All Plans</option>
+			{#each data.plans as p}
+				<option value={p.id} selected={data.planFilter === p.id}>{p.name}</option>
 			{/each}
 		</select>
 
@@ -125,7 +125,7 @@
 				<tr>
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Retailer Name</th>
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Mobile</th>
-					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Product</th>
+					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Plan</th>
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Date Created</th>
 					<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #EAEAEA;background:#fff;white-space:nowrap;">Cashback</th>
 					{#if data.tab === 'allClaims'}
@@ -150,7 +150,7 @@
 						>
 							<td style="padding:10px 14px;font-size:13px;color:#474545;font-weight:600;">{claim.retailer_name}</td>
 							<td style="padding:10px 14px;font-size:12px;font-family:monospace;color:#686868;">{claim.mobile}</td>
-							<td style="padding:10px 14px;font-size:13px;color:#474545;">{claim.product_name}</td>
+							<td style="padding:10px 14px;font-size:13px;color:#474545;">{claim.plan_name}</td>
 							<td style="padding:10px 14px;font-size:12px;color:#686868;">{fmt(claim.created_at)}</td>
 							<td style="padding:10px 14px;font-size:13px;color:#474545;font-weight:700;">₹{claim.cashback_amount}</td>
 							{#if data.tab === 'allClaims'}
@@ -213,7 +213,7 @@
 					>
 						<div style="flex:1;min-width:0;">
 							<div style="font-size:14px;font-weight:700;color:#474545;margin-bottom:2px;">{claim.retailer_name}</div>
-							<div style="font-size:12px;color:#686868;margin-bottom:6px;">{claim.product_name} · {fmt(claim.created_at)}</div>
+							<div style="font-size:12px;color:#686868;margin-bottom:6px;">{claim.plan_name} · {fmt(claim.created_at)}</div>
 							<div style="font-size:13px;font-weight:700;color:#474545;">₹{claim.cashback_amount}</div>
 						</div>
 						<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">

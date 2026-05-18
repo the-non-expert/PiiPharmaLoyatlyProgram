@@ -122,7 +122,7 @@
                 <!-- Top row -->
                 <div class="flex justify-between items-start mb-1.5">
                   <div class="flex-1 min-w-0 mr-3">
-                    <div class="text-[15px] font-bold text-[#474545] mb-0.5">{claim.product_name}</div>
+                    <div class="text-[15px] font-bold text-[#474545] mb-0.5">{claim.plan_name}</div>
                     <div class="text-[12px] text-[#686868]">#{claim.id.slice(0,8).toUpperCase()} · {formatDate(claim.created_at)}</div>
                   </div>
                   <span

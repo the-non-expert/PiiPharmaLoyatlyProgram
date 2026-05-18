@@ -65,6 +65,7 @@
 					{ id:'claims',    label:'Claims',     href:'/admin/claims', badge: data.pendingCount },
 					{ id:'retailers', label:'Retailers',  href:'/admin/retailers' },
 					{ id:'products',  label:'Products',   href:'/admin/products' },
+					{ id:'plans',     label:'Plans',      href:'/admin/plans' },
 					{ id:'payouts',   label:'Payouts',    href:'/admin/payouts' },
 				] as item}
 					{@const on = active(item.id)}
@@ -82,6 +83,8 @@
 							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;color:{on?'#fff':'rgba(255,255,255,0.45)'}"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.85" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
 						{:else if item.id === 'products'}
 							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;color:{on?'#fff':'rgba(255,255,255,0.45)'}"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+						{:else if item.id === 'plans'}
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;color:{on?'#fff':'rgba(255,255,255,0.45)'}"><path d="M9 14l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 						{:else if item.id === 'payouts'}
 							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;color:{on?'#fff':'rgba(255,255,255,0.45)'}"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M2 10h20" stroke="currentColor" stroke-width="2"/></svg>
 						{/if}
