@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		.select(`
 			id,
 			retailers ( id, name, upi_id ),
-			products ( name, cashback_amount )
+			cashback_plans ( name, cashback_amount )
 		`)
 		.eq('status', 'pending_payout');
 
@@ -29,35 +29,35 @@ export const GET: RequestHandler = async ({ locals }) => {
 		name: string;
 		upi_id: string;
 		totalAmount: number;
-		products: string[];
+		plans: string[];
 	}>();
 
-	for (const c of claims ?? []) {
+	for (const c of ((claims ?? []) as Array<any>)) {
 		const retailer = Array.isArray(c.retailers) ? c.retailers[0] : c.retailers;
-		const product  = Array.isArray(c.products)  ? c.products[0]  : c.products;
+		const plan     = Array.isArray(c.cashback_plans) ? c.cashback_plans[0] : c.cashback_plans;
 		if (!retailer?.id) continue;
 
-		const existing = byRetailer.get(retailer.id);
-		const productName = product?.name ?? 'Unknown';
-		const amount = product?.cashback_amount ?? 0;
+		const existing  = byRetailer.get(retailer.id);
+		const planName  = plan?.name ?? 'Unknown';
+		const amount    = plan?.cashback_amount ?? 0;
 
 		if (existing) {
 			existing.totalAmount += amount;
-			existing.products.push(productName);
+			existing.plans.push(planName);
 		} else {
 			byRetailer.set(retailer.id, {
 				name:        retailer.name ?? '',
 				upi_id:      retailer.upi_id ?? '',
 				totalAmount: amount,
-				products:    [productName],
+				plans:       [planName],
 			});
 		}
 	}
 
 	const header = 'name,beneUpiId,amount,transferMode,remarks';
 	const csvRows = Array.from(byRetailer.values()).map((r) => {
-		const claimCount = r.products.length;
-		const remarks = `${claimCount} claim${claimCount !== 1 ? 's' : ''}: ${r.products.join(', ')}`;
+		const claimCount = r.plans.length;
+		const remarks = `${claimCount} claim${claimCount !== 1 ? 's' : ''}: ${r.plans.join(', ')}`;
 		return [
 			csvField(r.name),
 			csvField(r.upi_id),

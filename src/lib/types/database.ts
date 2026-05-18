@@ -23,9 +23,25 @@ export interface Product {
   created_at: string;
 }
 
+export interface CashbackPlan {
+  id: string;
+  name: string;
+  cashback_amount: number;
+  active: boolean;
+  created_at: string;
+}
+
+export interface CashbackPlanLeg {
+  id: string;
+  plan_id: string;
+  product_id: string;
+  coupons_required: number;
+}
+
 // One row per physical coupon submitted by a retailer.
-// claim_id is null until the retailer accumulates enough coupons for a product;
-// at that point a Claim is auto-created and all qualifying submissions are linked.
+// claim_id is null until the retailer accumulates enough coupons across all
+// legs of a plan; at that point a Claim is auto-created and qualifying
+// submissions are linked.
 export interface CouponSubmission {
   id: string;
   retailer_id: string;
@@ -36,12 +52,13 @@ export interface CouponSubmission {
   created_at: string;
 }
 
-// Auto-created when a retailer's unlinked CouponSubmission count reaches
-// products.coupons_required. Never created manually by the retailer.
+// Auto-created when all legs of a cashback plan are satisfied.
+// plan_id is the authoritative FK; product_id is nullable legacy.
 export interface Claim {
   id: string;
   retailer_id: string;
-  product_id: string;
+  plan_id: string | null;
+  product_id: string | null;
   status: ClaimStatus;
   rejection_reason: string | null;
   approved_at: string | null;
@@ -99,13 +116,33 @@ export interface QrSerial {
 }
 
 // Joined types used in server load functions
+
+export interface CashbackPlanLegWithProduct extends CashbackPlanLeg {
+  product: Pick<Product, 'name'>;
+}
+
+export interface CashbackPlanWithLegs extends CashbackPlan {
+  legs: CashbackPlanLegWithProduct[];
+}
+
 export interface ClaimWithDetails extends Claim {
   retailer: Pick<Retailer, 'name' | 'city' | 'state' | 'upi_id' | 'mobile'>;
-  product: Pick<Product, 'name' | 'cashback_amount'>;
+  plan: Pick<CashbackPlan, 'name' | 'cashback_amount'>;
+  legs: Array<Pick<CashbackPlanLeg, 'product_id' | 'coupons_required'> & { product_name: string }>;
   submissions: Array<{ serial: string; photo_url: string }>;
 }
 
-export interface ProductWithProgress extends Product {
-  submitted_count: number;   // unlinked coupon_submissions for this retailer+product
-  has_active_claim: boolean; // a pending/approved claim already exists
+// Per-plan progress for the retailer home page
+export interface PlanWithProgress extends CashbackPlanWithLegs {
+  // Per-leg: how many unlinked submissions this retailer has for that product
+  leg_progress: Array<{
+    product_id: string;
+    product_name: string;
+    submitted: number;
+    required: number;
+  }>;
+  has_active_claim: boolean;
+  active_claim_count: number;
+  active_claim_total_cashback: number;
+  is_combo: boolean; // legs.length > 1
 }

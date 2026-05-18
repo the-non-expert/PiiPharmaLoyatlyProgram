@@ -2,10 +2,10 @@ import type { PageServerLoad } from './$types';
 import { getServiceClient } from '$lib/server/supabase';
 
 export const load: PageServerLoad = async ({ url }) => {
-	const tab = url.searchParams.get('tab') ?? 'pendingPayout'; // 'pendingPayout' | 'allClaims'
-	const productFilter = url.searchParams.get('product') ?? '';
-	const statusFilter  = url.searchParams.get('status') ?? '';
-	const sort          = url.searchParams.get('sort') ?? 'newest'; // 'newest' | 'oldest'
+	const tab         = url.searchParams.get('tab') ?? 'pendingPayout';
+	const planFilter  = url.searchParams.get('plan') ?? '';
+	const statusFilter = url.searchParams.get('status') ?? '';
+	const sort        = url.searchParams.get('sort') ?? 'newest';
 
 	const db = getServiceClient();
 
@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ url }) => {
 			created_at,
 			rejection_reason,
 			retailers ( name, mobile ),
-			products ( id, name, cashback_amount ),
+			cashback_plans ( id, name, cashback_amount ),
 			coupon_submissions ( id )
 		`)
 		.order('created_at', { ascending: sort === 'oldest' });
@@ -28,17 +28,17 @@ export const load: PageServerLoad = async ({ url }) => {
 		query = query.eq('status', statusFilter);
 	}
 
-	if (productFilter) query = query.eq('product_id', productFilter);
+	if (planFilter) query = query.eq('plan_id', planFilter);
 
-	const [{ data: claims }, { data: products }, { count: pendingCount }] = await Promise.all([
+	const [{ data: claims }, { data: plans }, { count: pendingCount }] = await Promise.all([
 		query,
-		db.from('products').select('id, name').order('name'),
+		(db as any).from('cashback_plans').select('id, name').order('name'),
 		db.from('claims').select('*', { count: 'exact', head: true }).eq('status', 'pending_payout'),
 	]);
 
-	const mapped = (claims ?? []).map((c) => {
+	const mapped = ((claims ?? []) as Array<any>).map((c: any) => {
 		const retailer = Array.isArray(c.retailers) ? c.retailers[0] : c.retailers;
-		const product  = Array.isArray(c.products)  ? c.products[0]  : c.products;
+		const plan     = Array.isArray(c.cashback_plans) ? c.cashback_plans[0] : c.cashback_plans;
 		return {
 			id:               c.id,
 			status:           c.status,
@@ -46,19 +46,19 @@ export const load: PageServerLoad = async ({ url }) => {
 			rejection_reason: c.rejection_reason,
 			retailer_name:    retailer?.name ?? '—',
 			mobile:           retailer?.mobile ?? '—',
-			product_id:       product?.id ?? '',
-			product_name:     product?.name ?? '—',
-			cashback_amount:  product?.cashback_amount ?? 0,
+			plan_id:          plan?.id ?? '',
+			plan_name:        plan?.name ?? '—',
+			cashback_amount:  plan?.cashback_amount ?? 0,
 			serial_count:     Array.isArray(c.coupon_submissions) ? c.coupon_submissions.length : 0,
 		};
 	});
 
 	return {
 		claims: mapped,
-		products: products ?? [],
+		plans: plans ?? [],
 		pendingCount: pendingCount ?? 0,
 		tab,
-		productFilter,
+		planFilter,
 		statusFilter,
 		sort,
 	};

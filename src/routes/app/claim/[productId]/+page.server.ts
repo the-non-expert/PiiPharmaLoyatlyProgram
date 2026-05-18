@@ -18,18 +18,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     .eq('product_id', params.productId)
     .is('claim_id', null);
 
-  const { data: activeClaim } = await supabase
-    .from('claims')
-    .select('id')
-    .eq('retailer_id', session.retailer_id)
-    .eq('product_id', params.productId)
-    .in('status', ['pending', 'approved'])
-    .maybeSingle();
-
   return {
     product,
     submitted_count: (unlinked ?? []).length,
-    has_active_claim: !!activeClaim
+    has_active_claim: false,
   };
 };
 
@@ -52,7 +44,6 @@ export const actions = {
       .from('products').select('*').eq('id', productId).eq('active', true).single();
     if (!product) return fail(400, { error: 'Product not found.' });
 
-    // Collect and validate all entries from the batch
     type Entry = { photo: File; serial: string };
     const entries: Entry[] = [];
 
@@ -64,7 +55,6 @@ export const actions = {
       if (photo.size > 10 * 1024 * 1024) return fail(400, { error: `Coupon ${i + 1}: photo must be under 10MB.` });
       if (!serial) return fail(400, { error: `Coupon ${i + 1}: serial number is required.` });
 
-      // Duplicate within this batch
       if (entries.some(e => e.serial === serial)) {
         return fail(400, { error: `Duplicate serial in this submission: ${serial}` });
       }
@@ -72,7 +62,6 @@ export const actions = {
       entries.push({ photo, serial });
     }
 
-    // Check all serials against DB in one query
     const serials = entries.map(e => e.serial);
     const { data: existing } = await supabase
       .from('coupon_submissions').select('serial').in('serial', serials);
@@ -80,7 +69,6 @@ export const actions = {
       return fail(400, { error: `Already submitted: ${existing[0].serial}` });
     }
 
-    // Upload photos and insert submissions
     for (const entry of entries) {
       const submissionId = crypto.randomUUID();
       const photoPath    = `submissions/${submissionId}.jpg`;
@@ -101,38 +89,80 @@ export const actions = {
       }
     }
 
-    // Count unlinked and maybe auto-create claim
-    const { data: unlinked } = await supabase
+    // Plan-aware auto-trigger: check all active plans containing this product
+    const { data: planLegs } = await (supabase as any)
+      .from('cashback_plan_legs')
+      .select('plan_id, cashback_plans!inner(id, name, cashback_amount, active)')
+      .eq('product_id', productId)
+      .eq('cashback_plans.active', true);
+
+    let qualified = false;
+    let cashback  = 0;
+    let upi_id: string | null = null;
+
+    for (const planLeg of planLegs ?? []) {
+      const plan = Array.isArray(planLeg.cashback_plans)
+        ? planLeg.cashback_plans[0]
+        : (planLeg.cashback_plans as any);
+      if (!plan) continue;
+
+      const { data: allLegs } = await (supabase as any)
+        .from('cashback_plan_legs')
+        .select('product_id, coupons_required')
+        .eq('plan_id', planLeg.plan_id);
+
+      if (!allLegs || allLegs.length === 0) continue;
+
+      let allSatisfied = true;
+      const qualifyingIds: string[] = [];
+
+      for (const leg of allLegs) {
+        const { data: unlinked } = await supabase
+          .from('coupon_submissions')
+          .select('id')
+          .eq('retailer_id', session.retailer_id)
+          .eq('product_id', leg.product_id)
+          .is('claim_id', null);
+
+        const count = (unlinked ?? []).length;
+        if (count < leg.coupons_required) {
+          allSatisfied = false;
+        }
+        qualifyingIds.push(...(unlinked ?? []).slice(0, leg.coupons_required).map(r => r.id));
+      }
+
+      if (allSatisfied && !qualified) {
+        const claimId = crypto.randomUUID();
+        await supabase.from('claims').insert({
+          id: claimId,
+          retailer_id: session.retailer_id,
+          plan_id: planLeg.plan_id,
+          status: 'pending_payout'
+        });
+        await supabase.from('coupon_submissions').update({ claim_id: claimId }).in('id', qualifyingIds);
+
+        qualified = true;
+        cashback  = plan.cashback_amount;
+
+        const { data: retailer } = await supabase
+          .from('retailers').select('upi_id').eq('id', session.retailer_id).single();
+        upi_id = retailer?.upi_id ?? null;
+      }
+    }
+
+    const { data: remaining } = await supabase
       .from('coupon_submissions')
       .select('id')
       .eq('retailer_id', session.retailer_id)
       .eq('product_id', productId)
       .is('claim_id', null);
 
-    const newCount = (unlinked ?? []).length;
-    const qualified = newCount >= product.coupons_required;
-    let upi_id: string | null = null;
-
-    if (qualified) {
-      const claimId = crypto.randomUUID();
-      await supabase.from('claims').insert({
-        id: claimId, retailer_id: session.retailer_id, product_id: productId, status: 'pending'
-      });
-      const unlinkedIds = (unlinked ?? []).map(r => r.id);
-      await supabase.from('coupon_submissions').update({ claim_id: claimId }).in('id', unlinkedIds);
-
-      const { data: retailer } = await supabase
-        .from('retailers').select('upi_id').eq('id', session.retailer_id).single();
-      upi_id = retailer?.upi_id ?? null;
-    }
-
     return {
       saved: true,
       submittedCount: couponCount,
-      newCount: qualified ? product.coupons_required : newCount,
-      required: product.coupons_required,
+      newCount: (remaining ?? []).length,
       qualified,
-      cashback: product.cashback_amount,
+      cashback,
       upi_id
     };
   }

@@ -23,7 +23,7 @@
 
   let appState = $state<AppState>({ kind: 'idle' });
   let submitting = $state(false);
-  let productFilter = $state<'all' | 'inprogress' | 'completed'>('all');
+  let planFilter = $state<'all' | 'inprogress' | 'completed'>('all');
 
   // Greeting based on time of day
   const hour = new Date().getHours();
@@ -61,6 +61,8 @@
             payload: {
               serial: payload.s,
               product_name: data.product_name,
+              plan_name: data.plan_name ?? data.product_name,
+              is_combo: data.is_combo ?? false,
               coupons_submitted: data.coupons_submitted,
               coupons_required: data.coupons_required,
               cashback_amount: data.cashback_amount,
@@ -134,7 +136,7 @@
         <div>
           <p class="text-[13px] leading-none mb-[2px]" style="color:rgba(255,255,255,0.75)">{greeting}</p>
           <h1 class="text-[22px] font-bold text-white leading-snug">{data.retailerName} 👋</h1>
-          {#await data.productsWithStats then { cashbackEarned }}
+          {#await data.plansWithStats then { cashbackEarned }}
             {#if cashbackEarned > 0}
               <p class="text-[12px] font-semibold mt-[4px]" style="color:rgba(255,255,255,0.7)">
                 ₹{cashbackEarned} earned so far
@@ -202,7 +204,7 @@
     <!-- ── Body ───────────────────────────────────────────────── -->
     <div class="flex-1 overflow-y-auto px-4 py-5">
 
-      {#await data.productsWithStats}
+      {#await data.plansWithStats}
         <!-- skeleton while loading -->
         <div class="flex flex-col gap-[10px]">
           {#each [1, 2, 3] as _}
@@ -217,7 +219,7 @@
           {/each}
         </div>
 
-      {:then { products, neverScanned }}
+      {:then { plans, neverScanned }}
 
         {#if neverScanned}
           <!-- ── Empty / first-run state ── -->
@@ -235,7 +237,7 @@
               Start scanning to earn cashback
             </h2>
             <p class="text-[13px] text-[#686868] text-center leading-[1.6] max-w-[280px] mb-[22px]">
-              Every QR sticker counts toward a product target. Hit the target and we'll send cashback straight to your UPI.
+              Every QR sticker counts toward a cashback target. Hit the target and we'll send cashback straight to your UPI.
             </p>
             <div class="w-full flex flex-col gap-[10px]">
               {#each [
@@ -256,7 +258,7 @@
 
         {:else}
           <!-- ── Filter tabs ── -->
-          {#if products.some(p => p.has_active_claim) && products.some(p => !p.has_active_claim)}
+          {#if plans.some(p => p.has_active_claim) && plans.some(p => !p.has_active_claim)}
             {@const tabs = [
               { id: 'all',        label: 'All' },
               { id: 'inprogress', label: 'In Progress' },
@@ -266,9 +268,9 @@
               {#each tabs as tab}
                 <button
                   type="button"
-                  onclick={() => (productFilter = tab.id)}
+                  onclick={() => (planFilter = tab.id as 'all' | 'inprogress' | 'completed')}
                   class="px-3 py-[5px] rounded-full text-[12px] font-bold border transition-colors cursor-pointer"
-                  style={productFilter === tab.id
+                  style={planFilter === tab.id
                     ? 'background:#2372B9;color:#fff;border-color:#2372B9'
                     : 'background:#fff;color:#686868;border-color:#EAEAEA'}
                 >
@@ -278,45 +280,71 @@
             </div>
           {/if}
 
-          <!-- ── Active progress list ── -->
-          {@const filtered = productFilter === 'inprogress'
-            ? products.filter(p => !p.has_active_claim)
-            : productFilter === 'completed'
-              ? products.filter(p => p.has_active_claim)
-              : products}
+          <!-- ── Plan progress list ── -->
+          {@const filtered = planFilter === 'inprogress'
+            ? plans.filter(p => !p.has_active_claim)
+            : planFilter === 'completed'
+              ? plans.filter(p => p.has_active_claim)
+              : plans}
           <div class="flex justify-between items-baseline mb-3">
             <h2
               class="text-[13px] font-bold text-[#474545] uppercase"
               style="letter-spacing:0.06em"
             >Active Progress</h2>
             <span class="text-[12px] font-semibold text-[#686868]">
-              {filtered.length} product{filtered.length !== 1 ? 's' : ''}
+              {filtered.length} plan{filtered.length !== 1 ? 's' : ''}
             </span>
           </div>
           <div class="flex flex-col gap-[10px]">
-            {#each filtered as product}
+            {#each filtered as plan}
               <div
                 class="bg-white rounded-xl border border-[#EAEAEA] px-[14px] py-3"
                 style="box-shadow:0 1px 4px rgba(0,0,0,0.04)"
               >
-                <div class="text-[14px] font-bold text-[#474545] mb-2">{product.name}</div>
+                <!-- Plan name + combo badge -->
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="text-[14px] font-bold text-[#474545]">{plan.name}</div>
+                  {#if plan.is_combo}
+                    <span
+                      class="text-[9px] font-bold uppercase rounded-full px-[6px] py-[1px]"
+                      style="background:#fef3cd;color:#92640a;letter-spacing:0.05em"
+                    >Combo</span>
+                  {/if}
+                </div>
 
-                {#if product.submitted_count > 0}
-                  {@const pct = Math.min(100, Math.round((product.submitted_count / product.coupons_required) * 100))}
-                  {@const remaining = product.coupons_required - product.submitted_count}
-                  <div class="flex justify-between items-baseline mb-[5px]">
-                    <span class="text-[11px] font-semibold text-[#686868]">{product.submitted_count}/{product.coupons_required} scanned</span>
+                <!-- Per-leg progress -->
+                {#if plan.total_submitted > 0}
+                  <div class="flex flex-col gap-[8px] mb-[6px]">
+                    {#each plan.leg_progress as leg}
+                      {@const legPct = Math.min(100, Math.round((leg.submitted / leg.required) * 100))}
+                      {@const legRemaining = leg.required - leg.submitted}
+                      <div>
+                        {#if plan.is_combo}
+                          <div class="text-[11px] font-semibold text-[#686868] mb-[3px]">{leg.product_name}</div>
+                        {/if}
+                        <div class="flex justify-between items-baseline mb-[3px]">
+                          <span class="text-[11px] text-[#686868]">{leg.submitted}/{leg.required} scanned</span>
+                        </div>
+                        <div class="h-[5px] bg-[#EAEAEA] rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all duration-500" style="width:{legPct}%;background:{legPct === 100 ? '#3d8c1a' : '#2372B9'}"></div>
+                        </div>
+                        {#if legRemaining > 0 && !plan.has_active_claim}
+                          <div class="text-[10px] text-[#686868] mt-[2px]">
+                            {legRemaining} more scan{legRemaining === 1 ? '' : 's'} to go
+                          </div>
+                        {/if}
+                      </div>
+                    {/each}
                   </div>
-                  <div class="h-[6px] bg-[#EAEAEA] rounded-full overflow-hidden mb-[6px]">
-                    <div class="h-full rounded-full transition-all duration-500" style="width:{pct}%;background:#2372B9"></div>
-                  </div>
-                  <div class="text-[11px] text-[#686868]">
-                    {remaining} more scan{remaining === 1 ? '' : 's'} to unlock ₹{product.cashback_amount} cashback
-                  </div>
+                  {#if !plan.has_active_claim}
+                    <div class="text-[11px] text-[#686868] mt-1">
+                      ₹{plan.cashback_amount} cashback when all targets are hit
+                    </div>
+                  {/if}
                 {/if}
 
-                {#if product.claim_count > 0}
-                  {#if product.submitted_count > 0}
+                {#if plan.active_claim_count > 0}
+                  {#if plan.total_submitted > 0}
                     <div class="h-px bg-[#EAEAEA] my-[8px]"></div>
                   {/if}
                   <div class="flex items-center gap-[6px]">
@@ -325,13 +353,13 @@
                       <path d="M12 7v5l3 3" stroke="#2372B9" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                     <span class="text-[11px] text-[#686868]">
-                      {product.claim_count} claim{product.claim_count === 1 ? '' : 's'} processing · ₹{product.claim_total_cashback} total queued for payout
+                      {plan.active_claim_count} claim{plan.active_claim_count === 1 ? '' : 's'} processing · ₹{plan.active_claim_total_cashback} queued for payout
                     </span>
                   </div>
                 {/if}
 
-                {#if product.submitted_count === 0 && product.claim_count === 0}
-                  <div class="text-[11px] text-[#686868]">₹{product.cashback_amount} cashback when complete</div>
+                {#if plan.total_submitted === 0 && plan.active_claim_count === 0}
+                  <div class="text-[11px] text-[#686868]">₹{plan.cashback_amount} cashback when complete</div>
                 {/if}
               </div>
             {/each}
@@ -339,7 +367,7 @@
         {/if}
 
       {:catch}
-        <p class="text-[13px] text-[#686868] text-center py-8">Couldn't load products. Please refresh.</p>
+        <p class="text-[13px] text-[#686868] text-center py-8">Couldn't load plans. Please refresh.</p>
       {/await}
 
     </div>

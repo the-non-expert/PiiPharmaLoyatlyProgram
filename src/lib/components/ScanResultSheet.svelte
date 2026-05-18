@@ -6,6 +6,8 @@
   export interface ScanResultOk {
     serial: string;
     product_name: string;
+    plan_name: string;
+    is_combo: boolean;
     coupons_submitted: number;
     coupons_required: number;
     cashback_amount: number;
@@ -27,6 +29,8 @@
   const pct = $derived(
     Math.min(100, Math.round((result.coupons_submitted / result.coupons_required) * 100))
   );
+
+  const displayName = $derived(result.plan_name || result.product_name);
 
   function trapFocus(node: HTMLElement) {
     const focusable = node.querySelectorAll<HTMLElement>(
@@ -51,10 +55,10 @@
   }
 </script>
 
-<!-- Backdrop: dim home behind -->
+<!-- Backdrop -->
 <div class="fixed inset-0 z-30" style="background: rgba(15,30,50,0.55)" aria-hidden="true" in:fade={{ duration: 200 }} out:fade={{ duration: 150 }}></div>
 
-<!-- Sheet — slides up 320ms cubic-bezier(0.2,0.7,0.1,1) per spec -->
+<!-- Sheet -->
 <div
   class="fixed left-0 right-0 bottom-0 z-40 bg-white max-w-lg mx-auto"
   style="border-radius: 24px 24px 0 0; box-shadow: 0 -16px 48px rgba(0,0,0,0.2); padding: 12px 24px 32px"
@@ -71,7 +75,6 @@
   {#if result.claim_created}
     <!-- ── CELEBRATION VARIANT ── -->
     <div class="relative flex justify-center mt-1 mb-3">
-      <!-- confetti dots -->
       {#each [[-60,-6,'#F59E0B',8],[-40,16,'#93CB52',6],[55,-10,'#2372B9',9],[70,18,'#F59E0B',7],[20,-22,'#93CB52',7],[-20,-28,'#2372B9',6]] as [x,y,c,s]}
         <div
           class="absolute rounded-full"
@@ -88,7 +91,10 @@
 
     <h2 class="text-[22px] font-bold text-[#474545] text-center mb-[6px]">Claim submitted!</h2>
     <p class="text-[13px] text-[#686868] text-center leading-[1.5] mb-[18px]">
-      You completed {result.coupons_required} of {result.coupons_required} coupons for {result.product_name}.
+      You completed all coupons for <strong>{displayName}</strong>.
+      {#if result.is_combo}
+        <span class="inline-block mt-1 text-[11px] font-bold text-[#F59E0B] bg-[#fef3cd] rounded-full px-2">Combo plan</span>
+      {/if}
     </p>
 
     <!-- cashback gradient card -->
@@ -99,10 +105,7 @@
       <div class="absolute right-[-20px] top-[-20px] opacity-[0.12]">
         <QrGlyph size={140} color="#fff" />
       </div>
-      <div
-        class="text-[11px] font-bold uppercase mb-[6px]"
-        style="color:rgba(255,255,255,0.75);letter-spacing:0.07em"
-      >Cashback</div>
+      <div class="text-[11px] font-bold uppercase mb-[6px]" style="color:rgba(255,255,255,0.75);letter-spacing:0.07em">Cashback</div>
       <div class="text-[36px] font-bold mb-2" style="letter-spacing:-0.01em">₹{result.cashback_amount}</div>
       <div
         class="flex items-center gap-2 px-3 py-[10px] rounded-lg"
@@ -134,16 +137,23 @@
       </div>
     </div>
 
-    <!-- product + progress card -->
-    <div
-      class="mt-5 p-[18px] rounded-xl border border-[#EAEAEA]"
-      style="background:#F4F6F8"
-    >
-      <div
-        class="text-[11px] font-bold uppercase text-[#686868] mb-[6px]"
-        style="letter-spacing:0.07em"
-      >Product</div>
-      <div class="text-[19px] font-bold text-[#474545] mb-[18px]">{result.product_name}</div>
+    <!-- plan/product + progress card -->
+    <div class="mt-5 p-[18px] rounded-xl border border-[#EAEAEA]" style="background:#F4F6F8">
+      <div class="text-[11px] font-bold uppercase text-[#686868] mb-[6px]" style="letter-spacing:0.07em">
+        {result.is_combo ? 'Combo Plan' : 'Plan'}
+      </div>
+      <div class="flex items-center gap-2 mb-[18px]">
+        <div class="text-[19px] font-bold text-[#474545]">{displayName}</div>
+        {#if result.is_combo}
+          <span class="text-[10px] font-bold text-[#F59E0B] bg-[#fef3cd] rounded-full px-2 py-[1px]">COMBO</span>
+        {/if}
+      </div>
+
+      {#if result.is_combo}
+        <div class="text-[11px] text-[#686868] mb-2">
+          Progress for <strong>{result.product_name}</strong>:
+        </div>
+      {/if}
 
       <div class="flex justify-between items-baseline mb-2">
         <span class="text-[13px] font-semibold text-[#474545]">Coupons scanned</span>
@@ -154,17 +164,11 @@
       </div>
 
       <div class="h-2 bg-[#EAEAEA] rounded-full overflow-hidden mb-[14px]">
-        <div
-          class="h-full rounded-full transition-all duration-500"
-          style="width:{pct}%;background:#2372B9"
-        ></div>
+        <div class="h-full rounded-full transition-all duration-500" style="width:{pct}%;background:#2372B9"></div>
       </div>
 
       <!-- cashback strip -->
-      <div
-        class="flex items-center gap-[10px] px-[14px] py-3 rounded-lg"
-        style="background:#e8f1fb"
-      >
+      <div class="flex items-center gap-[10px] px-[14px] py-3 rounded-lg" style="background:#e8f1fb">
         <span class="text-[22px]" role="img" aria-label="money">💰</span>
         <div class="flex-1">
           <div class="text-[14px] font-bold text-[#2372B9]">₹{result.cashback_amount} cashback when complete</div>
@@ -181,7 +185,6 @@
       class="w-full flex items-center justify-center gap-2 rounded-xl py-[15px] text-[15px] font-bold text-white"
       style="background:#2372B9"
     >
-      <!-- QR bricks icon -->
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
         <rect x="3" y="3" width="7" height="7" rx="1" stroke="#fff" stroke-width="2"/>
         <rect x="14" y="3" width="7" height="7" rx="1" stroke="#fff" stroke-width="2"/>
@@ -199,9 +202,9 @@
   </div>
 </div>
 
-<!-- live region for screen reader announcements -->
+<!-- live region for screen readers -->
 <div aria-live="polite" class="sr-only">
   {result.claim_created
-    ? `Claim submitted! ₹${result.cashback_amount} cashback for ${result.product_name}.`
-    : `Coupon scanned. ${result.coupons_submitted} of ${result.coupons_required} for ${result.product_name}.`}
+    ? `Claim submitted! ₹${result.cashback_amount} cashback for ${displayName}.`
+    : `Coupon scanned. ${result.coupons_submitted} of ${result.coupons_required} for ${displayName}.`}
 </div>

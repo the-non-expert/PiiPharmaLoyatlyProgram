@@ -137,21 +137,32 @@
 			{/if}
 		</div>
 
-		<!-- RIGHT main: Product strip + Serials table -->
+		<!-- RIGHT main: Plan strip + Serials table -->
 		<div class="col-right" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;">
 
-			<!-- Product info strip -->
-			<div style="background:#F4F6F8;border-radius:8px;padding:12px 16px;display:flex;gap:24px;flex-wrap:wrap;">
-				<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Product</span><div style="font-size:13px;font-weight:600;color:#474545;">{data.product?.name}</div></div>
-				<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Cashback</span><div style="font-size:13px;font-weight:700;color:#2372B9;">₹{data.product?.cashback_amount}</div></div>
-				<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Coupons req.</span><div style="font-size:13px;font-weight:600;color:#474545;">{data.product?.coupons_required}</div></div>
+			<!-- Plan info strip -->
+			<div style="background:#F4F6F8;border-radius:8px;padding:12px 16px;">
+				<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:{data.legs.length > 1 ? '12px' : '0'};">
+					<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Plan</span><div style="font-size:13px;font-weight:600;color:#474545;">{data.plan?.name ?? '—'}</div></div>
+					<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Cashback</span><div style="font-size:13px;font-weight:700;color:#2372B9;">₹{data.plan?.cashback_amount ?? 0}</div></div>
+					<div><span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;">Coupons</span><div style="font-size:13px;font-weight:600;color:#474545;">{data.coupons.length} scanned</div></div>
+				</div>
+				{#if data.legs.length > 1}
+					<div style="display:flex;gap:8px;flex-wrap:wrap;">
+						{#each data.legs as leg}
+							<span style="background:#fff;border:1px solid #EAEAEA;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;color:#474545;">
+								{leg.product_name} <span style="color:#686868;font-weight:400;">× {leg.coupons_required}</span>
+							</span>
+						{/each}
+					</div>
+				{/if}
 			</div>
 
 			<!-- Serials & scan timeline table -->
 			<div style="background:#fff;border-radius:10px;border:1px solid #EAEAEA;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
 				<div style="padding:14px 18px;border-bottom:1px solid #EAEAEA;font-size:13px;font-weight:700;color:#474545;">
 					Scanned coupons
-					<span style="font-size:12px;font-weight:500;color:#686868;margin-left:6px;">{data.coupons.length} of {data.product?.coupons_required} required</span>
+					<span style="font-size:12px;font-weight:500;color:#686868;margin-left:6px;">{data.coupons.length} total</span>
 				</div>
 				<div style="overflow-x:auto;">
 					<table style="width:100%;border-collapse:collapse;">
@@ -159,6 +170,9 @@
 							<tr>
 								<th style="padding:8px 16px;text-align:left;font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #EAEAEA;">#</th>
 								<th style="padding:8px 16px;text-align:left;font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #EAEAEA;">Serial</th>
+								{#if data.legs.length > 1}
+									<th style="padding:8px 16px;text-align:left;font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #EAEAEA;">Product</th>
+								{/if}
 								<th style="padding:8px 16px;text-align:left;font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #EAEAEA;">Batch</th>
 								<th style="padding:8px 16px;text-align:left;font-size:10px;font-weight:700;color:#686868;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #EAEAEA;">Scanned at</th>
 							</tr>
@@ -168,6 +182,9 @@
 								<tr style="border-bottom:1px solid #F4F6F8;">
 									<td style="padding:10px 16px;font-size:12px;color:#aaa;">{i + 1}</td>
 									<td style="padding:10px 16px;font-family:monospace;font-size:12px;font-weight:700;color:#474545;">{coupon.serial}</td>
+									{#if data.legs.length > 1}
+										<td style="padding:10px 16px;font-size:12px;color:#474545;">{coupon.product_name ?? '—'}</td>
+									{/if}
 									<td style="padding:10px 16px;">
 										{#if coupon.batch_label}
 											<span style="background:#e8f1fb;color:#14407a;border:1px solid #93c5fd;border-radius:99px;padding:2px 8px;font-size:10px;font-weight:700;">{coupon.batch_label}</span>
